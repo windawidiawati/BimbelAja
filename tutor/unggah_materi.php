@@ -1,4 +1,6 @@
 <?php
+include '../includes/auth.php';
+include '../includes/header.php';
 class Materi {
     private $conn;
     private $table_name = "materi";
