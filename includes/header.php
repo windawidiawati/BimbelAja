@@ -21,7 +21,7 @@
 <!-- Navbar (opsional) -->
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
   <div class="container">
-    <a class="navbar-brand" href="/bimbel-app/index.php">BimbelAja</a>
+    <a class="navbar-brand" href="/BimbelAja/index.php">BimbelAja</a>
     <div class="collapse navbar-collapse">
       <ul class="navbar-nav ms-auto">
         <li class="nav-item"><a class="nav-link" href="/BimbelAja/langganan/paket.php">Langganan</a></li>
