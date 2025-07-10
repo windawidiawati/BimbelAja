@@ -60,6 +60,19 @@ include '../includes/header.php';
         </div>
       </a>
     </div>
+
+    <!-- Tambahan: Lihat Nilai -->
+    <div class="col-md-6 col-lg-3">
+      <a href="lihat_nilai.php" class="text-decoration-none">
+        <div class="card text-center shadow-sm h-100">
+          <div class="card-body">
+            <div class="mb-2"><i class="bi bi-bar-chart-line text-info" style="font-size: 2rem;"></i></div>
+            <h5 class="card-title">Lihat Nilai</h5>
+            <p class="card-text small text-muted">Pantau hasil pengerjaan soal oleh siswa</p>
+          </div>
+        </div>
+      </a>
+    </div>
   </div>
 </div>
 
