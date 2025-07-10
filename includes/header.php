@@ -3,18 +3,21 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
+
+// Untuk menandai halaman aktif
+$current_page = basename($_SERVER['PHP_SELF']);
 ?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>BimbelAja</title>
 
   <!-- Bootstrap CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <!-- Bootstrap Icons (optional for icons) -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
 
   <style>
     body {
@@ -27,6 +30,14 @@ if (session_status() === PHP_SESSION_NONE) {
     }
     .nav-link {
       margin-left: 1rem;
+      transition: 0.3s;
+    }
+    .nav-link:hover {
+      opacity: 0.85;
+    }
+    .nav-link.active {
+      font-weight: bold;
+      border-bottom: 2px solid #ffc107;
     }
   </style>
 </head>
@@ -35,7 +46,7 @@ if (session_status() === PHP_SESSION_NONE) {
 <!-- Navbar -->
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
   <div class="container">
-    <a class="navbar-brand" href="/bimbel-app/index.php">
+    <a class="navbar-brand" href="/BimbelAja/index.php">
       <i class="bi bi-mortarboard-fill me-2"></i>BimbelAja
     </a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
@@ -44,10 +55,18 @@ if (session_status() === PHP_SESSION_NONE) {
 
     <div class="collapse navbar-collapse" id="navbarContent">
       <ul class="navbar-nav ms-auto align-items-center">
+
+        <!-- Menu Beranda -->
+        <li class="nav-item">
+          <a class="nav-link text-white <?= ($current_page == 'index.php') ? 'active' : '' ?>" href="/BimbelAja/index.php">
+            <i class="bi bi-house-door me-1"></i>Beranda
+          </a>
+        </li>
+
         <?php if (isset($_SESSION['user'])): ?>
           <!-- Jika sudah login -->
           <li class="nav-item">
-            <a class="nav-link text-white" href="/BimbelAja/user/dashboard.php">
+            <a class="nav-link text-white <?= ($current_page == 'dashboard.php') ? 'active' : '' ?>" href="/BimbelAja/user/dashboard.php">
               <i class="bi bi-speedometer2 me-1"></i>Dashboard
             </a>
           </li>
@@ -59,12 +78,12 @@ if (session_status() === PHP_SESSION_NONE) {
         <?php else: ?>
           <!-- Jika belum login -->
           <li class="nav-item">
-            <a class="nav-link text-white" href="/BimbelAja/langganan/paket.php">
+            <a class="nav-link text-white <?= ($current_page == 'paket.php') ? 'active' : '' ?>" href="/BimbelAja/langganan/paket.php">
               <i class="bi bi-tags me-1"></i>Langganan
             </a>
           </li>
           <li class="nav-item">
-            <a class="nav-link text-white" href="/BimbelAja/auth/login.php">
+            <a class="nav-link text-white <?= ($current_page == 'login.php') ? 'active' : '' ?>" href="/BimbelAja/auth/login.php">
               <i class="bi bi-box-arrow-in-right me-1"></i>Login
             </a>
           </li>
