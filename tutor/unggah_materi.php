@@ -17,29 +17,9 @@ $kelas_result = mysqli_query($conn, "SELECT * FROM kelas");
 $edit_id = null;
 $judul_edit = $deskripsi_edit = $kategori_edit = $kelas_edit = "";
 
-// Proses hapus materi
-if (isset($_GET['hapus'])) {
-  $id_hapus = (int) $_GET['hapus'];
-
-  $cek = mysqli_query($conn, "SELECT file FROM materi WHERE id = $id_hapus AND tutor_id = $tutor_id");
-  if ($cek && mysqli_num_rows($cek)) {
-    $data = mysqli_fetch_assoc($cek);
-    $file = $data['file'];
-    $file_path = realpath(__DIR__ . '/../assets/uploads/' . $file);
-    if ($file_path && file_exists($file_path)) {
-      @unlink($file_path);
-    }
-    mysqli_query($conn, "DELETE FROM materi WHERE id = $id_hapus AND tutor_id = $tutor_id");
-    $success = "Materi berhasil dihapus.";
-  } else {
-    $error = "Materi tidak ditemukan.";
-  }
-}
-
-// Proses edit ambil data
 if (isset($_GET['edit'])) {
   $edit_id = (int) $_GET['edit'];
-  $res = mysqli_query($conn, "SELECT * FROM materi WHERE id = $edit_id AND tutor_id = $tutor_id");
+  $res = mysqli_query($conn, "SELECT * FROM materi WHERE id = $edit_id AND tutor_id = $tutor_id AND status = 'proses'");
   if ($res && mysqli_num_rows($res)) {
     $row_edit = mysqli_fetch_assoc($res);
     $judul_edit = $row_edit['judul'];
@@ -48,11 +28,24 @@ if (isset($_GET['edit'])) {
     $kelas_edit = $row_edit['kelas_id'];
     $file_lama = $row_edit['file'];
   } else {
-    $error = "Materi tidak ditemukan untuk diedit.";
+    $error = "Materi tidak ditemukan atau sudah diverifikasi.";
   }
 }
 
-// Proses simpan atau update materi
+// Hapus materi (jika status masih 'proses')
+if (isset($_GET['hapus'])) {
+  $hapus_id = (int) $_GET['hapus'];
+  $res = mysqli_query($conn, "SELECT * FROM materi WHERE id = $hapus_id AND tutor_id = $tutor_id AND status = 'proses'");
+  if ($res && mysqli_num_rows($res)) {
+    $row = mysqli_fetch_assoc($res);
+    @unlink("../assets/uploads/" . $row['file']);
+    mysqli_query($conn, "DELETE FROM materi WHERE id = $hapus_id");
+    $success = "Materi berhasil dihapus.";
+  } else {
+    $error = "Materi tidak dapat dihapus.";
+  }
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $judul       = mysqli_real_escape_string($conn, $_POST['judul']);
   $deskripsi   = mysqli_real_escape_string($conn, $_POST['deskripsi']);
@@ -79,14 +72,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
       if (move_uploaded_file($fileTmp, $filePath)) {
         @unlink($uploadDir . '/' . $file_lama);
-        $query = "UPDATE materi SET judul='$judul', deskripsi='$deskripsi', kategori_id=$kategori_id, kelas_id=$kelas_id, file='$newFileName', tipe_file='$tipe_file' WHERE id = $id_edit AND tutor_id = $tutor_id";
+        $query = "UPDATE materi SET judul='$judul', deskripsi='$deskripsi', kategori_id=$kategori_id, kelas_id=$kelas_id, file='$newFileName', tipe_file='$tipe_file', status='proses' WHERE id = $id_edit AND tutor_id = $tutor_id AND status='proses'";
       }
     } else {
-      $query = "UPDATE materi SET judul='$judul', deskripsi='$deskripsi', kategori_id=$kategori_id, kelas_id=$kelas_id WHERE id = $id_edit AND tutor_id = $tutor_id";
+      $query = "UPDATE materi SET judul='$judul', deskripsi='$deskripsi', kategori_id=$kategori_id, kelas_id=$kelas_id, status='proses' WHERE id = $id_edit AND tutor_id = $tutor_id AND status='proses'";
     }
-
     if (isset($query) && mysqli_query($conn, $query)) {
-      $success = "Materi berhasil diperbarui.";
+      $success = "Materi berhasil diperbarui dan dikirim ulang.";
       $edit_id = null;
     } else {
       $error = "Gagal memperbarui materi.";
@@ -98,8 +90,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $tipe_file = ($ext === 'pdf') ? 'pdf' : 'video';
 
       if (move_uploaded_file($fileTmp, $filePath)) {
-        $query = "INSERT INTO materi (judul, deskripsi, kategori_id, kelas_id, file, tipe_file, tutor_id, created_at)
-                  VALUES ('$judul', '$deskripsi', $kategori_id, $kelas_id, '$newFileName', '$tipe_file', $tutor_id, NOW())";
+        $query = "INSERT INTO materi (judul, deskripsi, kategori_id, kelas_id, file, tipe_file, tutor_id, created_at, status)
+                  VALUES ('$judul', '$deskripsi', $kategori_id, $kelas_id, '$newFileName', '$tipe_file', $tutor_id, NOW(), 'proses')";
         mysqli_query($conn, $query);
         $success = "Materi berhasil diunggah.";
       } else {
@@ -111,10 +103,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   }
 }
 
-$query = "SELECT m.*, k.nama_kategori, kl.nama_kelas FROM materi m
+$query = "SELECT m.*, k.nama_kategori, kl.nama_kelas 
+          FROM materi m
           LEFT JOIN kategori_materi k ON m.kategori_id = k.id
           LEFT JOIN kelas kl ON m.kelas_id = kl.id
-          WHERE m.tutor_id = $tutor_id ORDER BY m.id DESC";
+          WHERE m.tutor_id = $tutor_id 
+          ORDER BY m.id DESC";
 $materi = mysqli_query($conn, $query);
 ?>
 
@@ -173,9 +167,9 @@ $materi = mysqli_query($conn, $query);
     <thead class="table-dark">
       <tr>
         <th>Judul</th>
-        <th>Deskripsi</th>
         <th>Kategori</th>
         <th>Kelas</th>
+        <th>Status</th>
         <th>File</th>
         <th>Aksi</th>
       </tr>
@@ -184,17 +178,28 @@ $materi = mysqli_query($conn, $query);
       <?php while ($row = mysqli_fetch_assoc($materi)): ?>
         <tr>
           <td><?= htmlspecialchars($row['judul']) ?></td>
-          <td><?= htmlspecialchars($row['deskripsi']) ?></td>
           <td><?= htmlspecialchars($row['nama_kategori']) ?: '-' ?></td>
           <td><?= htmlspecialchars($row['nama_kelas']) ?: '-' ?></td>
+          <td>
+            <span class="badge bg-<?= 
+              $row['status'] === 'diterima' ? 'success' : 
+              ($row['status'] === 'ditolak' ? 'danger' : 'secondary')
+            ?>">
+              <?= ucfirst($row['status']) ?>
+            </span>
+          </td>
           <td>
             <a href="../assets/uploads/<?= htmlspecialchars($row['file']) ?>" target="_blank">
               <?= ($row['tipe_file'] === 'video') ? 'Tonton Video' : 'Lihat PDF'; ?>
             </a>
           </td>
           <td>
-            <a href="?edit=<?= $row['id'] ?>" class="btn btn-sm btn-warning">Edit</a>
-            <a href="?hapus=<?= $row['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Hapus materi ini?')">Hapus</a>
+            <?php if ($row['status'] === 'proses'): ?>
+              <a href="?edit=<?= $row['id'] ?>" class="btn btn-sm btn-warning">Edit</a>
+              <a href="?hapus=<?= $row['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Hapus materi ini?')">Hapus</a>
+            <?php else: ?>
+              <em>Tidak bisa diedit</em>
+            <?php endif; ?>
           </td>
         </tr>
       <?php endwhile; ?>
