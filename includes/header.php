@@ -1,11 +1,14 @@
 <?php
-// Mulai session hanya jika belum dimulai
+// Mulai session jika belum aktif
 if (session_status() === PHP_SESSION_NONE) {
-    session_start();
+  session_start();
 }
 
-// Untuk menandai halaman aktif
-$current_page = basename($_SERVER['PHP_SELF']);
+// Ambil nama file halaman sekarang
+$current_page = basename($_SERVER['SCRIPT_NAME']);
+
+// Ambil role user jika login
+$role = $_SESSION['user']['role'] ?? null;
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -26,14 +29,14 @@ $current_page = basename($_SERVER['PHP_SELF']);
     }
     .navbar-brand {
       font-weight: bold;
-      font-size: 1.4rem;
+      font-size: 1.5rem;
     }
     .nav-link {
       margin-left: 1rem;
       transition: 0.3s;
     }
     .nav-link:hover {
-      opacity: 0.85;
+      opacity: 0.9;
     }
     .nav-link.active {
       font-weight: bold;
@@ -55,19 +58,16 @@ $current_page = basename($_SERVER['PHP_SELF']);
 
     <div class="collapse navbar-collapse" id="navbarContent">
       <ul class="navbar-nav ms-auto align-items-center">
-
-        <!-- Menu Beranda -->
-        <li class="nav-item">
-          <a class="nav-link text-white <?= ($current_page == 'index.php') ? 'active' : '' ?>" href="/BimbelAja/index.php">
-            <i class="bi bi-house-door me-1"></i>Beranda
-          </a>
-        </li>
-
         <?php if (isset($_SESSION['user'])): ?>
-          <!-- Jika sudah login -->
+          <!-- Menu untuk user yang login -->
           <li class="nav-item">
-            <a class="nav-link text-white <?= ($current_page == 'dashboard.php') ? 'active' : '' ?>" href="/BimbelAja/user/dashboard.php">
+            <a class="nav-link text-white <?= ($current_page === 'dashboard.php') ? 'active' : '' ?>" href="/BimbelAja/<?= $role ?>/dashboard.php">
               <i class="bi bi-speedometer2 me-1"></i>Dashboard
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link text-white <?= ($current_page === 'profil.php') ? 'active' : '' ?>" href="/BimbelAja/<?= $role ?>/profil.php">
+              <i class="bi bi-person-circle me-1"></i>Profil
             </a>
           </li>
           <li class="nav-item">
@@ -76,14 +76,19 @@ $current_page = basename($_SERVER['PHP_SELF']);
             </a>
           </li>
         <?php else: ?>
-          <!-- Jika belum login -->
+          <!-- Menu untuk pengunjung (belum login) -->
           <li class="nav-item">
-            <a class="nav-link text-white <?= ($current_page == 'paket.php') ? 'active' : '' ?>" href="/BimbelAja/langganan/paket.php">
+            <a class="nav-link text-white <?= ($current_page === 'index.php') ? 'active' : '' ?>" href="/BimbelAja/index.php">
+              <i class="bi bi-house-door me-1"></i>Beranda
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link text-white <?= ($current_page === 'paket.php') ? 'active' : '' ?>" href="/BimbelAja/langganan/paket.php">
               <i class="bi bi-tags me-1"></i>Langganan
             </a>
           </li>
           <li class="nav-item">
-            <a class="nav-link text-white <?= ($current_page == 'login.php') ? 'active' : '' ?>" href="/BimbelAja/auth/login.php">
+            <a class="nav-link text-white <?= ($current_page === 'login.php') ? 'active' : '' ?>" href="/BimbelAja/auth/login.php">
               <i class="bi bi-box-arrow-in-right me-1"></i>Login
             </a>
           </li>
@@ -95,3 +100,5 @@ $current_page = basename($_SERVER['PHP_SELF']);
 
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
