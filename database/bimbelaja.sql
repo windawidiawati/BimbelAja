@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Waktu pembuatan: 11 Jul 2025 pada 06.21
+-- Waktu pembuatan: 11 Jul 2025 pada 06.28
 -- Versi server: 10.4.32-MariaDB
 -- Versi PHP: 8.2.12
 
@@ -28,7 +28,7 @@ SET time_zone = "+00:00";
 --
 
 CREATE TABLE `forum` (
-  `id` int(11) NOT NULL,
+  `id int(11) NOT NULL,
   `parent_id` int(11) DEFAULT NULL,
   `judul` varchar(100) DEFAULT NULL,
   `isi` text DEFAULT NULL,
