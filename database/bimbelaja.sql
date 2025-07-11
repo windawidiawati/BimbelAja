@@ -28,7 +28,7 @@ SET time_zone = "+00:00";
 --
 
 CREATE TABLE `forum` (
-  `id int(11) NOT NULL,
+  `id` int(11) NOT NULL,
   `parent_id` int(11) DEFAULT NULL,
   `judul` varchar(100) DEFAULT NULL,
   `isi` text DEFAULT NULL,

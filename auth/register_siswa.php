@@ -1,4 +1,3 @@
-// File: register_siswa.php
 <?php
 include '../config/database.php';
 
@@ -65,18 +64,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
 
         <div class="mb-3">
-          <label class="form-label">Kelas</label>
-          <input type="text" name="kelas" class="form-control" value="<?= htmlspecialchars($kelas); ?>" required>
-        </div>
-
-        <div class="mb-4">
           <label class="form-label">Jenjang</label>
-          <select name="jenjang" class="form-select" required>
+          <select name="jenjang" id="jenjang" class="form-select" required>
             <option value="">-- Pilih Jenjang --</option>
             <option value="SD" <?= $jenjang === 'SD' ? 'selected' : '' ?>>SD</option>
             <option value="SMP" <?= $jenjang === 'SMP' ? 'selected' : '' ?>>SMP</option>
             <option value="SMA" <?= $jenjang === 'SMA' ? 'selected' : '' ?>>SMA</option>
-            <option value="SMK" <?= $jenjang === 'SMK' ? 'selected' : '' ?>>SMK</option>
+          </select>
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label">Kelas</label>
+          <select name="kelas" id="kelas" class="form-select" required>
+            <option value="">-- Pilih Kelas --</option>
           </select>
         </div>
 
@@ -91,5 +91,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
   </div>
 </div>
+
+<script>
+const kelasOptions = {
+  SD: ['Kelas 1', 'Kelas 2', 'Kelas 3', 'Kelas 4', 'Kelas 5', 'Kelas 6'],
+  SMP: ['Kelas 7', 'Kelas 8', 'Kelas 9'],
+  SMA: ['Kelas 10', 'Kelas 11', 'Kelas 12']
+};
+
+document.getElementById('jenjang').addEventListener('change', function () {
+  const jenjang = this.value;
+  const kelasSelect = document.getElementById('kelas');
+  kelasSelect.innerHTML = '<option value="">-- Pilih Kelas --</option>';
+
+  if (kelasOptions[jenjang]) {
+    kelasOptions[jenjang].forEach(function (kelas) {
+      const option = document.createElement('option');
+      option.value = kelas;
+      option.textContent = kelas;
+      kelasSelect.appendChild(option);
+    });
+  }
+});
+
+// Saat reload, isi kelas kembali jika user submit gagal
+window.addEventListener('DOMContentLoaded', () => {
+  const currentJenjang = '<?= $jenjang ?>';
+  const currentKelas = '<?= $kelas ?>';
+  if (currentJenjang && kelasOptions[currentJenjang]) {
+    const kelasSelect = document.getElementById('kelas');
+    kelasOptions[currentJenjang].forEach(k => {
+      const option = document.createElement('option');
+      option.value = k;
+      option.textContent = k;
+      if (k === currentKelas) option.selected = true;
+      kelasSelect.appendChild(option);
+    });
+  }
+});
+</script>
 
 <?php include '../includes/footer.php'; ?>
