@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Waktu pembuatan: 11 Jul 2025 pada 04.13
+-- Waktu pembuatan: 11 Jul 2025 pada 06.21
 -- Versi server: 10.4.32-MariaDB
 -- Versi PHP: 8.2.12
 
@@ -34,30 +34,6 @@ CREATE TABLE `forum` (
   `isi` text DEFAULT NULL,
   `user_id` int(11) DEFAULT NULL,
   `role` enum('siswa','tutor') NOT NULL DEFAULT 'siswa',
-  `created_at` datetime DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data untuk tabel `forum`
---
-
-INSERT INTO `forum` (`id`, `parent_id`, `judul`, `isi`, `user_id`, `role`, `created_at`) VALUES
-(1, NULL, 'Paragraf', 'fddddddddddddddddd', 2, 'tutor', '2025-07-10 14:32:51'),
-(2, 1, 'Re: Paragraf', 'dddddddddd', 2, 'tutor', '2025-07-10 14:32:57');
-
--- --------------------------------------------------------
-
---
--- Struktur dari tabel `jawaban_siswa`
---
-
-CREATE TABLE `jawaban_siswa` (
-  `id` int(11) NOT NULL,
-  `siswa_id` int(11) NOT NULL,
-  `soal_id` int(11) NOT NULL,
-  `jawaban_dipilih` varchar(1) NOT NULL,
-  `benar` tinyint(1) NOT NULL DEFAULT 0,
-  `skor` int(11) DEFAULT 0,
   `created_at` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -133,16 +109,8 @@ CREATE TABLE `kelas_online` (
   `link_zoom` text DEFAULT NULL,
   `tutor_id` int(11) DEFAULT NULL,
   `kelas_id` int(11) DEFAULT NULL,
-  `kategori_id` int(11) DEFAULT NULL,
-  `created_at` datetime DEFAULT current_timestamp()
+  `kategori_id` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data untuk tabel `kelas_online`
---
-
-INSERT INTO `kelas_online` (`id`, `topik`, `tanggal`, `waktu_mulai`, `waktu_selesai`, `link_zoom`, `tutor_id`, `kelas_id`, `kategori_id`, `created_at`) VALUES
-(1, 'Diskusi Paragraf', '2025-07-11 00:00:00', '17:30:00', '18:30:00', 'https://meet.google.com/landing', 2, 16, 1, '2025-07-10 14:28:27');
 
 -- --------------------------------------------------------
 
@@ -159,17 +127,9 @@ CREATE TABLE `materi` (
   `kelas_id` int(11) DEFAULT NULL,
   `created_at` datetime DEFAULT current_timestamp(),
   `tipe_file` enum('pdf','video','lain') DEFAULT 'pdf',
-  `kategori_id` int(11) DEFAULT NULL
+  `kategori_id` int(11) DEFAULT NULL,
+  `status` enum('proses','diterima','ditolak') DEFAULT 'proses'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data untuk tabel `materi`
---
-
-INSERT INTO `materi` (`id`, `judul`, `deskripsi`, `file`, `tutor_id`, `kelas_id`, `created_at`, `tipe_file`, `kategori_id`) VALUES
-(2, 'coba', 'nknknk', '686cc3adda1d8_LPJ_LKMM-D.pdf', 2, NULL, '2025-07-08 14:07:25', 'pdf', NULL),
-(6, 'bpupki', 'andzvdsvdnbsd', '686f44ec0f3f3_soal_UAS_Basis_Data_Lanjut_-_D3TI2D.pdf', 2, 8, '2025-07-10 11:43:24', 'pdf', 3),
-(7, 'bpupki', 'andzvdsvdnbsd', '686f45f0f2732_soal_UAS_Basis_Data_Lanjut_-_D3TI2D.pdf', 2, 8, '2025-07-10 11:47:44', 'pdf', 3);
 
 -- --------------------------------------------------------
 
@@ -220,14 +180,6 @@ CREATE TABLE `soal` (
   `kategori_id` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data untuk tabel `soal`
---
-
-INSERT INTO `soal` (`id`, `pertanyaan`, `opsi_a`, `opsi_b`, `opsi_c`, `opsi_d`, `jawaban`, `tutor_id`, `created_at`, `kelas_id`, `kategori_id`) VALUES
-(1, 'apa yang dimaksud dengan paragraf?', 'suatu gagasan yang berbentuk serangkaian kalimat yang saling berkaitan satu sama lain', 'makna pada suatu kalimat', 'mengandung tanda tanya', 'diakhiri dengan tanda titik.', 'A', 2, '2025-07-10 09:18:33', NULL, NULL),
-(2, 'apa yang dimaksud dengan paragraf?', 'suatu gagasan yang berbentuk serangkaian kalimat yang saling berkaitan satu sama lain', 'makna pada suatu kalimat', 'mengandung tanda tanya', 'diakhiri dengan tanda titik.', 'A', 2, '2025-07-10 13:41:36', 2, 3);
-
 -- --------------------------------------------------------
 
 --
@@ -237,18 +189,21 @@ INSERT INTO `soal` (`id`, `pertanyaan`, `opsi_a`, `opsi_b`, `opsi_c`, `opsi_d`, 
 CREATE TABLE `users` (
   `id` int(11) NOT NULL,
   `username` varchar(50) NOT NULL,
-  `password` varchar(50) NOT NULL,
-  `role` enum('admin','siswa','tutor') NOT NULL
+  `password` varchar(255) NOT NULL,
+  `role` enum('admin','siswa','tutor') NOT NULL,
+  `nama` varchar(100) DEFAULT NULL,
+  `keahlian` varchar(100) DEFAULT NULL,
+  `kelas` varchar(10) DEFAULT NULL,
+  `jenjang` varchar(20) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data untuk tabel `users`
 --
 
-INSERT INTO `users` (`id`, `username`, `password`, `role`) VALUES
-(1, 'admin', 'admin123', 'admin'),
-(2, 'tutor', 'tutor123', 'tutor'),
-(3, 'siswa', 'siswa123', 'siswa');
+INSERT INTO `users` (`id`, `username`, `password`, `role`, `nama`, `keahlian`, `kelas`, `jenjang`) VALUES
+(11, 'windawidia', '$2y$10$XGWOivu9khGFr.qvMX92u.Hc84RVlrBzxCjif5w9olpGcCbv4xQgS', 'siswa', 'winda', NULL, 'XII IPA', 'SMA'),
+(12, 'tutor', '$2y$10$kTKMEeU91ImWfKqTDzlIcOQU1DbAU7r7gp6/kC3XyVdKsIetI7iW.', 'tutor', 'april', 'Matematika', NULL, NULL);
 
 --
 -- Indexes for dumped tables
@@ -260,14 +215,6 @@ INSERT INTO `users` (`id`, `username`, `password`, `role`) VALUES
 ALTER TABLE `forum`
   ADD PRIMARY KEY (`id`),
   ADD KEY `user_id` (`user_id`);
-
---
--- Indeks untuk tabel `jawaban_siswa`
---
-ALTER TABLE `jawaban_siswa`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `siswa_id` (`siswa_id`),
-  ADD KEY `soal_id` (`soal_id`);
 
 --
 -- Indeks untuk tabel `kategori_materi`
@@ -293,8 +240,7 @@ ALTER TABLE `kelas_online`
 --
 ALTER TABLE `materi`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `tutor_id` (`tutor_id`),
-  ADD KEY `fk_kategori` (`kategori_id`);
+  ADD KEY `tutor_id` (`tutor_id`);
 
 --
 -- Indeks untuk tabel `pembayaran`
@@ -316,8 +262,7 @@ ALTER TABLE `progress`
 --
 ALTER TABLE `soal`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `tutor_id` (`tutor_id`),
-  ADD KEY `fk_soal_kelas` (`kelas_id`);
+  ADD KEY `tutor_id` (`tutor_id`);
 
 --
 -- Indeks untuk tabel `users`
@@ -333,12 +278,6 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT untuk tabel `forum`
 --
 ALTER TABLE `forum`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
-
---
--- AUTO_INCREMENT untuk tabel `jawaban_siswa`
---
-ALTER TABLE `jawaban_siswa`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -357,13 +296,13 @@ ALTER TABLE `kelas`
 -- AUTO_INCREMENT untuk tabel `kelas_online`
 --
 ALTER TABLE `kelas_online`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT untuk tabel `materi`
 --
 ALTER TABLE `materi`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT untuk tabel `pembayaran`
@@ -381,13 +320,13 @@ ALTER TABLE `progress`
 -- AUTO_INCREMENT untuk tabel `soal`
 --
 ALTER TABLE `soal`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT untuk tabel `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- Ketidakleluasaan untuk tabel pelimpahan (Dumped Tables)
@@ -400,13 +339,6 @@ ALTER TABLE `forum`
   ADD CONSTRAINT `forum_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
 
 --
--- Ketidakleluasaan untuk tabel `jawaban_siswa`
---
-ALTER TABLE `jawaban_siswa`
-  ADD CONSTRAINT `jawaban_siswa_ibfk_1` FOREIGN KEY (`siswa_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `jawaban_siswa_ibfk_2` FOREIGN KEY (`soal_id`) REFERENCES `soal` (`id`) ON DELETE CASCADE;
-
---
 -- Ketidakleluasaan untuk tabel `kelas_online`
 --
 ALTER TABLE `kelas_online`
@@ -416,8 +348,6 @@ ALTER TABLE `kelas_online`
 -- Ketidakleluasaan untuk tabel `materi`
 --
 ALTER TABLE `materi`
-  ADD CONSTRAINT `fk_kategori` FOREIGN KEY (`kategori_id`) REFERENCES `kategori_materi` (`id`) ON DELETE SET NULL,
-  ADD CONSTRAINT `fk_kategori_materi` FOREIGN KEY (`kategori_id`) REFERENCES `kategori_materi` (`id`),
   ADD CONSTRAINT `materi_ibfk_1` FOREIGN KEY (`tutor_id`) REFERENCES `users` (`id`);
 
 --
@@ -437,7 +367,6 @@ ALTER TABLE `progress`
 -- Ketidakleluasaan untuk tabel `soal`
 --
 ALTER TABLE `soal`
-  ADD CONSTRAINT `fk_soal_kelas` FOREIGN KEY (`kelas_id`) REFERENCES `kelas` (`id`),
   ADD CONSTRAINT `soal_ibfk_1` FOREIGN KEY (`tutor_id`) REFERENCES `users` (`id`);
 COMMIT;
 
