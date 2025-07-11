@@ -62,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   if (isset($_POST['id_edit'])) {
     $id_edit = (int) $_POST['id_edit'];
     if (!empty($fileName) && in_array($ext, $allowed_extensions)) {
-      $newFileName = uniqid() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '_', $fileName);
+      $newFileName = preg_replace('/[^a-zA-Z0-9._-]/', '_', $fileName);
       $filePath = $uploadDir . '/' . $newFileName;
       $tipe_file = ($ext === 'pdf') ? 'pdf' : 'video';
 
@@ -73,6 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
       $query = "UPDATE materi SET judul='$judul', deskripsi='$deskripsi', kategori_id=$kategori_id, kelas_id=$kelas_id WHERE id = $id_edit AND tutor_id = $tutor_id";
     }
+
     if (isset($query) && mysqli_query($conn, $query)) {
       $success = "Materi berhasil diperbarui.";
       $edit_id = null;
@@ -81,7 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
   } else {
     if (in_array($ext, $allowed_extensions)) {
-      $newFileName = uniqid() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '_', $fileName);
+      $newFileName = preg_replace('/[^a-zA-Z0-9._-]/', '_', $fileName);
       $filePath = $uploadDir . '/' . $newFileName;
       $tipe_file = ($ext === 'pdf') ? 'pdf' : 'video';
 
