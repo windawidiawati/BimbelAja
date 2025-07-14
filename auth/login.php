@@ -1,4 +1,6 @@
 <?php
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
 session_start();
 include '../config/database.php';
 
@@ -8,7 +10,19 @@ $allowedRoles = ['admin', 'siswa', 'tutor'];
 
 // Redirect jika sudah login
 if (isset($_SESSION['user'])) {
-  header('Location: ../' . $_SESSION['user']['role'] . '/dashboard.php');
+  $userRole = $_SESSION['user']['role'];
+
+  if ($userRole === 'siswa') {
+    $userId = $_SESSION['user']['id'];
+    $check = mysqli_query($conn, "SELECT * FROM langganan WHERE user_id = $userId LIMIT 1");
+    if (mysqli_num_rows($check) > 0) {
+      header('Location: ../siswa/dashboard.php');
+    } else {
+      header('Location: ../index.php');
+    }
+  } else {
+    header("Location: ../$userRole/dashboard.php");
+  }
   exit;
 }
 
@@ -17,6 +31,7 @@ if (!isset($_SESSION['login_attempts'])) {
   $_SESSION['login_attempts'] = 0;
 }
 
+// Proses login
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $usernameInput = trim($_POST['username']);
   $password = trim($_POST['password']);
@@ -38,7 +53,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       } elseif (password_verify($password, $user['password'])) {
         $_SESSION['user'] = $user;
         $_SESSION['login_attempts'] = 0;
-        header('Location: ../' . $user['role'] . '/dashboard.php');
+
+        if ($user['role'] === 'siswa') {
+          $userId = $user['id'];
+          $check = mysqli_query($conn, "SELECT * FROM langganan WHERE user_id = $userId LIMIT 1");
+          if (mysqli_num_rows($check) > 0) {
+            header('Location: ../siswa/dashboard.php');
+          } else {
+            header('Location: ../index.php');
+          }
+        } else {
+          header('Location: ../' . $user['role'] . '/dashboard.php');
+        }
         exit;
       } else {
         $_SESSION['login_attempts']++;
@@ -52,7 +78,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 ?>
 
-<!-- TAMPILAN HTML LOGIN -->
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -62,7 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
 </head>
 <body>
-  <div class="container d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+  <div class="container d-flex justify-content-center align-items-center" style="min-height: 90vh;">
     <div class="card shadow w-100" style="max-width: 420px;">
       <div class="card-body">
         <h4 class="card-title text-center mb-4">
