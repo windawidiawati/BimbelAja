@@ -8,7 +8,7 @@
         Belajar Lebih Mudah <br>dan Menyenangkan <br>Bersama <span class="text-warning">BimbelAja!</span>
       </h1>
       <p class="mb-4 text-muted">Temukan cara belajar paling efektif dan menyenangkan dengan bimbingan berkualitas.</p>
-      <a href="/BimbelAja/langganan/paket.php" class="btn btn-warning btn-lg text-white shadow-sm">Mulai Sekarang</a>
+      <a href="#paket" class="btn btn-warning btn-lg text-white shadow-sm">Mulai Sekarang</a>
     </div>
     <div class="col-md-6 text-center">
       <img src="assets/images/hero.png" alt="Belajar Online" class="img-fluid" style="max-height: 350px;">
@@ -58,32 +58,10 @@
 </div>
 
 <!-- Paket -->
-<div class="bg-light py-5">
+<div id="paket" class="bg-light py-5">
   <div class="container">
     <h2 class="text-center fw-bold mb-5">Pilih Paket Belajar Kamu</h2>
-    <div class="row g-4 text-center">
-      <div class="col-md-4">
-        <div class="p-4 bg-white border rounded shadow-sm h-100">
-          <h5 class="fw-bold">Gratis</h5>
-          <p class="text-muted">Coba fitur dasar tanpa biaya.</p>
-          <a href="#" class="btn btn-outline-primary mt-2">Daftar Sekarang</a>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="p-4 bg-white border rounded shadow-sm h-100">
-          <h5 class="fw-bold">Premium Bulanan</h5>
-          <p class="text-muted">Akses penuh semua fitur selama 30 hari.</p>
-          <a href="#" class="btn btn-primary mt-2">Daftar Sekarang</a>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="p-4 bg-white border rounded shadow-sm h-100">
-          <h5 class="fw-bold">Premium Tahunan</h5>
-          <p class="text-muted">Lebih hemat untuk akses setahun penuh.</p>
-          <a href="#" class="btn btn-primary mt-2">Daftar Sekarang</a>
-        </div>
-      </div>
-    </div>
+    <?php include 'langganan/paket.php'; ?>
   </div>
 </div>
 
