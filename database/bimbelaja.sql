@@ -36,6 +36,10 @@ CREATE TABLE `forum` (
   `role` enum('siswa','tutor') NOT NULL DEFAULT 'siswa',
   `created_at` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+<<<<<<< HEAD
+=======
+
+>>>>>>> dc9f1cb1fff3b4252b2024b6ddcbc7a3b172ddf6
 -- --------------------------------------------------------
 
 --
