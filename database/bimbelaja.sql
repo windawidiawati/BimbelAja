@@ -37,6 +37,30 @@ CREATE TABLE `forum` (
   `created_at` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data untuk tabel `forum`
+--
+
+INSERT INTO `forum` (`id`, `parent_id`, `judul`, `isi`, `user_id`, `role`, `created_at`) VALUES
+(1, NULL, 'Paragraf', 'fddddddddddddddddd', 2, 'tutor', '2025-07-10 14:32:51'),
+(2, 1, 'Re: Paragraf', 'dddddddddd', 2, 'tutor', '2025-07-10 14:32:57');
+
+-- --------------------------------------------------------
+
+--
+-- Struktur dari tabel `jawaban_siswa`
+--
+
+CREATE TABLE `jawaban_siswa` (
+  `id` int(11) NOT NULL,
+  `siswa_id` int(11) NOT NULL,
+  `soal_id` int(11) NOT NULL,
+  `jawaban_dipilih` varchar(1) NOT NULL,
+  `benar` tinyint(1) NOT NULL DEFAULT 0,
+  `skor` int(11) DEFAULT 0,
+  `created_at` datetime DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 -- --------------------------------------------------------
 
 --
