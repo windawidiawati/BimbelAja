@@ -348,7 +348,7 @@
 -- -- Ketidakleluasaan untuk tabel `materi`
 -- --
 -- ALTER TABLE `materi`
---   ADD CONSTRAINT `materi_ibfk_1` FOREIGN KEY (`tutor_id`) REFERENCES `users` (`id`);/
+--   ADD CONSTRAINT `materi_ibfk_1` FOREIGN KEY (`tutor_id`) REFERENCES `users` (`id`);
 
 -- --
 -- -- Ketidakleluasaan untuk tabel `pembayaran`
