@@ -4,7 +4,8 @@ if (session_status() === PHP_SESSION_NONE) {
   session_start();
 }
 
-include_once __DIR__ . '/../config/database.php'; // pastikan path benar
+// Include koneksi database
+include_once __DIR__ . '/../config/database.php'; // Pastikan path ini sesuai struktur folder kamu
 
 // Ambil nama file halaman sekarang
 $current_page = basename($_SERVER['SCRIPT_NAME']);
@@ -16,9 +17,13 @@ $role = $_SESSION['user']['role'] ?? null;
 $dashboard_link = "/BimbelAja/index.php";
 if ($role === 'siswa' && isset($_SESSION['user']['id'])) {
   $userId = $_SESSION['user']['id'];
-  $cekLangganan = mysqli_query($conn, "SELECT * FROM langganan WHERE user_id = $userId AND status = 'aktif' AND tanggal_berakhir >= CURDATE()");
-  if (mysqli_num_rows($cekLangganan) > 0) {
-    $dashboard_link = "/BimbelAja/siswa/dashboard.php";
+
+  // Cek koneksi
+  if ($conn) {
+    $cekLangganan = mysqli_query($conn, "SELECT * FROM langganan WHERE user_id = $userId AND status = 'aktif' AND tanggal_berakhir >= CURDATE()");
+    if (mysqli_num_rows($cekLangganan) > 0) {
+      $dashboard_link = "/BimbelAja/siswa/dashboard.php";
+    }
   }
 } elseif ($role && $role !== 'siswa') {
   $dashboard_link = "/BimbelAja/$role/dashboard.php";
@@ -37,7 +42,7 @@ if ($role === 'siswa' && isset($_SESSION['user']['id'])) {
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
 
   <style>
-    body {A
+    body {
       font-family: 'Segoe UI', sans-serif;
       background-color: #f9f9f9;
     }
