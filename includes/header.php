@@ -23,7 +23,7 @@ $role = $_SESSION['user']['role'] ?? null;
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
 
   <style>
-    body {
+    body {A
       font-family: 'Segoe UI', sans-serif;
       background-color: #f9f9f9;
     }
