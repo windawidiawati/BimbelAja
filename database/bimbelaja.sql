@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Waktu pembuatan: 11 Jul 2025 pada 06.28
+-- Waktu pembuatan: 15 Jul 2025 pada 05.01
 -- Versi server: 10.4.32-MariaDB
 -- Versi PHP: 8.2.12
 
@@ -36,10 +36,7 @@ CREATE TABLE `forum` (
   `role` enum('siswa','tutor') NOT NULL DEFAULT 'siswa',
   `created_at` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-<<<<<<< HEAD
-=======
 
->>>>>>> dc9f1cb1fff3b4252b2024b6ddcbc7a3b172ddf6
 -- --------------------------------------------------------
 
 --
@@ -118,6 +115,24 @@ CREATE TABLE `kelas_online` (
 -- --------------------------------------------------------
 
 --
+-- Struktur dari tabel `langganan`
+--
+
+CREATE TABLE `langganan` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `paket` varchar(50) NOT NULL,
+  `jenjang` varchar(20) DEFAULT NULL,
+  `kelas` varchar(10) DEFAULT NULL,
+  `tanggal_mulai` date NOT NULL,
+  `tanggal_berakhir` date NOT NULL,
+  `status` enum('aktif','expired') DEFAULT 'aktif',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Struktur dari tabel `materi`
 --
 
@@ -133,6 +148,14 @@ CREATE TABLE `materi` (
   `kategori_id` int(11) DEFAULT NULL,
   `status` enum('proses','diterima','ditolak') DEFAULT 'proses'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data untuk tabel `materi`
+--
+
+INSERT INTO `materi` (`id`, `judul`, `deskripsi`, `file`, `tutor_id`, `kelas_id`, `created_at`, `tipe_file`, `kategori_id`, `status`) VALUES
+(3, 'iot', 'hjjkskksks', '6870ac61a3cd7_07_PPB_Flutter_Dasar__Updated_Mar_2025_.pdf', 12, 1, '2025-07-11 13:17:05', 'pdf', 4, 'proses'),
+(4, 'iot', 'hjjkskksks', '6870ae621f53f_07_PPB_Flutter_Dasar__Updated_Mar_2025_.pdf', 12, 1, '2025-07-11 13:25:38', 'pdf', 4, 'proses');
 
 -- --------------------------------------------------------
 
@@ -205,8 +228,9 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `username`, `password`, `role`, `nama`, `keahlian`, `kelas`, `jenjang`) VALUES
-(11, 'windawidia', '$2y$10$XGWOivu9khGFr.qvMX92u.Hc84RVlrBzxCjif5w9olpGcCbv4xQgS', 'siswa', 'winda', NULL, 'XII IPA', 'SMA'),
-(12, 'tutor', '$2y$10$kTKMEeU91ImWfKqTDzlIcOQU1DbAU7r7gp6/kC3XyVdKsIetI7iW.', 'tutor', 'april', 'Matematika', NULL, NULL);
+(12, 'tutor', '$2y$10$kTKMEeU91ImWfKqTDzlIcOQU1DbAU7r7gp6/kC3XyVdKsIetI7iW.', 'tutor', 'april', 'Matematika', NULL, NULL),
+(14, 'siswa', '$2y$10$b/EwFR3HSuSbSC3EE5EGeeZ00ndRxZOPVZqaM6Sq/s7IwB77ujJXG', 'siswa', 'widia', NULL, '9', 'SMP'),
+(15, 'admin', '$2y$10$gnJnC8zneAP4sVw4ldT.7u2/YK81aLt6Nj96OTQ9ZAIA8aZcyaUaq', 'admin', 'Rafli', NULL, NULL, NULL);
 
 --
 -- Indexes for dumped tables
@@ -237,6 +261,13 @@ ALTER TABLE `kelas`
 ALTER TABLE `kelas_online`
   ADD PRIMARY KEY (`id`),
   ADD KEY `tutor_id` (`tutor_id`);
+
+--
+-- Indeks untuk tabel `langganan`
+--
+ALTER TABLE `langganan`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `user_id` (`user_id`);
 
 --
 -- Indeks untuk tabel `materi`
@@ -302,10 +333,16 @@ ALTER TABLE `kelas_online`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT untuk tabel `langganan`
+--
+ALTER TABLE `langganan`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT untuk tabel `materi`
 --
 ALTER TABLE `materi`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT untuk tabel `pembayaran`
@@ -329,7 +366,7 @@ ALTER TABLE `soal`
 -- AUTO_INCREMENT untuk tabel `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- Ketidakleluasaan untuk tabel pelimpahan (Dumped Tables)
@@ -346,6 +383,12 @@ ALTER TABLE `forum`
 --
 ALTER TABLE `kelas_online`
   ADD CONSTRAINT `kelas_online_ibfk_1` FOREIGN KEY (`tutor_id`) REFERENCES `users` (`id`);
+
+--
+-- Ketidakleluasaan untuk tabel `langganan`
+--
+ALTER TABLE `langganan`
+  ADD CONSTRAINT `langganan_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
 -- Ketidakleluasaan untuk tabel `materi`
