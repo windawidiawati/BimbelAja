@@ -149,6 +149,11 @@ $role = $_SESSION['user']['role'] ?? null;
         <i class="bi bi-credit-card"></i> Verifikasi Pembayaran
       </a>
     </li>
+    <li class="nav-item">
+      <a class="nav-link <?= ($current_page === 'chekout.php') ? 'active' : '' ?>" href="/BimbelAja/langganan/chekout.php">
+        <i class="bi bi-people me-1"></i>Pelanggan
+      </a>
+    </li>
   </ul>
 </div>
 
