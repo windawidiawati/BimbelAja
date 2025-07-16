@@ -1,7 +1,7 @@
 <?php
 session_start();
 include '../config/database.php';
-include '../includes/header.php';
+include '../includes/admin_header.php';
 
 if ($_SESSION['user']['role'] !== 'admin') {
     header("Location: ../index.php");
@@ -44,5 +44,5 @@ $pembayaran = mysqli_query($conn, "SELECT * FROM pembayaran WHERE user_id = $id 
   </table>
 </div>
 
-<?php include '../includes/footer.php'; ?>
+<?php include '../includes/admin_footer.php'; ?>
 
