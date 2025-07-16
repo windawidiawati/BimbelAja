@@ -112,7 +112,6 @@ $role = $_SESSION['user']['role'] ?? null;
 
 <!-- Sidebar -->
 <div class="sidebar">
-<<<<<<< HEAD
   <h5 class="text-white text-center">Admin Panel</h5>
   <ul class="nav flex-column">
     <li class="nav-item">
@@ -151,31 +150,11 @@ $role = $_SESSION['user']['role'] ?? null;
       </a>
     </li>
   </ul>
-=======
-  <h5 class="text-white text-center mb-3">Admin Panel</h5>
-  <a class="<?= ($current_page === 'dashboard.php') ? 'active' : '' ?>" href="dashboard.php">
-    <i class="bi bi-speedometer2 me-2"></i> Dashboard
-  </a>
-  <a class="<?= ($current_page === 'kelola_materi.php') ? 'active' : '' ?>" href="kelola_materi.php">
-    <i class="bi bi-file-earmark-text me-2"></i> Kelola Materi
-  </a>
-  <a class="<?= ($current_page === 'kelola_user.php') ? 'active' : '' ?>" href="kelola_user.php">
-    <i class="bi bi-person me-2"></i> Kelola User
-  </a>
-  <a class="<?= ($current_page === 'kelola_paket.php') ? 'active' : '' ?>" href="kelola_paket.php">
-    <i class="bi bi-boxes me-2"></i> Kelola Paket
-  </a>
-  <a class="<?= ($current_page === 'verifikasi_pembayaran.php') ? 'active' : '' ?>" href="verifikasi_pembayaran.php">
-    <i class="bi bi-credit-card me-2"></i> Verifikasi Pembayaran
-  </a>
-  <a class="<?= ($current_page === 'statistik.php') ? 'active' : '' ?>" href="statistik.php">
-    <i class="bi bi-bar-chart me-2"></i> Statistik
-  </a>
->>>>>>> origin
+
 </div>
 
 <!-- Konten -->
-<
+
 
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
