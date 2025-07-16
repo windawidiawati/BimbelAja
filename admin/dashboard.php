@@ -134,38 +134,7 @@ $role = $_SESSION['user']['role'] ?? null;
 </div>
 
 <!-- Konten -->
-<div class="content">
-  <h2>Dashboard Admin</h2>
-  <p>Selamat datang, <b><?= htmlspecialchars($_SESSION['user']['username']); ?></b>. Ini adalah panel kontrol admin.</p>
-
-  <div class="row mt-4">
-    <div class="col-md-3">
-      <a href="kelola_user.php" class="btn btn-primary w-100 mb-2">
-        <i class="bi bi-person"></i> Kelola User
-      </a>
-      <a href="kelola_materi.php" class="btn btn-primary w-100 mb-2">
-        <i class="bi bi-file-earmark-text"></i> Kelola Materi
-      </a>
-      <a href="kelola_paket.php" class="btn btn-primary w-100 mb-2">
-        <i class="bi bi-boxes"></i> Kelola Paket
-      </a>
-      <a href="verifikasi_pembayaran.php" class="btn btn-primary w-100 mb-2">
-        <i class="bi bi-credit-card"></i> Verifikasi Pembayaran
-      </a>
-      <a href="statistik.php" class="btn btn-primary w-100">
-        <i class="bi bi-bar-chart"></i> Lihat Statistik
-      </a>
-    </div>
-    <div class="col-md-9">
-      <div class="card shadow-sm">
-        <div class="card-body">
-          <h5 class="card-title">Informasi Sistem</h5>
-          <p class="card-text">Gunakan panel di samping untuk mengelola pengguna, materi, langganan, dan data lainnya.</p>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+<
 
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
