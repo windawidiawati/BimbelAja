@@ -6,7 +6,8 @@ include '../config/database.php';
 
 $error = '';
 $usernameInput = '';
-$allowedRoles = ['admin', 'siswa', 'tutor'];
+$allowedRoles = ['admin', 'siswa', 'tutor', 'kasir'];
+
 
 // Redirect jika sudah login
 if (isset($_SESSION['user'])) {
@@ -120,6 +121,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <span>Belum punya akun?
             <a href="register_siswa.php">Daftar Siswa</a> |
             <a href="register_tutor.php">Daftar Tutor</a>
+            <a href="register_kasir.php">Daftar Kasir</a>
           </span>
         </div>
       </div>

@@ -1,7 +1,8 @@
 <?php
 include '../includes/auth.php';
 if ($_SESSION['user']['role'] !== 'tutor') {
-  header('Location: ../index.php'); exit;
+  header('Location: ../index.php'); 
+  exit;
 }
 include '../includes/header.php';
 ?>
@@ -13,11 +14,14 @@ include '../includes/header.php';
   </div>
 
   <div class="row g-4">
+    <!-- Unggah Materi -->
     <div class="col-md-6 col-lg-3">
       <a href="unggah_materi.php" class="text-decoration-none">
         <div class="card text-center shadow-sm h-100 hover-shadow">
           <div class="card-body">
-            <div class="mb-2"><i class="bi bi-upload text-primary" style="font-size: 2rem;"></i></div>
+            <div class="mb-2">
+              <i class="bi bi-upload text-primary" style="font-size: 2rem;"></i>
+            </div>
             <h5 class="card-title">Unggah Materi</h5>
             <p class="card-text small text-muted">Tambahkan materi berupa video atau PDF</p>
           </div>
@@ -25,11 +29,14 @@ include '../includes/header.php';
       </a>
     </div>
 
+    <!-- Buat Soal -->
     <div class="col-md-6 col-lg-3">
       <a href="buat_soal.php" class="text-decoration-none">
         <div class="card text-center shadow-sm h-100">
           <div class="card-body">
-            <div class="mb-2"><i class="bi bi-pencil-square text-success" style="font-size: 2rem;"></i></div>
+            <div class="mb-2">
+              <i class="bi bi-pencil-square text-success" style="font-size: 2rem;"></i>
+            </div>
             <h5 class="card-title">Buat Soal</h5>
             <p class="card-text small text-muted">Susun soal latihan atau ujian</p>
           </div>
@@ -37,11 +44,14 @@ include '../includes/header.php';
       </a>
     </div>
 
+    <!-- Jadwal Kelas -->
     <div class="col-md-6 col-lg-3">
       <a href="jadwal_kelas.php" class="text-decoration-none">
         <div class="card text-center shadow-sm h-100">
           <div class="card-body">
-            <div class="mb-2"><i class="bi bi-calendar-event text-warning" style="font-size: 2rem;"></i></div>
+            <div class="mb-2">
+              <i class="bi bi-calendar-event text-warning" style="font-size: 2rem;"></i>
+            </div>
             <h5 class="card-title">Jadwal Kelas</h5>
             <p class="card-text small text-muted">Lihat dan atur jadwal kelas</p>
           </div>
@@ -49,11 +59,14 @@ include '../includes/header.php';
       </a>
     </div>
 
+    <!-- Forum Diskusi -->
     <div class="col-md-6 col-lg-3">
       <a href="forum.php" class="text-decoration-none">
         <div class="card text-center shadow-sm h-100">
           <div class="card-body">
-            <div class="mb-2"><i class="bi bi-chat-dots text-danger" style="font-size: 2rem;"></i></div>
+            <div class="mb-2">
+              <i class="bi bi-chat-dots text-danger" style="font-size: 2rem;"></i>
+            </div>
             <h5 class="card-title">Forum Diskusi</h5>
             <p class="card-text small text-muted">Diskusi dengan siswa dan tutor lain</p>
           </div>
@@ -61,14 +74,16 @@ include '../includes/header.php';
       </a>
     </div>
 
-    <!-- Tambahan: Lihat Nilai -->
+    <!-- Data Siswa -->
     <div class="col-md-6 col-lg-3">
-      <a href="lihat_nilai.php" class="text-decoration-none">
+      <a href="data_siswa.php" class="text-decoration-none">
         <div class="card text-center shadow-sm h-100">
           <div class="card-body">
-            <div class="mb-2"><i class="bi bi-bar-chart-line text-info" style="font-size: 2rem;"></i></div>
-            <h5 class="card-title">Lihat Nilai</h5>
-            <p class="card-text small text-muted">Pantau hasil pengerjaan soal oleh siswa</p>
+            <div class="mb-2">
+              <i class="bi bi-bar-chart-line text-info" style="font-size: 2rem;"></i>
+            </div>
+            <h5 class="card-title">Data Siswa</h5>
+            <p class="card-text small text-muted">Pantau nilai hasil pengerjaan soal</p>
           </div>
         </div>
       </a>

@@ -93,7 +93,7 @@ $soal = mysqli_query($conn, $query);
 <div class="container mt-5 mb-5">
   <div class="card shadow-sm p-4">
     <h3 class="mb-4 text-primary">
-      <?= $soal_edit ? '✏️ Edit Soal' : '📝 Tambah Soal Baru'; ?>
+      <?= $soal_edit ? '✏ Edit Soal' : '📝 Tambah Soal Baru'; ?>
     </h3>
 
     <?php if (isset($success)) echo "<div class='alert alert-success'>$success</div>"; ?>
@@ -179,8 +179,8 @@ $soal = mysqli_query($conn, $query);
               <td><?= htmlspecialchars($row['opsi_d']) ?></td>
               <td><strong><?= strtoupper($row['jawaban']) ?></strong></td>
               <td>
-                <a href="?edit=<?= $row['id'] ?>" class="btn btn-sm btn-warning mb-1">✏️</a>
-                <a href="?hapus=<?= $row['id'] ?>" class="btn btn-sm btn-danger mb-1" onclick="return confirm('Yakin ingin hapus soal ini?')">🗑️</a>
+                <a href="?edit=<?= $row['id'] ?>" class="btn btn-sm btn-warning mb-1">✏</a>
+                <a href="?hapus=<?= $row['id'] ?>" class="btn btn-sm btn-danger mb-1" onclick="return confirm('Yakin ingin hapus soal ini?')">🗑</a>
               </td>
             </tr>
           <?php endwhile; ?>
