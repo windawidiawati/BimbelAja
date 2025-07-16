@@ -4,7 +4,6 @@ include '../includes/header.php';
 include '../config/database.php';
 
 if ($_SESSION['user']['role'] !== 'admin') {
-<<<<<<< HEAD
   header('Location: ../index.php');
   exit;
 }
@@ -37,9 +36,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   header("Location: kelola_paket.php");
   exit;
 }
-=======
+
   header('Location: ../index.php'); exit;
-}
+
 
 // Tambah / Edit Data
 $edit_mode = false;
@@ -90,7 +89,6 @@ if (isset($_GET['hapus'])) {
 
 // Ambil semua data
 $paket = mysqli_query($conn, "SELECT * FROM paket ORDER BY harga ASC");
->>>>>>> origin
 ?>
 
 <div class="container mt-5">

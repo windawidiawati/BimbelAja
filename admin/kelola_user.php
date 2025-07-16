@@ -35,7 +35,7 @@
         }
         return $users;
     }
-=======
+
 <?php
 session_start();
 include '../config/database.php';
@@ -48,11 +48,17 @@ if ($_SESSION['user']['role'] !== 'admin') {
 
 // Proses hapus
 if (isset($_GET['hapus'])) {
-    $id = $_GET['hapus'];
-    mysqli_query($conn, "DELETE FROM users WHERE id = $id");
+    $id = (int) $_GET['hapus']; // pastikan hanya angka
+    $query = "DELETE FROM users WHERE id = $id";
+    if (!mysqli_query($conn, $query)) {
+        echo "Error saat menghapus: " . mysqli_error($conn);
+        exit;
+    }
     header("Location: kelola_user.php");
     exit;
 }
+
+?>
 
 // Filter
 $filter_role = $_GET['role'] ?? '';
@@ -168,7 +174,6 @@ $result = mysqli_query($conn, $sql);
     </tbody>
   </table>
 </div>
->>>>>>> origin
 
     // Menangani aksi tambah, edit, dan hapus
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
