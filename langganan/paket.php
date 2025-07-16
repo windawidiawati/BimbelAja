@@ -3,6 +3,12 @@ if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
 $isLoggedIn = isset($_SESSION['user']);
+
+include_once __DIR__ . '/../config/database.php';
+
+// Ambil hanya paket yang status-nya aktif
+$query = "SELECT * FROM paket WHERE status = 'aktif'";
+$result = mysqli_query($conn, $query);
 ?>
 
 <!DOCTYPE html>
@@ -18,43 +24,27 @@ $isLoggedIn = isset($_SESSION['user']);
   <h2 class="text-center mb-4">Pilih Paket Langganan</h2>
 
   <div class="row justify-content-center">
-    <!-- Paket Basic -->
-    <div class="col-md-4 mb-4">
-      <div class="card shadow-sm border-0 h-100">
-        <div class="card-header bg-primary text-white text-center">
-          <h4 class="my-2">Basic</h4>
-        </div>
-        <div class="card-body text-center">
-          <h5 class="card-title text-muted">Rp 50.000 / bulan</h5>
-          <p class="card-text">Akses materi dasar untuk semua jenjang</p>
+    <?php while ($paket = mysqli_fetch_assoc($result)): ?>
+      <div class="col-md-4 mb-4">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-header text-white text-center" style="background-color: <?= htmlspecialchars($paket['warna'] ?: '#0d6efd') ?>;">
+            <h4 class="my-2"><?= htmlspecialchars($paket['nama']) ?></h4>
+          </div>
+          <div class="card-body text-center">
+            <h5 class="card-title text-muted">Rp <?= number_format($paket['harga'], 0, ',', '.') ?> / <?= $paket['durasi'] ?> hari</h5>
+            <p><strong>Jenjang:</strong> <?= htmlspecialchars($paket['jenjang']) ?></p>
+            <p><strong>Kelas:</strong> <?= htmlspecialchars($paket['kelas']) ?></p>
+            <p class="card-text"><?= htmlspecialchars($paket['deskripsi']) ?></p>
 
-          <?php if ($isLoggedIn): ?>
-            <a href="checkout.php?paket=basic" class="btn btn-outline-primary btn-block mt-3">Langganan Sekarang</a>
-          <?php else: ?>
-            <button class="btn btn-outline-primary btn-block mt-3" data-bs-toggle="modal" data-bs-target="#loginModal">Langganan Sekarang</button>
-          <?php endif; ?>
+            <?php if ($isLoggedIn): ?>
+              <a href="/BimbelAja/langganan/checkout.php?paket_id=<?= $paket['id'] ?>" class="btn btn-outline-primary btn-block mt-3">Langganan Sekarang</a>
+            <?php else: ?>
+              <button class="btn btn-outline-primary btn-block mt-3" data-bs-toggle="modal" data-bs-target="#loginModal">Langganan Sekarang</button>
+            <?php endif; ?>
+          </div>
         </div>
       </div>
-    </div>
-
-    <!-- Paket Premium -->
-    <div class="col-md-4 mb-4">
-      <div class="card shadow-sm border-0 h-100">
-        <div class="card-header bg-success text-white text-center">
-          <h4 class="my-2">Premium</h4>
-        </div>
-        <div class="card-body text-center">
-          <h5 class="card-title text-muted">Rp 100.000 / bulan</h5>
-          <p class="card-text">Akses semua materi lengkap + latihan soal</p>
-
-          <?php if ($isLoggedIn): ?>
-            <a href="checkout.php?paket=premium" class="btn btn-outline-success btn-block mt-3">Langganan Sekarang</a>
-          <?php else: ?>
-            <button class="btn btn-outline-success btn-block mt-3" data-bs-toggle="modal" data-bs-target="#loginModal">Langganan Sekarang</button>
-          <?php endif; ?>
-        </div>
-      </div>
-    </div>
+    <?php endwhile; ?>
   </div>
 </div>
 
