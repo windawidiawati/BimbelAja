@@ -6,7 +6,7 @@ include '../config/database.php';
 
 $error = '';
 $usernameInput = '';
-$allowedRoles = ['admin', 'siswa', 'tutor'];
+$allowedRoles = ['admin', 'siswa', 'tutor', 'kasir'];
 
 // Redirect jika sudah login
 if (isset($_SESSION['user'])) {
@@ -60,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           if (mysqli_num_rows($check) > 0) {
             header('Location: ../siswa/dashboard.php');
           } else {
-            header('Location: ../index.php');
+            header('Location: ../langganan/paket.php');
           }
         } else {
           header('Location: ../' . $user['role'] . '/dashboard.php');

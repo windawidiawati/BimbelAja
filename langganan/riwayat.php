@@ -23,11 +23,11 @@ $query = mysqli_query($conn, "SELECT * FROM pembayaran WHERE user_id = $user_id 
 </head>
 <body>
 <div class="container mt-5">
-  <h2>Riwayat Pembayaran</h2>
-  <table class="table table-bordered mt-4">
+  <h2 class="mb-4">Riwayat Pembayaran</h2>
+  <table class="table table-bordered">
     <thead class="table-light">
       <tr>
-        <th>#</th>
+        <th>NO</th>
         <th>Nama Paket</th>
         <th>Harga</th>
         <th>Status</th>
@@ -42,12 +42,16 @@ $query = mysqli_query($conn, "SELECT * FROM pembayaran WHERE user_id = $user_id 
             <td><?= htmlspecialchars($row['paket']) ?></td>
             <td>Rp <?= number_format($row['harga'], 0, ',', '.') ?></td>
             <td>
-              <span class="badge bg-<?= 
-                $row['status'] === 'lunas' ? 'success' : 
-                ($row['status'] === 'pending' ? 'warning' : 'danger')
-              ?>">
-                <?= ucfirst($row['status']) ?>
-              </span>
+              <?php
+                $status = strtolower($row['status']);
+                $badge = match($status) {
+                  'lunas' => 'success',
+                  'pending' => 'warning',
+                  'ditolak' => 'danger',
+                  default => 'secondary',
+                };
+              ?>
+              <span class="badge bg-<?= $badge ?> text-uppercase"><?= ucfirst($status) ?></span>
             </td>
             <td><?= date('d M Y H:i', strtotime($row['tanggal'])) ?></td>
           </tr>

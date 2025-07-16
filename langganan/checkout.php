@@ -2,6 +2,7 @@
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
+
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'siswa') {
     header("Location: /BimbelAja/auth/login.php");
     exit;
@@ -14,9 +15,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['paket_id'])) {
     $user_id = $_SESSION['user']['id'];
     $paket_id = (int) $_POST['paket_id'];
 
-    // Ambil data paket dari database
+    // Validasi ID paket
     $query = "SELECT * FROM paket WHERE id = $paket_id AND status = 'aktif'";
     $result = mysqli_query($conn, $query);
+
     if (!$result || mysqli_num_rows($result) == 0) {
         echo "Paket tidak ditemukan atau tidak aktif.";
         exit;
@@ -34,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['paket_id'])) {
     $stmt->execute();
 
     if ($stmt->affected_rows > 0) {
-        header("Location: /BimbelAja/langganan/proses_pembayaran.php");
+        header("Location: /BimbelAja/langganan/metode.php");
         exit;
     } else {
         echo "Gagal memproses pembayaran.";
@@ -42,19 +44,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['paket_id'])) {
     }
 }
 
-// Jika GET (tampilan checkout)
+// Jika GET: tampilkan detail paket
 $paket_id = $_GET['paket_id'] ?? null;
-if (!$paket_id) {
+if (!$paket_id || !is_numeric($paket_id)) {
     echo "ID paket tidak ditemukan!";
     exit;
 }
 
 $query = "SELECT * FROM paket WHERE id = $paket_id AND status = 'aktif'";
 $result = mysqli_query($conn, $query);
+
 if (!$result || mysqli_num_rows($result) == 0) {
     echo "Paket tidak ditemukan atau tidak aktif.";
     exit;
 }
+
 $paket = mysqli_fetch_assoc($result);
 ?>
 
@@ -71,13 +75,13 @@ $paket = mysqli_fetch_assoc($result);
   <p><strong>Kategori:</strong> <?= htmlspecialchars($paket['kategori']) ?></p>
   <p><strong>Jenjang:</strong> <?= htmlspecialchars($paket['jenjang']) ?> - Kelas <?= htmlspecialchars($paket['kelas']) ?></p>
   <p><strong>Harga:</strong> Rp <?= number_format($paket['harga'], 0, ',', '.') ?></p>
-  <p><strong>Durasi:</strong> <?= $paket['durasi'] . ' ' . $paket['satuan_durasi'] ?></p>
+  <p><strong>Durasi:</strong> <?= $paket['durasi'] . ' ' . htmlspecialchars($paket['satuan_durasi']) ?></p>
   <p><strong>Deskripsi:</strong> <?= htmlspecialchars($paket['deskripsi']) ?></p>
 
-  <form method="post">
-    <input type="hidden" name="paket_id" value="<?= $paket['id'] ?>">
-    <button type="submit" class="btn btn-success">Lanjut ke Pembayaran</button>
-  </form>
+  <form action="/BimbelAja/langganan/metode_pembayaran.php" method="post">
+  <input type="hidden" name="paket_id" value="<?= $paket['id'] ?>">
+  <button type="submit" class="btn btn-success">Lanjut ke Pembayaran</button>
+</form>
 </div>
 </body>
 </html>

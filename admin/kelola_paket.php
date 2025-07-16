@@ -26,20 +26,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $harga = (int)$_POST['harga'];
   $durasi = (int)$_POST['durasi'];
   $satuan_durasi = $_POST['satuan_durasi'];
-  $warna = $_POST['warna'];
   $deskripsi = $_POST['deskripsi'];
   $status = $_POST['status'];
 
   if (isset($_POST['id']) && $_POST['id'] != '') {
     // Update
     $id = $_POST['id'];
-    $stmt = $conn->prepare("UPDATE paket SET nama=?, kategori=?, jenjang=?, kelas=?, harga=?, durasi=?, satuan_durasi=?, warna=?, deskripsi=?, status=?, updated_at=NOW() WHERE id=?");
-    $stmt->bind_param("ssssisssssi", $nama, $kategori, $jenjang, $kelas, $harga, $durasi, $satuan_durasi, $warna, $deskripsi, $status, $id);
+    $stmt = $conn->prepare("UPDATE paket SET nama=?, kategori=?, jenjang=?, kelas=?, harga=?, durasi=?, satuan_durasi=?, deskripsi=?, status=?, updated_at=NOW() WHERE id=?");
+    $stmt->bind_param("ssssissssi", $nama, $kategori, $jenjang, $kelas, $harga, $durasi, $satuan_durasi, $deskripsi, $status, $id);
     $stmt->execute();
   } else {
     // Insert
-    $stmt = $conn->prepare("INSERT INTO paket (nama, kategori, jenjang, kelas, harga, durasi, satuan_durasi, warna, deskripsi, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
-    $stmt->bind_param("ssssisssss", $nama, $kategori, $jenjang, $kelas, $harga, $durasi, $satuan_durasi, $warna, $deskripsi, $status);
+    $stmt = $conn->prepare("INSERT INTO paket (nama, kategori, jenjang, kelas, harga, durasi, satuan_durasi, deskripsi, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
+    $stmt->bind_param("ssssissss", $nama, $kategori, $jenjang, $kelas, $harga, $durasi, $satuan_durasi, $deskripsi, $status);
     $stmt->execute();
   }
 
@@ -132,19 +131,6 @@ $paket = mysqli_query($conn, "SELECT * FROM paket ORDER BY harga ASC");
         </div>
 
         <div class="mb-3">
-          <label>Warna Bootstrap</label>
-          <select name="warna" class="form-select" required>
-            <?php
-              $opsi_warna = ['primary', 'success', 'warning', 'danger', 'info', 'secondary'];
-              foreach ($opsi_warna as $w) {
-                $selected = ($edit_data['warna'] ?? '') === $w ? 'selected' : '';
-                echo "<option value='$w' $selected>$w</option>";
-              }
-            ?>
-          </select>
-        </div>
-
-        <div class="mb-3">
           <label>Deskripsi</label>
           <textarea name="deskripsi" class="form-control" required><?= $edit_data['deskripsi'] ?? '' ?></textarea>
         </div>
@@ -178,7 +164,6 @@ $paket = mysqli_query($conn, "SELECT * FROM paket ORDER BY harga ASC");
         <th>Harga</th>
         <th>Durasi</th>
         <th>Deskripsi</th>
-        <th>Warna</th>
         <th>Status</th>
         <th>Aksi</th>
       </tr>
@@ -193,7 +178,6 @@ $paket = mysqli_query($conn, "SELECT * FROM paket ORDER BY harga ASC");
           <td>Rp <?= number_format($row['harga'], 0, ',', '.') ?></td>
           <td><?= $row['durasi'] . ' ' . htmlspecialchars($row['satuan_durasi'] ?? 'bulan') ?></td>
           <td><?= htmlspecialchars($row['deskripsi']) ?></td>
-          <td><span class="badge bg-<?= $row['warna'] ?>"><?= $row['warna'] ?></span></td>
           <td><?= htmlspecialchars($row['status']) ?></td>
           <td>
             <a href="?edit=<?= $row['id'] ?>" class="btn btn-sm btn-warning">Edit</a>
