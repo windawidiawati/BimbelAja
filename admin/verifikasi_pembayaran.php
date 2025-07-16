@@ -11,7 +11,7 @@ if ($_SESSION['user']['role'] !== 'admin') {
 // Koneksi ke database
 include '../config/database.php';
 
-// Ambil data pembayaran
+// Ambil data pembayaran 
 $query = "SELECT p.*, u.username, u.nama 
           FROM pembayaran p 
           JOIN users u ON p.user_id = u.id 
