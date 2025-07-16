@@ -4,11 +4,30 @@ if (session_status() === PHP_SESSION_NONE) {
   session_start();
 }
 
+// Include koneksi database
+include_once __DIR__ . '/../config/database.php'; // Pastikan path ini sesuai struktur folder kamu
+
 // Ambil nama file halaman sekarang
 $current_page = basename($_SERVER['SCRIPT_NAME']);
 
 // Ambil role user jika login
 $role = $_SESSION['user']['role'] ?? null;
+
+// Cek status langganan siswa (jika role siswa)
+$dashboard_link = "/BimbelAja/index.php";
+if ($role === 'siswa' && isset($_SESSION['user']['id'])) {
+  $userId = $_SESSION['user']['id'];
+
+  // Cek koneksi
+  if ($conn) {
+    $cekLangganan = mysqli_query($conn, "SELECT * FROM langganan WHERE user_id = $userId AND status = 'aktif' AND tanggal_berakhir >= CURDATE()");
+    if (mysqli_num_rows($cekLangganan) > 0) {
+      $dashboard_link = "/BimbelAja/siswa/dashboard.php";
+    }
+  }
+} elseif ($role && $role !== 'siswa') {
+  $dashboard_link = "/BimbelAja/$role/dashboard.php";
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -61,7 +80,7 @@ $role = $_SESSION['user']['role'] ?? null;
         <?php if (isset($_SESSION['user'])): ?>
           <!-- Menu untuk user yang login -->
           <li class="nav-item">
-            <a class="nav-link text-white <?= ($current_page === 'dashboard.php') ? 'active' : '' ?>" href="/BimbelAja/<?= $role ?>/dashboard.php">
+            <a class="nav-link text-white <?= ($current_page === 'dashboard.php') ? 'active' : '' ?>" href="<?= $dashboard_link ?>">
               <i class="bi bi-speedometer2 me-1"></i>Dashboard
             </a>
           </li>
