@@ -18,7 +18,6 @@ $role = $_SESSION['user']['role'] ?? null;
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BimbelAja - Admin Panel</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
   <style>
@@ -142,7 +141,6 @@ $role = $_SESSION['user']['role'] ?? null;
 
 <!-- Sidebar untuk layar besar -->
 <div class="sidebar d-none d-lg-block">
-  <h5 class="text-white text-center mb-3">Admin Panel</h5>
   <a class="<?= ($current_page === 'dashboard.php') ? 'active' : '' ?>" href="/BimbelAja/admin/dashboard.php">
     <i class="bi bi-speedometer2 me-2"></i> Dashboard
   </a>
