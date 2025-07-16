@@ -150,8 +150,13 @@ $role = $_SESSION['user']['role'] ?? null;
       </a>
     </li>
     <li class="nav-item">
-      <a class="nav-link <?= ($current_page === 'chekout.php') ? 'active' : '' ?>" href="/BimbelAja/langganan/chekout.php">
+      <a class="nav-link <?= ($current_page === 'chekout.php') ? 'active' : '' ?>" href="/BimbelAja/langganan/paket.php">
         <i class="bi bi-people me-1"></i>Pelanggan
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link <?= ($current_page === 'chekout.php') ? 'active' : '' ?>" href="kelola_paket.php">
+        <i class="bi bi-people me-1"></i>Kelola Paket
       </a>
     </li>
   </ul>

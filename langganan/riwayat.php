@@ -7,7 +7,7 @@ include '../config/database.php';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Riwayat Langganan - BimbelAja</title>
+    <title>Data Langganan - BimbelAja</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <style>
@@ -139,11 +139,11 @@ include '../config/database.php';
     <!-- Main Content -->
     <main class="main-content">
       <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-3 mb-4 border-bottom">
-        <h1 class="h3 fw-bold text-primary">Riwayat Langganan</h1>
+        <h1 class="h3 fw-bold text-primary">Data Langganan</h1>
       </div>
 
       <div class="card p-4 mb-4">
-        <h5 class="fw-bold">Daftar Riwayat Langganan</h5>
+        <h5 class="fw-bold">Daftar Data Langganan</h5>
         <table>
           <thead>
             <tr>
