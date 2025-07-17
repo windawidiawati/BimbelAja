@@ -1,58 +1,130 @@
 <?php
 include '../includes/auth.php';
-include '../includes/header.php';
+include '../config/database.php';
 
+// Cek role kasir
 if ($_SESSION['user']['role'] !== 'kasir') {
-  header('Location: ../index.php');
-  exit;
+    header('Location: ../index.php');
+    exit;
 }
 
-$namaKasir = htmlspecialchars($_SESSION['user']['nama']);
+// Ambil data summary
+$total_transaksi = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) AS total FROM pembayaran"))['total'] ?? 0;
+$total_online = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) AS total FROM pembayaran WHERE metode='transfer'"))['total'] ?? 0;
+$total_tunai = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) AS total FROM pembayaran WHERE metode='tunai'"))['total'] ?? 0;
+$total_siswa = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) AS total FROM users WHERE role='siswa'"))['total'] ?? 0;
+
+include '../includes/header.php';
 ?>
 
-<div class="container py-5">
-  <div class="text-center mb-4">
-    <h2 class="fw-bold">Dashboard Kasir</h2>
-    <p class="text-muted">Selamat datang, <?= $namaKasir; ?>! Silakan pilih menu kasir di bawah ini.</p>
-  </div>
+<style>
+    body {
+        font-family: 'Segoe UI', sans-serif;
+        background-color: #f8f9fa;
+    }
+    .sidebar {
+        width: 240px;
+        background-color: #0d6efd;
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        padding-top: 20px;
+    }
+    .sidebar a {
+        color: white;
+        display: block;
+        padding: 12px 20px;
+        text-decoration: none;
+        font-size: 16px;
+    }
+    .sidebar a:hover {
+        background-color: #0b5ed7;
+    }
+    .sidebar .logo {
+        text-align: center;
+        margin-bottom: 30px;
+        color: white;
+        font-size: 20px;
+        font-weight: bold;
+    }
+    .content {
+        margin-left: 240px;
+        padding: 20px;
+    }
+    .card-icon {
+        font-size: 2rem;
+    }
+</style>
 
-  <div class="row g-4">
-    <!-- Menu: Checkout Tunai -->
-    <div class="col-md-4">
-      <div class="card h-100 shadow-sm border-0">
-        <div class="card-body text-center">
-          <i class="bi bi-cash-stack display-4 text-primary mb-3"></i>
-          <h5 class="card-title fw-semibold">Checkout Tunai</h5>
-          <p class="card-text">Input transaksi pembayaran siswa yang dilakukan secara langsung (tunai).</p>
-          <a href="checkout_tunai.php" class="btn btn-primary mt-2">Buka</a>
-        </div>
-      </div>
+<div class="sidebar">
+    <div class="logo">
+        <i class="bi bi-cash-coin me-2"></i>BimbelAja
     </div>
+    <a href="dashboard.php"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a>
+    <a href="checkout_tunai.php"><i class="bi bi-cash-stack me-2"></i>Checkout Tunai</a>
+    <a href="data_siswa.php"><i class="bi bi-people me-2"></i>Data Siswa</a>
+    <a href="transaksi.php"><i class="bi bi-receipt-cutoff me-2"></i>Transaksi</a>
+    <a href="profil.php"><i class="bi bi-person-circle me-2"></i>Profil</a>
+</div>
 
-    <!-- Menu: Data Siswa -->
-    <div class="col-md-4">
-      <div class="card h-100 shadow-sm border-0">
-        <div class="card-body text-center">
-          <i class="bi bi-people display-4 text-success mb-3"></i>
-          <h5 class="card-title fw-semibold">Data Siswa</h5>
-          <p class="card-text">Lihat daftar siswa yang terdaftar di sistem untuk keperluan transaksi.</p>
-          <a href="data_siswa.php" class="btn btn-success mt-2">Lihat</a>
-        </div>
-      </div>
-    </div>
+<div class="content">
+    <h4 class="fw-bold mb-4"><i class="bi bi-speedometer2 me-2"></i>Dashboard Kasir</h4>
+    <p>Selamat datang, <b><?= $_SESSION['user']['username']; ?></b>! Semangat bekerja hari ini 😊</p>
 
-    <!-- Menu: Riwayat Transaksi -->
-    <div class="col-md-4">
-      <div class="card h-100 shadow-sm border-0">
-        <div class="card-body text-center">
-          <i class="bi bi-receipt-cutoff display-4 text-warning mb-3"></i>
-          <h5 class="card-title fw-semibold">Riwayat Transaksi</h5>
-          <p class="card-text">Cek semua pembayaran baik yang dilakukan online maupun tunai.</p>
-          <a href="transaksi.php" class="btn btn-warning mt-2 text-white">Lihat</a>
+    <div class="row g-4 mt-3">
+        <!-- Total Transaksi -->
+        <div class="col-md-3 col-sm-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-body d-flex align-items-center">
+                    <div class="text-primary card-icon me-3"><i class="bi bi-receipt"></i></div>
+                    <div>
+                        <div class="text-muted small">Total Transaksi</div>
+                        <div class="fw-bold fs-5"><?= $total_transaksi ?></div>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
+
+        <!-- Transaksi Online -->
+        <div class="col-md-3 col-sm-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-body d-flex align-items-center">
+                    <div class="text-success card-icon me-3"><i class="bi bi-credit-card"></i></div>
+                    <div>
+                        <div class="text-muted small">Transaksi Online</div>
+                        <div class="fw-bold fs-5"><?= $total_online ?></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transaksi Tunai -->
+        <div class="col-md-3 col-sm-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-body d-flex align-items-center">
+                    <div class="text-warning card-icon me-3"><i class="bi bi-cash-stack"></i></div>
+                    <div>
+                        <div class="text-muted small">Transaksi Tunai</div>
+                        <div class="fw-bold fs-5"><?= $total_tunai ?></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Siswa -->
+        <div class="col-md-3 col-sm-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-body d-flex align-items-center">
+                    <div class="text-info card-icon me-3"><i class="bi bi-people"></i></div>
+                    <div>
+                        <div class="text-muted small">Total Siswa</div>
+                        <div class="fw-bold fs-5"><?= $total_siswa ?></div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
 </div>
 
 <?php include '../includes/footer.php'; ?>
