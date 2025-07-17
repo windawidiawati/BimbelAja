@@ -1,113 +1,130 @@
 <?php
-// Mulai session jika belum aktif
-if (session_status() === PHP_SESSION_NONE) {
-  session_start();
+session_start();
+include '../config/database.php';
+include '../includes/admin_header.php';
+
+if ($_SESSION['user']['role'] !== 'admin') {
+    header("Location: ../index.php");
+    exit;
 }
 
-// Cek apakah user adalah admin
-if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
-  header('Location: ../index.php');
-  exit;
-}
+// Data Summary
+$jumlah_admin     = mysqli_num_rows(mysqli_query($conn, "SELECT * FROM users WHERE role = 'admin'"));
+$jumlah_tutor     = mysqli_num_rows(mysqli_query($conn, "SELECT * FROM users WHERE role = 'tutor'"));
+$jumlah_siswa     = mysqli_num_rows(mysqli_query($conn, "SELECT * FROM users WHERE role = 'siswa'"));
+$jumlah_kasir     = mysqli_num_rows(mysqli_query($conn, "SELECT * FROM users WHERE role = 'kasir'"));
+$jumlah_paket     = mysqli_num_rows(mysqli_query($conn, "SELECT * FROM paket"));
+$jumlah_langganan = mysqli_num_rows(mysqli_query($conn, "SELECT * FROM langganan"));
 
-// Ambil nama file halaman sekarang
-$current_page = basename($_SERVER['SCRIPT_NAME']);
-$role = $_SESSION['user']['role'] ?? null;
+$pemasukan_query = mysqli_query($conn, "
+    SELECT SUM(p.harga) AS total
+    FROM langganan l
+    JOIN paket p ON l.paket = p.nama
+");
+$pemasukan = mysqli_fetch_assoc($pemasukan_query);
+$total_pemasukan = $pemasukan['total'] ?? 0;
 ?>
-<!DOCTYPE html>
-<html lang="id">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BimbelAja - Dashboard Admin</title>
 
-  <!-- Bootstrap CSS & Icons -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+<div class="content p-4">
+  <h4 class="fw-bold mb-4"><i class="bi bi-speedometer2 me-2"></i>Dashboard Admin</h4>
 
-  <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background-color: #f9f9f9;
-    }
-    .navbar-brand {
-      font-weight: bold;
-      font-size: 1.5rem;
-    }
-    .nav-link {
-      margin-left: 1rem;
-      transition: 0.3s;
-    }
-    .nav-link:hover {
-      opacity: 0.9;
-    }
-    .nav-link.active {
-      font-weight: bold;
-      border-bottom: 2px solid #ffc107;
-    }
-    .sidebar {
-      height: 100vh;
-      position: fixed;
-      top: 56px;
-      left: 0;
-      width: 250px;
-      background-color: #0d6efd;
-      padding-top: 20px;
-    }
-    .sidebar a {
-      color: white;
-      padding: 10px 20px;
-      display: block;
-      text-decoration: none;
-    }
-    .sidebar a:hover {
-      background-color: #0056b3;
-    }
-    .sidebar a.active {
-      background-color: #0056b3;
-    }
-    .content {
-      margin-left: 250px;
-      padding: 20px;
-    }
-  </style>
-</head>
-<body>
+  <div class="row g-4">
+    <!-- User Summary -->
+    <div class="col-md-3">
+      <div class="card border-0 shadow-sm h-100 bg-light">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="me-3 text-primary fs-2"><i class="bi bi-person-gear"></i></div>
+            <div>
+              <div class="text-muted">Total Admin</div>
+              <div class="fw-bold fs-5"><?= $jumlah_admin ?></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-0 shadow-sm h-100 bg-light">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="me-3 text-success fs-2"><i class="bi bi-person-check"></i></div>
+            <div>
+              <div class="text-muted">Total Tutor</div>
+              <div class="fw-bold fs-5"><?= $jumlah_tutor ?></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-0 shadow-sm h-100 bg-light">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="me-3 text-info fs-2"><i class="bi bi-person-lines-fill"></i></div>
+            <div>
+              <div class="text-muted">Total Siswa</div>
+              <div class="fw-bold fs-5"><?= $jumlah_siswa ?></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-0 shadow-sm h-100 bg-light">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="me-3 text-warning fs-2"><i class="bi bi-person-badge-fill"></i></div>
+            <div>
+              <div class="text-muted">Total Kasir</div>
+              <div class="fw-bold fs-5"><?= $jumlah_kasir ?></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
-<!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
-  <div class="container">
-    <a class="navbar-brand" href="/BimbelAja/index.php">
-      <i class="bi bi-mortarboard-fill me-2"></i>BimbelAja
-    </a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-
-    <div class="collapse navbar-collapse" id="navbarContent">
-      <ul class="navbar-nav ms-auto align-items-center">
-        <?php if ($role): ?>
-          <li class="nav-item">
-            <a class="nav-link text-white <?= ($current_page === 'dashboard.php') ? 'active' : '' ?>" href="/BimbelAja/<?= $role ?>/dashboard.php">
-              <i class="bi bi-speedometer2 me-1"></i>Dashboard
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link text-white <?= ($current_page === 'profil.php') ? 'active' : '' ?>" href="/BimbelAja/<?= $role ?>/profil.php">
-              <i class="bi bi-person-circle me-1"></i>Profil
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link text-white" href="/BimbelAja/auth/logout.php">
-              <i class="bi bi-box-arrow-right me-1"></i>Logout
-            </a>
-          </li>
-        <?php else: ?>
-          <!-- Untuk pengunjung belum login -->
-        <?php endif; ?>
-      </ul>
+    <!-- Paket dan Langganan -->
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm h-100 bg-primary text-white">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="me-3 fs-2"><i class="bi bi-box-seam"></i></div>
+            <div>
+              <div>Total Paket</div>
+              <div class="fw-bold fs-5"><?= $jumlah_paket ?></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm h-100 bg-success text-white">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="me-3 fs-2"><i class="bi bi-bag-check-fill"></i></div>
+            <div>
+              <div>Total Langganan</div>
+              <div class="fw-bold fs-5"><?= $jumlah_langganan ?></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm h-100 bg-warning text-dark">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="me-3 fs-2"><i class="bi bi-cash-stack"></i></div>
+            <div>
+              <div>Total Pemasukan</div>
+              <div class="fw-bold fs-5">Rp <?= number_format($total_pemasukan, 0, ',', '.') ?></div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
+
 </nav>
 
 <!-- Sidebar -->
@@ -160,3 +177,8 @@ $role = $_SESSION['user']['role'] ?? null;
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+
+</div>
+
+<?php include '../includes/admin_footer.php'; ?>
+
