@@ -4,13 +4,42 @@ include '../includes/auth.php';
 
 // Hanya kasir yang boleh akses
 if ($_SESSION['user']['role'] !== 'kasir') {
-  header('Location: ../index.php');
-  exit;
+    header("Location: ../index.php");
+    exit;
 }
 
-// Ambil data siswa dan paket
-$siswa_result = mysqli_query($conn, "SELECT * FROM users WHERE role='siswa'");
-$paket_result = mysqli_query($conn, "SELECT * FROM paket WHERE status='aktif'");
+$success = $error = '';
+$transaksi = null;
+
+// Proses verifikasi kode bayar
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $kode_bayar = trim($_POST['kode_bayar'] ?? '');
+
+    if (empty($kode_bayar)) {
+        $error = "Kode bayar wajib diisi!";
+    } else {
+        // Cari transaksi dengan status menunggu_kasir
+        $stmt = $conn->prepare("SELECT * FROM pembayaran WHERE kode_bayar = ? AND status = 'menunggu_kasir'");
+        $stmt->bind_param("s", $kode_bayar);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($result->num_rows > 0) {
+            $transaksi = $result->fetch_assoc();
+
+            // Update status menjadi lunas
+            $update = $conn->prepare("UPDATE pembayaran SET status='lunas' WHERE id = ?");
+            $update->bind_param("i", $transaksi['id']);
+            if ($update->execute()) {
+                $success = "Pembayaran berhasil diverifikasi!";
+            } else {
+                $error = "Gagal memperbarui status.";
+            }
+        } else {
+            $error = "Kode bayar tidak ditemukan atau sudah diverifikasi.";
+        }
+    }
+}
 ?>
 
 <?php include '../includes/header.php'; ?>
@@ -50,6 +79,14 @@ $paket_result = mysqli_query($conn, "SELECT * FROM paket WHERE status='aktif'");
         margin-left: 240px;
         padding: 20px;
     }
+    .card {
+        border-radius: 12px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    }
+    .btn-primary {
+        border-radius: 8px;
+        font-weight: bold;
+    }
 </style>
 
 <div class="sidebar">
@@ -63,41 +100,43 @@ $paket_result = mysqli_query($conn, "SELECT * FROM paket WHERE status='aktif'");
 </div>
 
 <div class="content">
-    <h4 class="fw-bold mb-4"><i class="bi bi-cash-coin me-2"></i>Checkout Pembayaran Tunai</h4>
-    <div class="card shadow border-0">
+    <h4 class="fw-bold mb-4"><i class="bi bi-cash-coin me-2"></i>Verifikasi Pembayaran Tunai</h4>
+
+    <?php if (!empty($error)): ?>
+        <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
+    <?php endif; ?>
+
+    <?php if (!empty($success)): ?>
+        <div class="alert alert-success"><?= htmlspecialchars($success) ?></div>
+    <?php endif; ?>
+
+    <!-- Form Input Kode Bayar -->
+    <div class="card mb-4">
         <div class="card-body">
-            <form action="proses_checkout.php" method="POST" class="needs-validation" novalidate>
+            <form method="POST">
                 <div class="mb-3">
-                    <label for="user_id" class="form-label">Nama Siswa</label>
-                    <select name="user_id" id="user_id" class="form-select" required>
-                        <option value="">-- Pilih Siswa --</option>
-                        <?php while ($siswa = mysqli_fetch_assoc($siswa_result)) : ?>
-                            <option value="<?= $siswa['id'] ?>"><?= $siswa['nama'] ?> (<?= $siswa['username'] ?>)</option>
-                        <?php endwhile; ?>
-                    </select>
+                    <label for="kode_bayar" class="form-label">Masukkan Kode Bayar</label>
+                    <input type="text" name="kode_bayar" id="kode_bayar" class="form-control" placeholder="Contoh: AB12345" required>
                 </div>
-
-                <div class="mb-4">
-                    <label for="paket_id" class="form-label">Paket Langganan</label>
-                    <select name="paket_id" id="paket_id" class="form-select" required>
-                        <option value="">-- Pilih Paket --</option>
-                        <?php while ($paket = mysqli_fetch_assoc($paket_result)) : ?>
-                            <option value="<?= $paket['id'] ?>">
-                                <?= $paket['nama'] ?> - Rp<?= number_format($paket['harga']) ?> /
-                                <?= $paket['durasi'] . ' ' . $paket['satuan_durasi'] ?>
-                            </option>
-                        <?php endwhile; ?>
-                    </select>
-                </div>
-
-                <div class="d-grid">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-save me-1"></i> Simpan Pembayaran
-                    </button>
-                </div>
+                <button type="submit" class="btn btn-primary w-100"><i class="bi bi-check-circle me-1"></i>Verifikasi</button>
             </form>
         </div>
     </div>
+
+    <!-- Jika transaksi ditemukan -->
+    <?php if ($transaksi): ?>
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <strong>Detail Transaksi</strong>
+            </div>
+            <div class="card-body">
+                <p><strong>Nama Paket:</strong> <?= htmlspecialchars($transaksi['paket']) ?></p>
+                <p><strong>Harga:</strong> Rp<?= number_format($transaksi['harga'], 0, ',', '.') ?></p>
+                <p><strong>Kode Bayar:</strong> <?= htmlspecialchars($transaksi['kode_bayar']) ?></p>
+                <p><strong>Status:</strong> <span class="badge bg-success">Lunas</span></p>
+            </div>
+        </div>
+    <?php endif; ?>
 </div>
 
 <?php include '../includes/footer.php'; ?>
