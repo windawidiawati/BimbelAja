@@ -15,9 +15,31 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
   </div>
 
   <?php if (isset($_GET['success'])): ?>
-    <div class="alert alert-success"><?= htmlspecialchars($_GET['success']) ?></div>
+    <div class="alert alert-success">
+      <?php 
+        $successMessages = [
+          'tambah' => 'Materi berhasil ditambahkan!',
+          'setujui' => 'Materi berhasil disetujui!',
+          'tolak' => 'Materi berhasil ditolak!',
+          'hapus' => 'Materi berhasil dihapus!'
+        ];
+        echo htmlspecialchars($successMessages[$_GET['success']] ?? 'Operasi berhasil!');
+      ?>
+    </div>
   <?php elseif (isset($_GET['error'])): ?>
-    <div class="alert alert-danger"><?= htmlspecialchars($_GET['error']) ?></div>
+    <div class="alert alert-danger">
+      <?php 
+        $errorMessages = [
+          'tambah' => 'Gagal menambahkan materi. Silakan coba lagi.',
+          'setujui' => 'Gagal menyetujui materi. Silakan coba lagi.',
+          'tolak' => 'Gagal menolak materi. Silakan coba lagi.',
+          'hapus' => 'Gagal menghapus materi. Silakan coba lagi.',
+          'file' => 'Format file tidak valid. Hanya PDF dan video yang diperbolehkan.',
+          'ukuran' => 'Ukuran file terlalu besar. Maksimal 10MB.'
+        ];
+        echo htmlspecialchars($errorMessages[$_GET['error']] ?? 'Terjadi kesalahan. Silakan coba lagi.');
+      ?>
+    </div>
   <?php endif; ?>
 
   <div class="table-responsive">
@@ -59,22 +81,22 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
           <td><?= ucfirst($row['tipe_file']) ?></td>
           <td>
             <span class="badge 
-              <?= $row['status'] == 'diterima' ? 'bg-success' : ($row['status'] == 'ditolak' ? 'bg-danger' : 'bg-warning text-dark') ?>">
+              <?= $row['status'] == 'disetujui' ? 'bg-success' : ($row['status'] == 'ditolak' ? 'bg-danger' : 'bg-warning text-dark') ?>">
               <?= ucfirst($row['status']) ?>
             </span>
           </td>
           <td>
             <form action="proses_materi.php" method="POST" class="d-inline">
               <input type="hidden" name="id" value="<?= $row['id'] ?>">
-              <button name="setujui" class="btn btn-success btn-sm" onclick="return confirm('Setujui materi ini?')">✔</button>
+              <button name="setujui" class="btn btn-success btn-sm" onclick="return confirm('Apakah Anda yakin ingin menyetujui materi ini?')">✔</button>
             </form>
             <form action="proses_materi.php" method="POST" class="d-inline">
               <input type="hidden" name="id" value="<?= $row['id'] ?>">
-              <button name="tolak" class="btn btn-danger btn-sm" onclick="return confirm('Tolak materi ini?')">✖</button>
+              <button name="tolak" class="btn btn-danger btn-sm" onclick="return confirm('Apakah Anda yakin ingin menolak materi ini?')">✖</button>
             </form>
             <form action="proses_materi.php" method="POST" class="d-inline">
               <input type="hidden" name="id" value="<?= $row['id'] ?>">
-              <button name="hapus" class="btn btn-secondary btn-sm" onclick="return confirm('Hapus materi ini?')">🗑</button>
+              <button name="hapus" class="btn btn-secondary btn-sm" onclick="return confirm('Apakah Anda yakin ingin menghapus materi ini?')">🗑</button>
             </form>
           </td>
         </tr>
@@ -130,6 +152,7 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
         <div class="mb-3">
           <label>File Materi (PDF/Video)</label>
           <input type="file" name="file" class="form-control" accept=".pdf,.mp4,.mkv,.avi,.mov" required>
+          <small class="text-muted">Format file yang diperbolehkan: PDF, MP4, MKV, AVI, MOV. Maksimal ukuran: 10MB</small>
         </div>
       </div>
       <div class="modal-footer">
