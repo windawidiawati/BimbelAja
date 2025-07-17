@@ -1,201 +1,166 @@
 <?php
-// Mulai session jika belum aktif
 session_start();
+include '../config/database.php';
+include '../includes/admin_header.php';
 
-// Cek apakah user adalah admin
 if ($_SESSION['user']['role'] !== 'admin') {
-    header('Location: ../index.php'); 
-    exit;
+  exit;
 }
 
-// Koneksi ke database
-include '../config/database.php';
-
-// Ambil data pembayaran 
+// Ambil data pembayaran + user
 $query = "SELECT p.*, u.username, u.nama 
           FROM pembayaran p 
           JOIN users u ON p.user_id = u.id 
           ORDER BY p.tanggal DESC";
 $result = $conn->query($query);
 
-// Menangani aksi hapus
+// Proses hapus pembayaran
 if (isset($_GET['action']) && $_GET['action'] == 'delete' && isset($_GET['id'])) {
     $id = $_GET['id'];
-    $deleteQuery = "DELETE FROM pembayaran WHERE id = ?";
-    $stmt = $conn->prepare($deleteQuery);
+    $stmt = $conn->prepare("DELETE FROM pembayaran WHERE id = ?");
     $stmt->bind_param("i", $id);
     $stmt->execute();
     $stmt->close();
-    header("Location: verifikasi_pembayaran.php"); // Redirect setelah hapus
+    header("Location: verifikasi_pembayaran.php");
     exit;
 }
 
-// Menangani aksi edit status
+// Proses update data pembayaran
 if (isset($_POST['edit_status']) && isset($_POST['id'])) {
     $id = $_POST['id'];
     $status = $_POST['status'];
-    $updateQuery = "UPDATE pembayaran SET status = ? WHERE id = ?";
-    $stmt = $conn->prepare($updateQuery);
-    $stmt->bind_param("si", $status, $id);
+    $paket = $_POST['paket'];
+    $harga = str_replace(['.', 'Rp', ' '], '', $_POST['harga']); // normalisasi angka
+
+    $stmt = $conn->prepare("UPDATE pembayaran SET paket = ?, harga = ?, status = ? WHERE id = ?");
+    $stmt->bind_param("sisi", $paket, $harga, $status, $id);
     $stmt->execute();
     $stmt->close();
-    header("Location: data_verifikasi.php"); // Redirect setelah edit
+    header("Location: verifikasi_pembayaran.php");
     exit;
 }
 ?>
 
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verifikasi Pembayaran - BimbelAja</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Segoe UI', sans-serif;
-            background-color: #f9f9f9;
-        }
-        .sidebar {
-            height: 100vh;
-            position: fixed;
-            top: 56px;
-            left: 0;
-            width: 250px;
-            background-color: #0d6efd;
-            padding-top: 20px;
-        }
-        .sidebar a {
-            color: white;
-        }
-        .sidebar a:hover {
-            background-color: #0056b3;
-        }
-        .content {
-            margin-left: 250px;
-            padding: 20px;
-        }
-        .status-lunas {
-            color: green;
-            font-weight: bold;
-        }
-        .status-ditolak {
-            color: red;
-            font-weight: bold;
-        }
-        .status-pending {
-            color: orange;
-            font-weight: bold;
-        }
-    </style>
-</head>
-<body>
-
-<!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
-    <div class="container">
-        <a class="navbar-brand" href="../index.php">
-            <i class="bi bi-mortarboard-fill me-2"></i>BimbelAja
-        </a>
-    </div>
-</nav>
-
-<!-- Sidebar -->
-<div class="sidebar">
-    <h5 class="text-white text-center">Admin Panel</h5>
-    <ul class="nav flex-column">
-        <li class="nav-item">
-            <a class="nav-link" href="dashboard.php">
-                <i class="bi bi-speedometer2"></i> Dashboard
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="kelola_materi.php">
-                <i class="bi bi-file-earmark-text"></i> Kelola Materi
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="kelola_user.php">
-                <i class="bi bi-person"></i> Kelola User
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="statistik.php">
-                <i class="bi bi-bar-chart"></i> Statistik
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link active" href="verifikasi_pembayaran.php">
-                <i class="bi bi-credit-card"></i> Verifikasi Pembayaran
-            </a>
-        </li>
-    </ul>
-</div>
-
-<!-- Konten Utama -->
 <div class="content">
-    <div class="card shadow">
-        <div class="card-header bg-white">
-            <h3 class="card-title mb-0">
-                <i class="bi bi-credit-card me-2"></i> Data Verifikasi Pembayaran
-            </h3>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-striped table-hover">
-                    <thead class="table-light">
-                        <tr>
-                            <th>ID</th>
-                            <th>Nama Siswa</th>
-                            <th>Username</th>
-                            <th>Paket</th>
-                            <th>Harga</th>
-                            <th>Status</th>
-                            <th>Tanggal</th>
-                            <th>Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php if ($result && $result->num_rows > 0): ?>
-                            <?php while ($row = $result->fetch_assoc()): ?>
-                                <tr>
-                                    <td><?= htmlspecialchars($row['id']) ?></td>
-                                    <td><?= htmlspecialchars($row['nama']) ?></td>
-                                    <td><?= htmlspecialchars($row['username']) ?></td>
-                                    <td><?= htmlspecialchars($row['paket']) ?></td>
-                                    <td>Rp <?= number_format($row['harga'], 0, ',', '.') ?></td>
-                                    <td class="status-<?= $row['status'] ?>">
-                                        <?= strtoupper($row['status']) ?>
-                                    </td>
-                                    <td><?= date('d M Y H:i', strtotime($row['tanggal'])) ?></td>
-                                    <td>
-                                        <form action="" method="POST" style="display:inline;">
-                                            <input type="hidden" name="id" value="<?= $row['id'] ?>">
-                                            <select name="status" required>
-                                                <option value="pending" <?= $row['status'] == 'pending' ? 'selected' : '' ?>>Pending</option>
-                                                <option value="lunas" <?= $row['status'] == 'lunas' ? 'selected' : '' ?>>Lunas</option>
-                                                <option value="ditolak" <?= $row['status'] == 'ditolak' ? 'selected' : '' ?>>Ditolak</option>
-                                            </select>
-                                            <button type="submit" name="edit_status" class="btn btn-sm btn-primary">Edit</button>
-                                        </form>
-                                        <a href="?action=delete&id=<?= $row['id'] ?>" onclick="return confirm('Yakin ingin menghapus pembayaran ini?')" class="btn btn-sm btn-danger">Hapus</a>
-                                    </td>
-                                </tr>
-                            <?php endwhile; ?>
-                        <?php else: ?>
-                            <tr>
-                                <td colspan="8" class="text-center">Tidak ada data pembayaran</td>
-                            </tr>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+  <div class="card shadow">
+    <div class="card-header bg-white">
+      <h3 class="card-title mb-0"><i class="bi bi-credit-card me-2"></i> Data Verifikasi Pembayaran</h3>
     </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-striped table-hover">
+          <thead class="table-light">
+            <tr>
+              <th>ID</th>
+              <th>Nama</th>
+              <th>Username</th>
+              <th>Paket</th>
+              <th>Harga</th>
+              <th>Status</th>
+              <th>Tanggal</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody>
+            <?php if ($result && $result->num_rows > 0): ?>
+              <?php while ($row = $result->fetch_assoc()): ?>
+                <tr>
+                  <td><?= $row['id'] ?></td>
+                  <td><?= htmlspecialchars($row['nama']) ?></td>
+                  <td><?= htmlspecialchars($row['username']) ?></td>
+                  <td><?= htmlspecialchars($row['paket']) ?></td>
+                  <td>Rp <?= number_format($row['harga'], 0, ',', '.') ?></td>
+                  <td class="status-<?= $row['status'] ?>"><?= strtoupper($row['status']) ?></td>
+                  <td><?= date('d M Y H:i', strtotime($row['tanggal'])) ?></td>
+                  <td>
+                    <button class="btn btn-sm btn-primary btn-edit"
+                      data-id="<?= $row['id'] ?>"
+                      data-nama="<?= htmlspecialchars($row['nama']) ?>"
+                      data-username="<?= htmlspecialchars($row['username']) ?>"
+                      data-paket="<?= htmlspecialchars($row['paket']) ?>"
+                      data-harga="<?= number_format($row['harga'], 0, ',', '.') ?>"
+                      data-status="<?= $row['status'] ?>"
+                      data-bs-toggle="modal"
+                      data-bs-target="#editModal">
+                      Edit
+                    </button>
+                    <a href="?action=delete&id=<?= $row['id'] ?>"
+                       onclick="return confirm('Yakin ingin menghapus pembayaran ini?')"
+                       class="btn btn-sm btn-danger">Hapus</a>
+                  </td>
+                </tr>
+              <?php endwhile; ?>
+            <?php else: ?>
+              <tr><td colspan="8" class="text-center">Tidak ada data pembayaran</td></tr>
+            <?php endif; ?>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 </div>
 
-<!-- Bootstrap JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+<!-- Modal Edit -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="POST" class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editModalLabel">Edit Data Pembayaran</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" name="id" id="edit-id">
+        <div class="mb-3">
+          <label for="edit-nama" class="form-label">Nama</label>
+          <input type="text" id="edit-nama" class="form-control" readonly>
+        </div>
+        <div class="mb-3">
+          <label for="edit-username" class="form-label">Username</label>
+          <input type="text" id="edit-username" class="form-control" readonly>
+        </div>
+        <div class="mb-3">
+          <label for="edit-paket" class="form-label">Paket</label>
+          <input type="text" name="paket" id="edit-paket" class="form-control" required>
+        </div>
+        <div class="mb-3">
+          <label for="edit-harga" class="form-label">Harga (Rp)</label>
+          <input type="text" name="harga" id="edit-harga" class="form-control" required>
+        </div>
+        <div class="mb-3">
+          <label for="edit-status" class="form-label">Status</label>
+          <select name="status" id="edit-status" class="form-select" required>
+            <option value="pending">Pending</option>
+            <option value="lunas">Lunas</option>
+            <option value="ditolak">Ditolak</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="submit" name="edit_status" class="btn btn-primary">Simpan Perubahan</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll('.btn-edit').forEach(button => {
+    button.addEventListener('click', () => {
+      const id = button.dataset.id;
+      const nama = button.dataset.nama;
+      const username = button.dataset.username;
+      const paket = button.dataset.paket;
+      const harga = button.dataset.harga;
+      const status = button.dataset.status;
+
+      document.getElementById('edit-id').value = id;
+      document.getElementById('edit-nama').value = nama;
+      document.getElementById('edit-username').value = username;
+      document.getElementById('edit-paket').value = paket;
+      document.getElementById('edit-harga').value = harga;
+      document.getElementById('edit-status').value = status;
+    });
+  });
+</script>
+
+<?php include '../includes/admin_footer.php'; ?>

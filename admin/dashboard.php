@@ -124,61 +124,6 @@ $total_pemasukan = $pemasukan['total'] ?? 0;
       </div>
     </div>
   </div>
-
-</nav>
-
-<!-- Sidebar -->
-<div class="sidebar">
-  <h5 class="text-white text-center">Admin Panel</h5>
-  <ul class="nav flex-column">
-    <li class="nav-item">
-      <a class="nav-link <?= ($current_page === 'dashboard.php') ? 'active' : '' ?>" href="dashboard.php">
-        <i class="bi bi-speedometer2"></i> Dashboard
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link <?= ($current_page === 'kelola_materi.php') ? 'active' : '' ?>" href="kelola_materi.php">
-        <i class="bi bi-file-earmark-text"></i> Kelola Materi
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link <?= ($current_page === 'kelola_user.php') ? 'active' : '' ?>" href="kelola_user.php">
-        <i class="bi bi-person"></i> Kelola User
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link <?= ($current_page === 'statistik.php') ? 'active' : '' ?>" href="statistik.php">
-        <i class="bi bi-bar-chart"></i> Statistik
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link <?= ($current_page === 'verifikasi_pembayaran.php') ? 'active' : '' ?>" href="verifikasi_pembayaran.php">
-        <i class="bi bi-credit-card"></i> Verifikasi Pembayaran
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link <?= ($current_page === 'chekout.php') ? 'active' : '' ?>" href="/BimbelAja/langganan/paket.php">
-        <i class="bi bi-people me-1"></i>Pelanggan
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link <?= ($current_page === 'chekout.php') ? 'active' : '' ?>" href="kelola_paket.php">
-        <i class="bi bi-people me-1"></i>Kelola Paket
-      </a>
-    </li>
-  </ul>
-
-</div>
-
-<!-- Konten -->
-
-
-<!-- Bootstrap JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
-
 </div>
 
 <?php include '../includes/admin_footer.php'; ?>
-
