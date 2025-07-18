@@ -30,49 +30,18 @@ $paket = mysqli_fetch_assoc($query);
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 <style>
-    body {
-        background: #f8f9fa;
-        font-family: 'Segoe UI', sans-serif;
-    }
-    .card-custom {
-        max-width: 700px;
-        margin: auto;
-        border-radius: 16px;
-        box-shadow: 0 8px 20px rgba(0,0,0,0.08);
-        background: #fff;
-    }
-    .card-header {
-        background: linear-gradient(90deg, #0d6efd, #6610f2);
-        color: #fff;
-        font-size: 1.3rem;
-        font-weight: bold;
-        text-align: center;
-        border-radius: 16px 16px 0 0;
-        padding: 15px;
-    }
-    .btn-success {
-        border-radius: 10px;
-        font-weight: 600;
-        transition: 0.3s;
-    }
-    .btn-success:hover {
-        background: #198754;
-        transform: scale(1.03);
-    }
-    .info-box {
-        background: #eef3ff;
-        padding: 15px;
-        border-radius: 10px;
-        margin-bottom: 20px;
-    }
+    body { background: #f8f9fa; font-family: 'Segoe UI', sans-serif; }
+    .card-custom { max-width: 700px; margin: auto; border-radius: 16px; box-shadow: 0 8px 20px rgba(0,0,0,0.08); background: #fff; }
+    .card-header { background: linear-gradient(90deg, #0d6efd, #6610f2); color: #fff; font-size: 1.3rem; font-weight: bold; text-align: center; border-radius: 16px 16px 0 0; padding: 15px; }
+    .btn-success { border-radius: 10px; font-weight: 600; transition: 0.3s; }
+    .btn-success:hover { background: #198754; transform: scale(1.03); }
+    .info-box { background: #eef3ff; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
 </style>
 </head>
 <body>
 <div class="container py-5">
     <div class="card card-custom">
-        <div class="card-header">
-            <i class="bi bi-cart-check me-2"></i> Checkout Paket
-        </div>
+        <div class="card-header"><i class="bi bi-cart-check me-2"></i> Checkout Paket</div>
         <div class="card-body p-4">
             <div class="info-box">
                 <h5 class="fw-bold mb-3"><?= htmlspecialchars($paket['nama']) ?></h5>
@@ -85,6 +54,7 @@ $paket = mysqli_fetch_assoc($query);
 
             <form action="metode_pembayaran.php" method="post">
                 <input type="hidden" name="paket_id" value="<?= htmlspecialchars($paket['id']) ?>">
+                <input type="hidden" name="user_id" value="<?= htmlspecialchars($_SESSION['user']['id']) ?>">
                 <button type="submit" class="btn btn-success w-100">
                     <i class="bi bi-credit-card me-1"></i> Lanjut Pilih Metode Pembayaran
                 </button>

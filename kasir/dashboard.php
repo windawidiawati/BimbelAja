@@ -1,130 +1,82 @@
 <?php
-include '../includes/auth.php';
-include '../config/database.php';
-
-// Cek role kasir
-if ($_SESSION['user']['role'] !== 'kasir') {
-    header('Location: ../index.php');
-    exit;
-}
-
-// Ambil data summary
-$total_transaksi = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) AS total FROM pembayaran"))['total'] ?? 0;
-$total_online = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) AS total FROM pembayaran WHERE metode='transfer'"))['total'] ?? 0;
-$total_tunai = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) AS total FROM pembayaran WHERE metode='tunai'"))['total'] ?? 0;
-$total_siswa = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) AS total FROM users WHERE role='siswa'"))['total'] ?? 0;
-
-include '../includes/header.php';
+include '../includes/kasir_header.php';
 ?>
 
-<style>
-    body {
-        font-family: 'Segoe UI', sans-serif;
-        background-color: #f8f9fa;
-    }
-    .sidebar {
-        width: 240px;
-        background-color: #0d6efd;
-        position: fixed;
-        top: 0;
-        bottom: 0;
-        left: 0;
-        padding-top: 20px;
-    }
-    .sidebar a {
-        color: white;
-        display: block;
-        padding: 12px 20px;
-        text-decoration: none;
-        font-size: 16px;
-    }
-    .sidebar a:hover {
-        background-color: #0b5ed7;
-    }
-    .sidebar .logo {
-        text-align: center;
-        margin-bottom: 30px;
-        color: white;
-        font-size: 20px;
-        font-weight: bold;
-    }
-    .content {
-        margin-left: 240px;
-        padding: 20px;
-    }
-    .card-icon {
-        font-size: 2rem;
-    }
-</style>
+<h4 class="fw-bold mb-4"><i class="bi bi-speedometer2 me-2"></i>Dashboard Kasir</h4>
 
-<div class="sidebar">
-    <div class="logo">
-        <i class="bi bi-cash-coin me-2"></i>BimbelAja
+<div class="row g-4">
+    <!-- Card 1: Total Transaksi -->
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-body text-center">
+                <i class="bi bi-receipt-cutoff display-5 text-primary mb-3"></i>
+                <h5 class="fw-bold">Total Transaksi</h5>
+                <p class="fs-4 text-dark">120</p>
+            </div>
+        </div>
     </div>
-    <a href="dashboard.php"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a>
-    <a href="checkout_tunai.php"><i class="bi bi-cash-stack me-2"></i>Checkout Tunai</a>
-    <a href="data_siswa.php"><i class="bi bi-people me-2"></i>Data Siswa</a>
-    <a href="transaksi.php"><i class="bi bi-receipt-cutoff me-2"></i>Transaksi</a>
-    <a href="profil.php"><i class="bi bi-person-circle me-2"></i>Profil</a>
-</div>
 
-<div class="content">
-    <h4 class="fw-bold mb-4"><i class="bi bi-speedometer2 me-2"></i>Dashboard Kasir</h4>
-    <p>Selamat datang, <b><?= $_SESSION['user']['username']; ?></b>! Semangat bekerja hari ini 😊</p>
-
-    <div class="row g-4 mt-3">
-        <!-- Total Transaksi -->
-        <div class="col-md-3 col-sm-6">
-            <div class="card shadow-sm border-0">
-                <div class="card-body d-flex align-items-center">
-                    <div class="text-primary card-icon me-3"><i class="bi bi-receipt"></i></div>
-                    <div>
-                        <div class="text-muted small">Total Transaksi</div>
-                        <div class="fw-bold fs-5"><?= $total_transaksi ?></div>
-                    </div>
-                </div>
+    <!-- Card 2: Pending -->
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-body text-center">
+                <i class="bi bi-hourglass-split display-5 text-warning mb-3"></i>
+                <h5 class="fw-bold">Menunggu Verifikasi</h5>
+                <p class="fs-4 text-dark">8</p>
             </div>
         </div>
+    </div>
 
-        <!-- Transaksi Online -->
-        <div class="col-md-3 col-sm-6">
-            <div class="card shadow-sm border-0">
-                <div class="card-body d-flex align-items-center">
-                    <div class="text-success card-icon me-3"><i class="bi bi-credit-card"></i></div>
-                    <div>
-                        <div class="text-muted small">Transaksi Online</div>
-                        <div class="fw-bold fs-5"><?= $total_online ?></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Transaksi Tunai -->
-        <div class="col-md-3 col-sm-6">
-            <div class="card shadow-sm border-0">
-                <div class="card-body d-flex align-items-center">
-                    <div class="text-warning card-icon me-3"><i class="bi bi-cash-stack"></i></div>
-                    <div>
-                        <div class="text-muted small">Transaksi Tunai</div>
-                        <div class="fw-bold fs-5"><?= $total_tunai ?></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Total Siswa -->
-        <div class="col-md-3 col-sm-6">
-            <div class="card shadow-sm border-0">
-                <div class="card-body d-flex align-items-center">
-                    <div class="text-info card-icon me-3"><i class="bi bi-people"></i></div>
-                    <div>
-                        <div class="text-muted small">Total Siswa</div>
-                        <div class="fw-bold fs-5"><?= $total_siswa ?></div>
-                    </div>
-                </div>
+    <!-- Card 3: Siswa Terdaftar -->
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-body text-center">
+                <i class="bi bi-people display-5 text-success mb-3"></i>
+                <h5 class="fw-bold">Siswa Terdaftar</h5>
+                <p class="fs-4 text-dark">56</p>
             </div>
         </div>
     </div>
 </div>
 
-<?php include '../includes/footer.php'; ?>
+<hr class="my-4">
+
+<!-- Tabel Transaksi Terbaru -->
+<div class="card shadow-sm border-0">
+    <div class="card-header bg-primary text-white">
+        <h6 class="mb-0"><i class="bi bi-clock-history me-2"></i>Transaksi Terbaru</h6>
+    </div>
+    <div class="card-body">
+        <table class="table table-striped text-center">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Nama Siswa</th>
+                    <th>Paket</th>
+                    <th>Harga</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1</td>
+                    <td>Ani</td>
+                    <td>Paket 3 Bulan</td>
+                    <td>Rp 500.000</td>
+                    <td><span class="badge bg-success">Lunas</span></td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>Budi</td>
+                    <td>Paket 1 Bulan</td>
+                    <td>Rp 200.000</td>
+                    <td><span class="badge bg-warning text-dark">Pending</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<?php
+include '../includes/kasir_footer.php';
+?>

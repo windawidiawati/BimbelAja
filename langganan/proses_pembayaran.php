@@ -31,14 +31,13 @@ $tanggal = date('Y-m-d H:i:s');
 $kode_unik = null;
 $bukti_transfer = null;
 
-// Logika untuk metode pembayaran
+// Tentukan status & kode unik
 if ($metode === 'tunai') {
     $status = 'menunggu_kasir';
-    $kode_unik = 'TUNAI' . rand(100000, 999999); // Kode unik hanya untuk tunai
+    $kode_unik = 'TUNAI' . rand(100000, 999999);
 } else {
     $status = 'pending';
 
-    // Proses upload bukti transfer
     if (isset($_FILES['bukti_transfer']) && $_FILES['bukti_transfer']['error'] === UPLOAD_ERR_OK) {
         $target_dir = "../uploads/bukti_transfer/";
         if (!is_dir($target_dir)) mkdir($target_dir, 0777, true);
@@ -49,31 +48,23 @@ if ($metode === 'tunai') {
 
         if (move_uploaded_file($_FILES['bukti_transfer']['tmp_name'], $target_file)) {
             $bukti_transfer = $filename;
-        } else {
-            echo "Gagal mengunggah bukti transfer.";
-            exit;
         }
     }
 }
 
-// Simpan transaksi ke database
 $stmt = $conn->prepare("INSERT INTO pembayaran (user_id, paket, harga, metode, kode_unik, status, tanggal, bukti_transfer) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
 $stmt->bind_param("isisssss", $user_id, $nama_paket, $harga, $metode, $kode_unik, $status, $tanggal, $bukti_transfer);
 
 if ($stmt->execute()) {
-    // Jika tunai, tampilkan kode unik untuk siswa
     if ($metode === 'tunai') {
-        echo "<div style='text-align:center; font-family:Arial; margin-top:50px;'>
+        echo "<div style='text-align:center; margin-top:50px;'>
                 <h2>Pembayaran Tunai</h2>
-                <p>Berikan kode berikut ke kasir untuk verifikasi pembayaran:</p>
+                <p>Tunjukkan kode ini ke kasir:</p>
                 <h1 style='color:green;'>$kode_unik</h1>
-                <a href='/BimbelAja/langganan/riwayat.php' style='display:inline-block;margin-top:20px;padding:10px 20px;background:#28a745;color:white;text-decoration:none;border-radius:5px;'>Lihat Riwayat</a>
+                <a href='/BimbelAja/langganan/riwayat.php' class='btn btn-success mt-3'>Lihat Riwayat</a>
               </div>";
-        exit;
     } else {
-        // Jika transfer, redirect ke riwayat
         header("Location: /BimbelAja/langganan/riwayat.php");
-        exit;
     }
 } else {
     echo "Gagal menyimpan pembayaran.";
