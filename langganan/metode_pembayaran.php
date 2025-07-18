@@ -6,6 +6,7 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'siswa') {
 }
 
 include_once __DIR__ . '/../config/database.php';
+include '../includes/header.php';
 
 $user_id = $_SESSION['user']['id'];
 $paket_id = $_POST['paket_id'] ?? $_GET['paket_id'] ?? null;
@@ -128,3 +129,5 @@ document.getElementById('metode').addEventListener('change', function() {
 </script>
 </body>
 </html>
+<?php
+include '../includes/footer.php';

@@ -6,6 +6,7 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'siswa') {
 }
 
 include_once __DIR__ . '/../config/database.php';
+include '../includes/header.php';
 
 $paket_id = $_GET['paket_id'] ?? null;
 if (!$paket_id || !is_numeric($paket_id)) {
@@ -94,3 +95,4 @@ $paket = mysqli_fetch_assoc($query);
 </div>
 </body>
 </html>
+<? include '../includes/footer.php';
