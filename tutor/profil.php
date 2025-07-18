@@ -3,44 +3,52 @@ include '../includes/auth.php';
 include '../includes/header.php';
 include '../config/database.php';
 
-// Cek role tutor
+// Pastikan hanya tutor yang bisa akses
 if ($_SESSION['user']['role'] !== 'tutor') {
-  header('Location: ../index.php');
-  exit;
+    header('Location: ../index.php');
+    exit;
 }
 
-$tutor_id = $_SESSION['user']['id'];
+// Ambil ID user dari session
+$user_id = $_SESSION['user']['id'];
 
-// Ambil data tutor
-$query = "SELECT username FROM users WHERE id = $tutor_id";
-$result = mysqli_query($conn, $query);
-$tutor = mysqli_fetch_assoc($result);
+// Ambil data user dari database
+$query = mysqli_query($conn, "SELECT * FROM users WHERE id = '$user_id'");
+$user = mysqli_fetch_assoc($query);
 ?>
 
-<div class="container py-5">
-  <div class="row justify-content-center">
-    <div class="col-md-6">
-      <div class="card shadow-lg border-0 rounded-4">
-        <div class="card-body p-5 text-center">
-          <img src="https://ui-avatars.com/api/?name=Nur+Apriliyani&background=0D8ABC&color=fff&size=128" 
-               class="rounded-circle mb-4 shadow-sm" 
-               alt="Foto Profil" width="120" height="120">
-
-          <h4 class="fw-bold mb-2">Nur Apriliyani</h4>
-          <p class="text-muted mb-4">Tutor di Bimbel Online</p>
-
-          <div class="d-grid gap-2">
-            <a href="ubah_password.php" class="btn btn-outline-primary">
-              <i class="bi bi-key"></i> Ubah Password
-            </a>
-            <a href="../includes/logout.php" class="btn btn-danger">
-              <i class="bi bi-box-arrow-right"></i> Keluar
-            </a>
-          </div>
+<div class="container mt-4">
+    <div class="card" style="max-width: 500px; margin: 0 auto;">
+        <div class="card-body">
+            <h4 class="card-title">Profil Tutor</h4>
+            <hr>
+            <table class="table">
+                <tr>
+                    <th>Nama</th>
+                    <td><?php echo htmlspecialchars($user['nama']); ?></td>
+                </tr>
+                <tr>
+                    <th>Username</th>
+                    <td><?php echo htmlspecialchars($user['username']); ?></td>
+                </tr>
+                <tr>
+                    <th>Keahlian</th>
+                    <td><?php echo htmlspecialchars($user['keahlian'] ?? '-'); ?></td>
+                </tr>
+                <tr>
+                    <th>Kelas</th>
+                    <td><?php echo htmlspecialchars($user['kelas'] ?? '-'); ?></td>
+                </tr>
+                <tr>
+                    <th>Jenjang</th>
+                    <td><?php echo htmlspecialchars($user['jenjang'] ?? '-'); ?></td>
+                </tr>
+                <tr>
+                    <th>Role</th>
+                    <td><?php echo ucfirst($user['role']); ?></td>
+                </tr>
+            </table>
+            <a href="edit_profil.php" class="btn btn-primary">Edit Profil</a>
         </div>
-      </div>
     </div>
-  </div>
 </div>
-
-<?php include '../includes/footer.php'; ?>
