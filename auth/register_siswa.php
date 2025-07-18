@@ -94,9 +94,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <script>
 const kelasOptions = {
-  SD: ['Kelas 1', 'Kelas 2', 'Kelas 3', 'Kelas 4', 'Kelas 5', 'Kelas 6'],
-  SMP: ['Kelas 7', 'Kelas 8', 'Kelas 9'],
-  SMA: ['Kelas 10', 'Kelas 11', 'Kelas 12']
+  SD: ['1', '2', '3', '4', '5', '6'],
+  SMP: ['7', '8', '9'],
+  SMA: ['10', '11', '12']
 };
 
 document.getElementById('jenjang').addEventListener('change', function () {
@@ -107,14 +107,14 @@ document.getElementById('jenjang').addEventListener('change', function () {
   if (kelasOptions[jenjang]) {
     kelasOptions[jenjang].forEach(function (kelas) {
       const option = document.createElement('option');
-      option.value = kelas;
-      option.textContent = kelas;
+      option.value = kelas; // VALUE = angka (7,8,9)
+      option.textContent = "Kelas " + kelas; // TAMPILAN = Kelas 7
       kelasSelect.appendChild(option);
     });
   }
 });
 
-// Saat reload, isi kelas kembali jika user submit gagal
+// Saat reload, isi kembali jika ada error
 window.addEventListener('DOMContentLoaded', () => {
   const currentJenjang = '<?= $jenjang ?>';
   const currentKelas = '<?= $kelas ?>';
@@ -123,7 +123,7 @@ window.addEventListener('DOMContentLoaded', () => {
     kelasOptions[currentJenjang].forEach(k => {
       const option = document.createElement('option');
       option.value = k;
-      option.textContent = k;
+      option.textContent = "Kelas " + k;
       if (k === currentKelas) option.selected = true;
       kelasSelect.appendChild(option);
     });

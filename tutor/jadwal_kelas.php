@@ -88,7 +88,53 @@ $jadwal_result = mysqli_query($conn, "
 ");
 ?>
 
-<div class="container py-5">
+<style>
+.sidebar {
+    width: 240px;
+    background: #0d6efd;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    padding-top: 20px;
+}
+.sidebar a {
+    color: white;
+    display: block;
+    padding: 12px 20px;
+    text-decoration: none;
+}
+.sidebar a:hover {
+    background: #0b5ed7;
+}
+.sidebar .logo {
+    text-align: center;
+    color: #fff;
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 30px;
+}
+.content {
+    margin-left: 240px;
+    padding: 20px;
+}
+.active {
+    background-color: #0b5ed7;
+}
+</style>
+
+<div class="sidebar">
+    <div class="logo">BimbelAja</div>
+    <a href="dashboard.php"><i class="bi bi-speedometer2"></i> Dashboard</a>
+    <a href="unggah_materi.php"><i class="bi bi-upload"></i> Unggah Materi</a>
+    <a href="buat_soal.php"><i class="bi bi-pencil-square"></i> Buat Soal</a>
+    <a href="jadwal_kelas.php" class="active"><i class="bi bi-calendar-event"></i> Jadwal Kelas</a>
+    <a href="forum.php"><i class="bi bi-chat-dots"></i> Forum</a>
+    <a href="data_siswa.php"><i class="bi bi-people"></i> Data Siswa</a>
+</div>
+
+<div class="content">
+<div class="container py-4">
   <h3 class="mb-4"><?= $edit_id ? 'Edit Jadwal Kelas' : 'Tambah Jadwal Kelas Online' ?></h3>
 
   <?php if ($success): ?>
@@ -188,6 +234,7 @@ $jadwal_result = mysqli_query($conn, "
       <?php endwhile; ?>
     </tbody>
   </table>
+</div>
 </div>
 
 <?php include '../includes/footer.php'; ?>
