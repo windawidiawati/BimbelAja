@@ -11,16 +11,16 @@ if ($_SESSION['user']['role'] !== 'kasir') {
 $success = $error = '';
 $transaksi = null;
 
-// Proses verifikasi kode bayar
+// Proses verifikasi kode unik
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $kode_bayar = trim($_POST['kode_bayar'] ?? '');
+    $kode_unik = trim($_POST['kode_unik'] ?? '');
 
-    if (empty($kode_bayar)) {
-        $error = "Kode bayar wajib diisi!";
+    if (empty($kode_unik)) {
+        $error = "Kode unik wajib diisi!";
     } else {
         // Cari transaksi dengan status menunggu_kasir
-        $stmt = $conn->prepare("SELECT * FROM pembayaran WHERE kode_bayar = ? AND status = 'menunggu_kasir'");
-        $stmt->bind_param("s", $kode_bayar);
+        $stmt = $conn->prepare("SELECT * FROM pembayaran WHERE kode_unik = ? AND status = 'menunggu_kasir'");
+        $stmt->bind_param("s", $kode_unik);
         $stmt->execute();
         $result = $stmt->get_result();
 
@@ -36,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $error = "Gagal memperbarui status.";
             }
         } else {
-            $error = "Kode bayar tidak ditemukan atau sudah diverifikasi.";
+            $error = "Kode unik tidak ditemukan atau sudah diverifikasi.";
         }
     }
 }
@@ -110,13 +110,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="alert alert-success"><?= htmlspecialchars($success) ?></div>
     <?php endif; ?>
 
-    <!-- Form Input Kode Bayar -->
+    <!-- Form Input Kode Unik -->
     <div class="card mb-4">
         <div class="card-body">
             <form method="POST">
                 <div class="mb-3">
-                    <label for="kode_bayar" class="form-label">Masukkan Kode Bayar</label>
-                    <input type="text" name="kode_bayar" id="kode_bayar" class="form-control" placeholder="Contoh: AB12345" required>
+                    <label for="kode_unik" class="form-label">Masukkan Kode Unik</label>
+                    <input type="text" name="kode_unik" id="kode_unik" class="form-control" placeholder="Contoh: AB12345" required>
                 </div>
                 <button type="submit" class="btn btn-primary w-100"><i class="bi bi-check-circle me-1"></i>Verifikasi</button>
             </form>
@@ -132,7 +132,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="card-body">
                 <p><strong>Nama Paket:</strong> <?= htmlspecialchars($transaksi['paket']) ?></p>
                 <p><strong>Harga:</strong> Rp<?= number_format($transaksi['harga'], 0, ',', '.') ?></p>
-                <p><strong>Kode Bayar:</strong> <?= htmlspecialchars($transaksi['kode_bayar']) ?></p>
+                <p><strong>Kode Unik:</strong> <?= htmlspecialchars($transaksi['kode_unik']) ?></p>
                 <p><strong>Status:</strong> <span class="badge bg-success">Lunas</span></p>
             </div>
         </div>
