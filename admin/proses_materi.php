@@ -2,66 +2,59 @@
 session_start();
 include '../config/database.php';
 
-if ($_SESSION['user']['role'] !== 'admin') {
-  header("Location: ../index.php");
-  exit;
-}
-
-// Fungsi redirect dengan notifikasi
 function redirectWith($key, $val) {
   header("Location: kelola_materi.php?$key=$val");
   exit;
 }
 
-// === TAMBAH MATERI ===
-if (isset($_POST['tambah'])) {
-  $judul    = mysqli_real_escape_string($conn, $_POST['judul']);
-  $kategori = mysqli_real_escape_string($conn, $_POST['kategori']);
-  $tutor    = mysqli_real_escape_string($conn, $_POST['tutor']);
-  $tanggal  = date('Y-m-d');
+if ($_SESSION['user']['role'] !== 'admin') {
+  redirectWith('error', 'unauthorized');
+}
 
-  // Validasi file
-  $allowed = ['pdf', 'mp4', 'zip'];
-  $file    = $_FILES['file'];
-  $ext     = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-  $ukuran  = $file['size'];
+// Tambah Materi oleh Admin
+if (isset($_POST['tambah_admin'])) {
+  $judul = mysqli_real_escape_string($conn, $_POST['judul']);
+  $deskripsi = mysqli_real_escape_string($conn, $_POST['deskripsi']);
+  $kategori_id = (int)$_POST['kategori_id'];
+  $kelas_id = (int)$_POST['kelas_id'];
+  $created_at = date('Y-m-d H:i:s');
 
-  if (!in_array($ext, $allowed)) {
-    redirectWith('error', 'file');
-  }
+  // File upload
+  $allowed = ['pdf', 'mp4', 'mkv', 'avi', 'mov'];
+  $file = $_FILES['file'];
+  $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+  $size = $file['size'];
 
-  if ($ukuran > 20 * 1024 * 1024) { // Maks 20MB
-    redirectWith('error', 'ukuran');
-  }
+  if (!in_array($ext, $allowed)) redirectWith('error', 'file');
+  if ($size > 10 * 1024 * 1024) redirectWith('error', 'ukuran'); // max 10MB
 
-  $namaFile = uniqid() . '.' . $ext;
-  $lokasi   = '../uploads/' . $namaFile;
+  $filename = uniqid() . '.' . $ext;
+  $path = '../assets/uploads/' . $filename;
 
-  if (move_uploaded_file($file['tmp_name'], $lokasi)) {
-    $query = "INSERT INTO materi (judul, kategori, tutor, file, tanggal_upload, status) 
-              VALUES ('$judul', '$kategori', '$tutor', '$namaFile', '$tanggal', 'menunggu')";
-    if (mysqli_query($conn, $query)) {
-      redirectWith('success', 'tambah');
-    } else {
-      unlink($lokasi); // Hapus file kalau gagal insert
-      redirectWith('error', 'tambah');
-    }
+  $tipe = in_array($ext, ['pdf']) ? 'pdf' : 'video';
+
+  if (move_uploaded_file($file['tmp_name'], $path)) {
+    $query = "INSERT INTO materi (judul, deskripsi, kategori_id, kelas_id, file, tipe_file, status, created_at)
+              VALUES ('$judul', '$deskripsi', $kategori_id, $kelas_id, '$filename', '$tipe', 'disetujui', '$created_at')";
+    if (mysqli_query($conn, $query)) redirectWith('success', 'tambah');
+    else redirectWith('error', 'tambah');
   } else {
     redirectWith('error', 'tambah');
   }
 }
 
-if (isset($_POST['disetujui'])) {
+// Setujui Materi
+if (isset($_POST['setujui'])) {
   $id = (int)$_POST['id'];
   $query = "UPDATE materi SET status = 'disetujui' WHERE id = $id";
   if (mysqli_query($conn, $query)) {
-    redirectWith('success', 'disetujui');
+    redirectWith('success', 'setujui');
   } else {
-    redirectWith('error', 'disetujui');
+    redirectWith('error', 'setujui');
   }
 }
 
-// === TOLAK MATERI ===
+// Tolak Materi
 if (isset($_POST['tolak'])) {
   $id = (int)$_POST['id'];
   $query = "UPDATE materi SET status = 'ditolak' WHERE id = $id";
@@ -72,21 +65,19 @@ if (isset($_POST['tolak'])) {
   }
 }
 
-// === HAPUS MATERI ===
+// Hapus Materi
 if (isset($_POST['hapus'])) {
   $id = (int)$_POST['id'];
-  $data = mysqli_fetch_assoc(mysqli_query($conn, "SELECT file FROM materi WHERE id = $id"));
-  $file = $data['file'];
-  $lokasi = '../uploads/' . $file;
+  $get = mysqli_fetch_assoc(mysqli_query($conn, "SELECT file FROM materi WHERE id = $id"));
+  $file = $get['file'];
+  $lokasi = "../assets/uploads/$file";
 
   if (mysqli_query($conn, "DELETE FROM materi WHERE id = $id")) {
-    if (file_exists($lokasi)) {
-      unlink($lokasi);
-    }
+    if (file_exists($lokasi)) unlink($lokasi);
     redirectWith('success', 'hapus');
   } else {
     redirectWith('error', 'hapus');
   }
 }
 
-//redirectWith('error', 'unknown');
+redirectWith('error', 'unknown');
