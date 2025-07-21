@@ -37,12 +37,11 @@ $kode_unik = null;
 $bukti_transfer = null;
 $status = 'pending'; // default status
 
-// Proses berdasarkan metode
 if ($metode === 'tunai') {
     $status = 'menunggu_kasir';
-    $kode_unik = 'TUNAI' . rand(100000, 999999); // Kode unik untuk verifikasi di kasir
+    $kode_unik = 'TUNAI' . rand(100000, 999999);
 } elseif ($metode === 'transfer') {
-    // Upload bukti transfer
+    // Cek apakah file diupload
     if (!isset($_FILES['bukti_transfer']) || $_FILES['bukti_transfer']['error'] !== UPLOAD_ERR_OK) {
         echo "Bukti transfer wajib diunggah untuk metode transfer.";
         exit;
@@ -66,22 +65,20 @@ if ($metode === 'tunai') {
     exit;
 }
 
-// Simpan transaksi pembayaran
+
 $stmt = $conn->prepare("INSERT INTO pembayaran (user_id, paket, harga, metode, kode_unik, status, tanggal, bukti_transfer) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
 $stmt->bind_param("isisssss", $user_id, $nama_paket, $harga, $metode, $kode_unik, $status, $tanggal, $bukti_transfer);
 
 if ($stmt->execute()) {
     if ($metode === 'tunai') {
-        echo "<div style='text-align:center; font-family:Arial; margin-top:50px;'>
+        echo "<div style='text-align:center; margin-top:50px;'>
                 <h2>Pembayaran Tunai</h2>
-                <p>Berikan kode berikut ke kasir untuk verifikasi pembayaran:</p>
+                <p>Tunjukkan kode ini ke kasir:</p>
                 <h1 style='color:green;'>$kode_unik</h1>
-                <a href='/BimbelAja/langganan/riwayat.php' style='display:inline-block;margin-top:20px;padding:10px 20px;background:#28a745;color:white;text-decoration:none;border-radius:5px;'>Lihat Riwayat</a>
+                <a href='/BimbelAja/langganan/riwayat.php' class='btn btn-success mt-3'>Lihat Riwayat</a>
               </div>";
-        exit;
     } else {
         header("Location: /BimbelAja/langganan/riwayat.php");
-        exit;
     }
 } else {
     echo "Gagal menyimpan pembayaran.";
