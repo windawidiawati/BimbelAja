@@ -7,6 +7,7 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'siswa') {
 }
 
 include_once __DIR__ . '/../config/database.php';
+include '../includes/header.php';
 
 $user_id = $_POST['user_id'] ?? null;
 $paket_id = $_POST['paket_id'] ?? null;
@@ -70,7 +71,7 @@ $stmt = $conn->prepare("INSERT INTO pembayaran (user_id, paket, harga, metode, k
 $stmt->bind_param("isisssss", $user_id, $nama_paket, $harga, $metode, $kode_unik, $status, $tanggal, $bukti_transfer);
 
 if ($stmt->execute()) {
-    if ($metode === 'tunai') {
+    if ($metode = 'tunai') {
         echo "<div style='text-align:center; margin-top:50px;'>
                 <h2>Pembayaran Tunai</h2>
                 <p>Tunjukkan kode ini ke kasir:</p>
@@ -84,3 +85,5 @@ if ($stmt->execute()) {
     echo "Gagal menyimpan pembayaran.";
 }
 ?>
+<?php
+include '../includes/footer.php';
