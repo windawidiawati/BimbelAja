@@ -72,8 +72,10 @@ ob_end_flush(); // Mengakhiri output buffering dan mengirim output
                     </thead>
                     <tbody>
                         <?php if ($result && $result->num_rows > 0): ?>
-                            <?php while ($row = $result->fetch_assoc()): ?>
-                                <tr>
+                              <?php $no = 1; while ($row = $result->fetch_assoc()): ?>
+                                 <tr>
+                                  <td><?= $no++ ?></td>
+
                                     <td><?= $row['id'] ?></td>
                                     <td><?= htmlspecialchars($row['nama']) ?></td>
                                     <td><?= htmlspecialchars($row['username']) ?></td>
