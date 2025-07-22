@@ -1,5 +1,4 @@
-<<<<<<< HEAD
-=======
+
 <?php
 if (session_status() == PHP_SESSION_NONE) session_start();
 
@@ -91,4 +90,4 @@ $result = mysqli_stmt_get_result($query);
 </div>
 </body>
 </html>
->>>>>>> origin
+

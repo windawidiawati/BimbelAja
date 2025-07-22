@@ -60,7 +60,7 @@ ob_end_flush(); // Mengakhiri output buffering dan mengirim output
                 <table class="table table-striped table-hover">
                     <thead class="table-light">
                         <tr>
-                            <th>ID</th>
+                            <th>No</th>
                             <th>Nama</th>
                             <th>Username</th>
                             <th>Paket</th>

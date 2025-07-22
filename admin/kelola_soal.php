@@ -128,7 +128,7 @@ $result = $stmt->get_result();
     <table class="table table-striped">
         <thead>
             <tr>
-                <th>ID</th>
+                <th>No</th>
                 <th>Pertanyaan</th>
                 <th>Opsi A</th>
                 <th>Opsi B</th>
