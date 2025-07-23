@@ -125,8 +125,8 @@ $result = $stmt->get_result();
     <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#tambahSoalModal">Tambah Soal</button>
 
     <!-- Tabel -->
-    <table class="table table-striped">
-        <thead>
+    <table class="table table-bordered bg-white shadow-sm">
+        <thead class="table-primary">
             <tr>
                 <th>No</th>
                 <th>Pertanyaan</th>
