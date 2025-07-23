@@ -1,84 +1,33 @@
 <?php
 include '../includes/auth.php';
-include '../includes/header.php';
+include '../includes/tutor_header.php';
 include '../config/database.php';
 
 if ($_SESSION['user']['role'] !== 'tutor' && $_SESSION['user']['role'] !== 'admin') {
-  header('Location: ../index.php');
-  exit;
+    header('Location: ../index.php');
+    exit;
 }
 
-// Daftar kelas lengkap
+// Daftar kelas
 $daftar_kelas = [
-  'Kelas 1 SD', 'Kelas 2 SD', 'Kelas 3 SD', 'Kelas 4 SD', 'Kelas 5 SD', 'Kelas 6 SD',
-  'Kelas 7 SMP', 'Kelas 8 SMP', 'Kelas 9 SMP',
-  'Kelas 10 SMA IPA', 'Kelas 11 SMA IPA', 'Kelas 12 SMA IPA',
-  'Kelas 10 SMA IPS', 'Kelas 11 SMA IPS', 'Kelas 12 SMA IPS'
+    'Kelas 1 SD', 'Kelas 2 SD', 'Kelas 3 SD', 'Kelas 4 SD', 'Kelas 5 SD', 'Kelas 6 SD',
+    'Kelas 7 SMP', 'Kelas 8 SMP', 'Kelas 9 SMP',
+    'Kelas 10 SMA IPA', 'Kelas 11 SMA IPA', 'Kelas 12 SMA IPA',
+    'Kelas 10 SMA IPS', 'Kelas 11 SMA IPS', 'Kelas 12 SMA IPS'
 ];
 
-// Ambil filter dari URL
+// Filter dari URL
 $filter_kelas = isset($_GET['kelas']) ? $_GET['kelas'] : '';
 $filter_kategori = isset($_GET['kategori_id']) ? $_GET['kategori_id'] : '';
 ?>
 
-<style>
-    body {
-        font-family: 'Segoe UI', sans-serif;
-        background-color: #f8f9fa;
-    }
-    .sidebar {
-        width: 240px;
-        background-color: #0d6efd;
-        position: fixed;
-        top: 0;
-        bottom: 0;
-        left: 0;
-        padding-top: 20px;
-    }
-    .sidebar a {
-        color: white;
-        display: block;
-        padding: 12px 20px;
-        text-decoration: none;
-        font-size: 16px;
-    }
-    .sidebar a:hover {
-        background-color: #0b5ed7;
-    }
-    .sidebar .logo {
-        text-align: center;
-        margin-bottom: 30px;
-        color: white;
-        font-size: 20px;
-        font-weight: bold;
-    }
-    .content {
-        margin-left: 240px;
-        padding: 20px;
-    }
-</style>
-
-<!-- Sidebar -->
-<div class="sidebar">
-    <div class="logo">
-        <i class="bi bi-mortarboard-fill me-2"></i>BimbelAja
-    </div>
-    <a href="dashboard.php"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a>
-    <a href="unggah_materi.php"><i class="bi bi-upload me-2"></i>Unggah Materi</a>
-    <a href="buat_soal.php"><i class="bi bi-pencil-square me-2"></i>Buat Soal</a>
-    <a href="jadwal_kelas.php"><i class="bi bi-calendar-event me-2"></i>Jadwal Kelas</a>
-    <a href="forum.php"><i class="bi bi-chat-dots me-2"></i>Forum</a>
-    <a href="data_siswa.php" class="active" style="background-color:#0b5ed7;"><i class="bi bi-people me-2"></i>Data Siswa</a>
-</div>
-
-<!-- Konten -->
 <div class="content">
     <div class="card shadow-sm p-4 mb-5">
         <h3 class="mb-4 fw-bold text-primary">📊 Data Siswa & Nilai Per Mata Pelajaran</h3>
 
         <!-- Filter -->
         <form method="GET" class="row g-3 mb-4 align-items-end">
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <label class="form-label">Filter Kelas:</label>
                 <select name="kelas" class="form-select">
                     <option value="">Semua Kelas</option>
@@ -90,7 +39,7 @@ $filter_kategori = isset($_GET['kategori_id']) ? $_GET['kategori_id'] : '';
                 </select>
             </div>
 
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <label class="form-label">Filter Mata Pelajaran:</label>
                 <select name="kategori_id" class="form-select">
                     <option value="">Semua Mapel</option>
@@ -104,7 +53,7 @@ $filter_kategori = isset($_GET['kategori_id']) ? $_GET['kategori_id'] : '';
                 </select>
             </div>
 
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <button type="submit" class="btn btn-primary w-100">
                     <i class="bi bi-funnel-fill"></i> Terapkan Filter
                 </button>
@@ -169,7 +118,6 @@ $filter_kategori = isset($_GET['kategori_id']) ? $_GET['kategori_id'] : '';
                                 <td>{$nama_kategori}</td>
                                 <td>{$nilai}</td>
                               </tr>";
-
                         $no++;
                     }
 
@@ -183,4 +131,4 @@ $filter_kategori = isset($_GET['kategori_id']) ? $_GET['kategori_id'] : '';
     </div>
 </div>
 
-<?php include '../includes/footer.php'; ?>
+<?php include '../includes/tutor_footer.php'; ?>

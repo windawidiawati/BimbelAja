@@ -1,11 +1,11 @@
 <?php
 include '../includes/auth.php';
-include '../includes/header.php';
+include '../includes/tutor_header.php'; // Ganti header ke tutor_header
 include '../config/database.php';
 
 if ($_SESSION['user']['role'] !== 'tutor') {
-  header('Location: ../index.php');
-  exit;
+    header('Location: ../index.php');
+    exit;
 }
 
 $tutor_id = $_SESSION['user']['id'];
@@ -20,89 +20,94 @@ $judul_edit = $deskripsi_edit = $kategori_edit = $kelas_edit = "";
 
 // Proses Edit
 if (isset($_GET['edit'])) {
-  $edit_id = (int) $_GET['edit'];
-  $res = mysqli_query($conn, "SELECT * FROM materi WHERE id = $edit_id AND tutor_id = $tutor_id");
-  if ($res && mysqli_num_rows($res)) {
-    $row_edit = mysqli_fetch_assoc($res);
-    $judul_edit = $row_edit['judul'];
-    $deskripsi_edit = $row_edit['deskripsi'];
-    $kategori_edit = $row_edit['kategori_id'];
-    $kelas_edit = $row_edit['kelas_id'];
-    $file_lama = $row_edit['file'];
-  } else {
-    $error = "Materi tidak ditemukan untuk diedit.";
-  }
+    $edit_id = (int) $_GET['edit'];
+    $res = mysqli_query($conn, "SELECT * FROM materi WHERE id = $edit_id AND tutor_id = $tutor_id");
+    if ($res && mysqli_num_rows($res)) {
+        $row_edit = mysqli_fetch_assoc($res);
+        $judul_edit = $row_edit['judul'];
+        $deskripsi_edit = $row_edit['deskripsi'];
+        $kategori_edit = $row_edit['kategori_id'];
+        $kelas_edit = $row_edit['kelas_id'];
+        $file_lama = $row_edit['file'];
+    } else {
+        $error = "Materi tidak ditemukan untuk diedit.";
+    }
 }
 
 // Proses Hapus
 if (isset($_GET['hapus'])) {
-  $hapus_id = (int) $_GET['hapus'];
-  $res = mysqli_query($conn, "SELECT file FROM materi WHERE id = $hapus_id AND tutor_id = $tutor_id");
-  if ($res && mysqli_num_rows($res)) {
-    $row = mysqli_fetch_assoc($res);
-    @unlink(__DIR__ . '/../assets/uploads/' . $row['file']);
-    mysqli_query($conn, "DELETE FROM materi WHERE id = $hapus_id AND tutor_id = $tutor_id");
-    $success = "Materi berhasil dihapus.";
-  }
+    $hapus_id = (int) $_GET['hapus'];
+    $res = mysqli_query($conn, "SELECT file FROM materi WHERE id = $hapus_id AND tutor_id = $tutor_id");
+    if ($res && mysqli_num_rows($res)) {
+        $row = mysqli_fetch_assoc($res);
+        @unlink(__DIR__ . '/../assets/uploads/' . $row['file']);
+        mysqli_query($conn, "DELETE FROM materi WHERE id = $hapus_id AND tutor_id = $tutor_id");
+        $success = "Materi berhasil dihapus.";
+    }
 }
 
 // Proses Upload / Update
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  $judul       = mysqli_real_escape_string($conn, $_POST['judul']);
-  $deskripsi   = mysqli_real_escape_string($conn, $_POST['deskripsi']);
-  $kategori_id = (int) $_POST['kategori_id'];
-  $kelas_id    = (int) $_POST['kelas_id'];
+    $judul       = mysqli_real_escape_string($conn, $_POST['judul']);
+    $deskripsi   = mysqli_real_escape_string($conn, $_POST['deskripsi']);
+    $kategori_id = (int) $_POST['kategori_id'];
+    $kelas_id    = (int) $_POST['kelas_id'];
 
-  $allowed_extensions = ['pdf', 'mp4', 'avi', 'mkv', 'mov'];
-  $fileName = $_FILES['file']['name'];
-  $fileTmp  = $_FILES['file']['tmp_name'];
-  $ext      = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+    $allowed_extensions = ['pdf', 'mp4', 'avi', 'mkv', 'mov'];
+    $fileName = $_FILES['file']['name'];
+    $fileTmp  = $_FILES['file']['tmp_name'];
+    $ext      = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
 
-  $uploadDir = realpath(__DIR__ . '/../assets/uploads');
-  if (!$uploadDir) {
-    mkdir(__DIR__ . '/../assets/uploads', 0777, true);
     $uploadDir = realpath(__DIR__ . '/../assets/uploads');
-  }
-
-  if (isset($_POST['id_edit'])) {
-    $id_edit = (int) $_POST['id_edit'];
-    if (!empty($fileName) && in_array($ext, $allowed_extensions)) {
-      $newFileName = preg_replace('/[^a-zA-Z0-9._-]/', '_', $fileName);
-      $filePath = $uploadDir . '/' . $newFileName;
-      $tipe_file = ($ext === 'pdf') ? 'pdf' : 'video';
-
-      if (move_uploaded_file($fileTmp, $filePath)) {
-        @unlink($uploadDir . '/' . $file_lama);
-        $query = "UPDATE materi SET judul='$judul', deskripsi='$deskripsi', kategori_id=$kategori_id, kelas_id=$kelas_id, file='$newFileName', tipe_file='$tipe_file', status='proses' WHERE id = $id_edit AND tutor_id = $tutor_id";
-      }
-    } else {
-      $query = "UPDATE materi SET judul='$judul', deskripsi='$deskripsi', kategori_id=$kategori_id, kelas_id=$kelas_id WHERE id = $id_edit AND tutor_id = $tutor_id";
+    if (!$uploadDir) {
+        mkdir(__DIR__ . '/../assets/uploads', 0777, true);
+        $uploadDir = realpath(__DIR__ . '/../assets/uploads');
     }
 
-    if (isset($query) && mysqli_query($conn, $query)) {
-      $success = "Materi berhasil diperbarui.";
-      $edit_id = null;
-    } else {
-      $error = "Gagal memperbarui materi.";
-    }
-  } else {
-    if (in_array($ext, $allowed_extensions)) {
-      $newFileName = preg_replace('/[^a-zA-Z0-9._-]/', '_', $fileName);
-      $filePath = $uploadDir . '/' . $newFileName;
-      $tipe_file = ($ext === 'pdf') ? 'pdf' : 'video';
+    if (isset($_POST['id_edit'])) {
+        $id_edit = (int) $_POST['id_edit'];
+        if (!empty($fileName) && in_array($ext, $allowed_extensions)) {
+            $newFileName = preg_replace('/[^a-zA-Z0-9._-]/', '_', $fileName);
+            $filePath = $uploadDir . '/' . $newFileName;
+            $tipe_file = ($ext === 'pdf') ? 'pdf' : 'video';
 
-      if (move_uploaded_file($fileTmp, $filePath)) {
-        $query = "INSERT INTO materi (judul, deskripsi, kategori_id, kelas_id, file, tipe_file, tutor_id, status, created_at)
-                  VALUES ('$judul', '$deskripsi', $kategori_id, $kelas_id, '$newFileName', '$tipe_file', $tutor_id, 'proses', NOW())";
-        mysqli_query($conn, $query);
-        $success = "Materi berhasil diunggah.";
-      } else {
-        $error = "Gagal mengunggah file.";
-      }
+            if (move_uploaded_file($fileTmp, $filePath)) {
+                @unlink($uploadDir . '/' . $file_lama);
+                $query = "UPDATE materi 
+                          SET judul='$judul', deskripsi='$deskripsi', kategori_id=$kategori_id, kelas_id=$kelas_id, 
+                              file='$newFileName', tipe_file='$tipe_file', status='proses' 
+                          WHERE id = $id_edit AND tutor_id = $tutor_id";
+            }
+        } else {
+            $query = "UPDATE materi 
+                      SET judul='$judul', deskripsi='$deskripsi', kategori_id=$kategori_id, kelas_id=$kelas_id 
+                      WHERE id = $id_edit AND tutor_id = $tutor_id";
+        }
+
+        if (isset($query) && mysqli_query($conn, $query)) {
+            $success = "Materi berhasil diperbarui.";
+            $edit_id = null;
+        } else {
+            $error = "Gagal memperbarui materi.";
+        }
     } else {
-      $error = "Tipe file tidak diperbolehkan.";
+        if (in_array($ext, $allowed_extensions)) {
+            $newFileName = preg_replace('/[^a-zA-Z0-9._-]/', '_', $fileName);
+            $filePath = $uploadDir . '/' . $newFileName;
+            $tipe_file = ($ext === 'pdf') ? 'pdf' : 'video';
+
+            if (move_uploaded_file($fileTmp, $filePath)) {
+                $query = "INSERT INTO materi (judul, deskripsi, kategori_id, kelas_id, file, tipe_file, tutor_id, status, created_at)
+                          VALUES ('$judul', '$deskripsi', $kategori_id, $kelas_id, '$newFileName', '$tipe_file', $tutor_id, 'proses', NOW())";
+                mysqli_query($conn, $query);
+                $success = "Materi berhasil diunggah.";
+            } else {
+                $error = "Gagal mengunggah file.";
+            }
+        } else {
+            $error = "Tipe file tidak diperbolehkan.";
+        }
     }
-  }
 }
 
 // Filter
@@ -112,61 +117,13 @@ $where = "WHERE m.tutor_id = $tutor_id";
 if ($filter_kelas > 0) $where .= " AND m.kelas_id = $filter_kelas";
 if ($filter_kategori > 0) $where .= " AND m.kategori_id = $filter_kategori";
 
-$query = "SELECT m.*, k.nama_kategori, kl.nama_kelas FROM materi m
+$query = "SELECT m.*, k.nama_kategori, kl.nama_kelas 
+          FROM materi m
           LEFT JOIN kategori_materi k ON m.kategori_id = k.id
           LEFT JOIN kelas kl ON m.kelas_id = kl.id
           $where ORDER BY m.id DESC";
 $materi = mysqli_query($conn, $query);
 ?>
-
-<style>
-    body {
-        font-family: 'Segoe UI', sans-serif;
-        background-color: #f8f9fa;
-    }
-    .sidebar {
-        width: 240px;
-        background-color: #0d6efd;
-        position: fixed;
-        top: 0;
-        bottom: 0;
-        left: 0;
-        padding-top: 20px;
-    }
-    .sidebar a {
-        color: white;
-        display: block;
-        padding: 12px 20px;
-        text-decoration: none;
-        font-size: 16px;
-    }
-    .sidebar a:hover {
-        background-color: #0b5ed7;
-    }
-    .sidebar .logo {
-        text-align: center;
-        margin-bottom: 30px;
-        color: white;
-        font-size: 20px;
-        font-weight: bold;
-    }
-    .content {
-        margin-left: 240px;
-        padding: 20px;
-    }
-</style>
-
-<div class="sidebar">
-    <div class="logo">
-        <i class="bi bi-mortarboard-fill me-2"></i>BimbelAja
-    </div>
-    <a href="dashboard.php"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a>
-    <a href="unggah_materi.php" class="active"><i class="bi bi-upload me-2"></i>Unggah Materi</a>
-    <a href="buat_soal.php"><i class="bi bi-pencil-square me-2"></i>Buat Soal</a>
-    <a href="jadwal_kelas.php"><i class="bi bi-calendar-event me-2"></i>Jadwal Kelas</a>
-    <a href="forum.php"><i class="bi bi-chat-dots me-2"></i>Forum</a>
-    <a href="data_siswa.php"><i class="bi bi-people me-2"></i>Data Siswa</a>
-</div>
 
 <div class="content">
     <h3 class="mb-4"><?= $edit_id ? 'Edit Materi' : 'Unggah Materi' ?></h3>
@@ -291,4 +248,4 @@ $materi = mysqli_query($conn, $query);
     </table>
 </div>
 
-<?php include '../includes/footer.php'; ?>
+<?php include '../includes/tutor_footer.php'; ?>

@@ -1,13 +1,13 @@
 <?php
 include '../includes/auth.php';
-include '../includes/header.php';
+include '../includes/tutor_header.php';
+include '../config/database.php';
 
 if ($_SESSION['user']['role'] !== 'tutor') {
   header('Location: ../index.php');
   exit;
 }
 
-include '../config/database.php';
 $user_id = $_SESSION['user']['id'];
 $role = $_SESSION['user']['role'];
 
@@ -24,55 +24,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // Ambil diskusi utama
 $diskusi = mysqli_query($conn, "SELECT * FROM forum WHERE parent_id IS NULL ORDER BY created_at DESC");
 ?>
-
-<style>
-    body {
-        font-family: 'Segoe UI', sans-serif;
-        background-color: #f8f9fa;
-    }
-    .sidebar {
-        width: 240px;
-        background-color: #0d6efd;
-        position: fixed;
-        top: 0;
-        bottom: 0;
-        left: 0;
-        padding-top: 20px;
-    }
-    .sidebar a {
-        color: white;
-        display: block;
-        padding: 12px 20px;
-        text-decoration: none;
-        font-size: 16px;
-    }
-    .sidebar a:hover {
-        background-color: #0b5ed7;
-    }
-    .sidebar .logo {
-        text-align: center;
-        margin-bottom: 30px;
-        color: white;
-        font-size: 20px;
-        font-weight: bold;
-    }
-    .content {
-        margin-left: 240px;
-        padding: 20px;
-    }
-</style>
-
-<div class="sidebar">
-    <div class="logo">
-        <i class="bi bi-mortarboard-fill me-2"></i>BimbelAja
-    </div>
-    <a href="dashboard.php"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a>
-    <a href="unggah_materi.php"><i class="bi bi-upload me-2"></i>Unggah Materi</a>
-    <a href="buat_soal.php"><i class="bi bi-pencil-square me-2"></i>Buat Soal</a>
-    <a href="jadwal_kelas.php"><i class="bi bi-calendar-event me-2"></i>Jadwal Kelas</a>
-    <a href="forum.php" class="active" style="background-color:#0b5ed7;"><i class="bi bi-chat-dots me-2"></i>Forum</a>
-    <a href="data_siswa.php"><i class="bi bi-people me-2"></i>Data Siswa</a>
-</div>
 
 <div class="content">
     <div class="card shadow-sm p-4 mb-5">
@@ -122,4 +73,4 @@ $diskusi = mysqli_query($conn, "SELECT * FROM forum WHERE parent_id IS NULL ORDE
     </div>
 </div>
 
-<?php include '../includes/footer.php'; ?>
+<?php include '../includes/tutor_footer.php'; ?>
