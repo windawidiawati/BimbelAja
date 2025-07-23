@@ -57,7 +57,7 @@ $paket = mysqli_fetch_assoc($query);
                 <input type="hidden" name="paket_id" value="<?= htmlspecialchars($paket['id']) ?>">
                 <input type="hidden" name="user_id" value="<?= htmlspecialchars($_SESSION['user']['id']) ?>">
                 <button type="submit" class="btn btn-success w-100">
-                    <i class="bi bi-credit-card me-1"></i> Lanjut Pilih Metode Pembayaran
+                    <i class="bi bi-credit-card me-1"></i> Lanjutkan Pembayaran
                 </button>
             </form>
         </div>

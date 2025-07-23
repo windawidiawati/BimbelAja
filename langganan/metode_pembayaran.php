@@ -34,40 +34,40 @@ $paket = mysqli_fetch_assoc($query);
 <body class="bg-light">
 <div class="container mt-5">
     <div class="card p-4 shadow-sm">
-        <h3 class="mb-3">Pilih Metode Pembayaran</h3>
+        <h3 class="mb-3">Pembayaran Paket</h3>
         <p><strong>Paket:</strong> <?= htmlspecialchars($paket['nama']) ?> - Rp<?= number_format($paket['harga'], 0, ',', '.') ?></p>
-        
+
+        <div class="alert alert-warning">
+            <strong>Catatan:</strong> Pembayaran <strong>tunai</strong> hanya dapat dilakukan langsung di kasir.<br>
+            Untuk pembayaran melalui sistem, silakan gunakan metode <strong>transfer bank</strong> berikut.
+        </div>
+
         <form action="proses_pembayaran.php" method="POST" enctype="multipart/form-data">
             <input type="hidden" name="user_id" value="<?= htmlspecialchars($user_id) ?>">
             <input type="hidden" name="paket_id" value="<?= htmlspecialchars($paket_id) ?>">
+            <input type="hidden" name="metode" value="transfer">
 
+            <!-- Info rekening -->
             <div class="mb-3">
-                <label class="form-label">Metode</label>
-                <select name="metode" id="metode" class="form-select" onchange="toggleBuktiTransfer()" required>
-                    <option value="">-- Pilih Metode --</option>
-                    <option value="tunai">Tunai (Bayar di Kasir)</option>
-                    <option value="transfer">Transfer Bank</option>
-                </select>
+                <div class="alert alert-info">
+                    <strong>Transfer ke rekening berikut:</strong><br>
+                    Bank: BCA<br>
+                    No. Rekening: <strong>1234567890</strong><br>
+                    Atas Nama: <strong>BimbelAja Education</strong>
+                </div>
             </div>
 
-            <div class="mb-3" id="bukti-transfer-section" style="display:none;">
+            <!-- Upload bukti transfer -->
+            <div class="mb-3">
                 <label class="form-label">Upload Bukti Transfer</label>
-                <input type="file" name="bukti_transfer" class="form-control" accept="image/*">
-                <small class="text-muted">Hanya untuk metode transfer.</small>
+                <input type="file" name="bukti_transfer" class="form-control" accept="image/*" required>
             </div>
 
-            <button type="submit" class="btn btn-primary w-100">Lanjutkan</button>
+            <button type="submit" class="btn btn-primary w-100">Kirim Pembayaran</button>
         </form>
     </div>
 </div>
-
-<script>
-    function toggleBuktiTransfer() {
-        const metode = document.getElementById('metode').value;
-        document.getElementById('bukti-transfer-section').style.display = (metode === 'transfer') ? 'block' : 'none';
-    }
-</script>
 </body>
 </html>
-<?php
-include '../includes/footer.php';
+
+<?php include '../includes/footer.php'; ?>

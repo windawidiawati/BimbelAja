@@ -51,9 +51,6 @@ $current_page = basename($_SERVER['SCRIPT_NAME']);
 <body>
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
     <div class="container-fluid">
-        <a class="navbar-brand" href="dashboard.php">
-            <i class="bi bi-cash-stack me-2"></i>BimbelAja Kasir
-        </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
             <span class="navbar-toggler-icon"></span>
         </button>

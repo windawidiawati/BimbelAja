@@ -1,4 +1,5 @@
 <?php
+ob_start();
 include '../includes/auth.php';
 include '../includes/admin_header.php';
 include '../config/database.php';
@@ -197,3 +198,4 @@ function updateKelasOptions() {
 </script>
 
 <?php include '../includes/admin_footer.php'; ?>
+<? ob_end_flush();

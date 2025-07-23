@@ -39,9 +39,10 @@ $bukti_transfer = null;
 $status = 'pending'; // default status
 
 if ($metode === 'tunai') {
-    $status = 'menunggu_kasir';
-    $kode_unik = 'TUNAI' . rand(100000, 999999);
-} elseif ($metode === 'transfer') {
+    $_SESSION['success'] = "Untuk pembayaran tunai, silakan datang langsung ke kasir tanpa perlu melalui sistem.";
+    header("Location: ../siswa/dashboard.php");
+    exit;
+}elseif ($metode === 'transfer') {
     // Cek apakah file diupload
     if (!isset($_FILES['bukti_transfer']) || $_FILES['bukti_transfer']['error'] !== UPLOAD_ERR_OK) {
         echo "Bukti transfer wajib diunggah untuk metode transfer.";
@@ -71,18 +72,23 @@ $stmt = $conn->prepare("INSERT INTO pembayaran (user_id, paket, harga, metode, k
 $stmt->bind_param("isisssss", $user_id, $nama_paket, $harga, $metode, $kode_unik, $status, $tanggal, $bukti_transfer);
 
 if ($stmt->execute()) {
-    if ($metode = 'tunai') {
-        echo "<div style='text-align:center; margin-top:50px;'>
-                <h2>Pembayaran Tunai</h2>
-                <p>Tunjukkan kode ini ke kasir:</p>
-                <h1 style='color:green;'>$kode_unik</h1>
-                <a href='/BimbelAja/langganan/riwayat.php' class='btn btn-success mt-3'>Lihat Riwayat</a>
-              </div>";
-    } else {
-        header("Location: /BimbelAja/langganan/riwayat.php");
-    }
+    // Jika metode bukan transfer, redirect langsung ke dashboard
+if ($metode === 'tunai') {
+    $_SESSION['success'] = "Untuk pembayaran tunai, silakan langsung ke kasir.";
+    header("Location: ../siswa/dashboard.php");
+    exit;
+}
+
+// SISANYA BARU JALAN UNTUK TRANSFER
+$stmt = $conn->prepare("INSERT INTO pembayaran (user_id, paket, harga, metode, kode_unik, status, tanggal, bukti_transfer) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+$stmt->bind_param("isisssss", $user_id, $nama_paket, $harga, $metode, $kode_unik, $status, $tanggal, $bukti_transfer);
+
+if ($stmt->execute()) {
+    header("Location: /BimbelAja/langganan/riwayat.php");
 } else {
     echo "Gagal menyimpan pembayaran.";
+}
+
 }
 ?>
 <?php
