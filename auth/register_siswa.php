@@ -1,7 +1,7 @@
 <?php
 include '../config/database.php';
 
-$username = $password = $nama = $kelas = $jenjang = '';
+$username = $password = $nama = $kelas = $jenjang = $email = $no_hp = '';
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -10,26 +10,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $nama     = trim($_POST['nama']);
   $kelas    = trim($_POST['kelas']);
   $jenjang  = trim($_POST['jenjang']);
+  $email    = trim($_POST['email']);
+  $no_hp    = trim($_POST['no_hp']);
   $role     = 'siswa';
+  $status   = 'belum_aktif';
 
-  if (empty($username) || empty($password) || empty($nama) || empty($kelas) || empty($jenjang)) {
+  if (empty($username) || empty($password) || empty($nama) || empty($kelas) || empty($jenjang) || empty($email) || empty($no_hp)) {
     $error = "Semua field wajib diisi!";
   } else {
-    $stmt = mysqli_prepare($conn, "SELECT id FROM users WHERE username = ?");
-    mysqli_stmt_bind_param($stmt, "s", $username);
+    // Cek username/email sudah terdaftar
+    $stmt = mysqli_prepare($conn, "SELECT id FROM users WHERE username = ? OR email = ?");
+    mysqli_stmt_bind_param($stmt, "ss", $username, $email);
     mysqli_stmt_execute($stmt);
     mysqli_stmt_store_result($stmt);
 
     if (mysqli_stmt_num_rows($stmt) > 0) {
-      $error = "Username sudah terdaftar!";
+      $error = "Username atau Email sudah terdaftar!";
     } else {
       $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
-      $stmt = mysqli_prepare($conn, "INSERT INTO users (username, password, role, nama, kelas, jenjang) VALUES (?, ?, ?, ?, ?, ?)");
-      mysqli_stmt_bind_param($stmt, "ssssss", $username, $hashed_password, $role, $nama, $kelas, $jenjang);
+      $stmt = mysqli_prepare($conn, "INSERT INTO users (username, password, role, nama, kelas, jenjang, email, no_hp, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+      mysqli_stmt_bind_param($stmt, "sssssssss", $username, $hashed_password, $role, $nama, $kelas, $jenjang, $email, $no_hp, $status);
       mysqli_stmt_execute($stmt);
 
-      header('Location: login.php');
+      header('Location: login.php?msg=register-success');
       exit;
     }
   }
@@ -51,6 +55,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="mb-3">
           <label class="form-label">Nama Lengkap</label>
           <input type="text" name="nama" class="form-control" value="<?= htmlspecialchars($nama); ?>" required>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Email</label>
+          <input type="email" name="email" class="form-control" value="<?= htmlspecialchars($email); ?>" required>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">No. HP / WhatsApp</label>
+          <input type="text" name="no_hp" class="form-control" value="<?= htmlspecialchars($no_hp); ?>" required>
         </div>
 
         <div class="mb-3">
@@ -107,14 +121,13 @@ document.getElementById('jenjang').addEventListener('change', function () {
   if (kelasOptions[jenjang]) {
     kelasOptions[jenjang].forEach(function (kelas) {
       const option = document.createElement('option');
-      option.value = kelas; // VALUE = angka (7,8,9)
-      option.textContent = "Kelas " + kelas; // TAMPILAN = Kelas 7
+      option.value = kelas;
+      option.textContent = "Kelas " + kelas;
       kelasSelect.appendChild(option);
     });
   }
 });
 
-// Saat reload, isi kembali jika ada error
 window.addEventListener('DOMContentLoaded', () => {
   const currentJenjang = '<?= $jenjang ?>';
   const currentKelas = '<?= $kelas ?>';

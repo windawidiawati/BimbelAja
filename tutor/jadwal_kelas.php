@@ -4,7 +4,8 @@ if ($_SESSION['user']['role'] !== 'tutor') {
   header('Location: ../index.php');
   exit;
 }
-include '../includes/header.php';
+
+include '../includes/tutor_header.php';
 include '../config/database.php';
 
 $tutor_id = $_SESSION['user']['id'];
@@ -88,54 +89,10 @@ $jadwal_result = mysqli_query($conn, "
 ");
 ?>
 
-<style>
-.sidebar {
-    width: 240px;
-    background: #0d6efd;
-    position: fixed;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    padding-top: 20px;
-}
-.sidebar a {
-    color: white;
-    display: block;
-    padding: 12px 20px;
-    text-decoration: none;
-}
-.sidebar a:hover {
-    background: #0b5ed7;
-}
-.sidebar .logo {
-    text-align: center;
-    color: #fff;
-    font-size: 20px;
-    font-weight: bold;
-    margin-bottom: 30px;
-}
-.content {
-    margin-left: 240px;
-    padding: 20px;
-}
-.active {
-    background-color: #0b5ed7;
-}
-</style>
-
-<div class="sidebar">
-    <div class="logo">BimbelAja</div>
-    <a href="dashboard.php"><i class="bi bi-speedometer2"></i> Dashboard</a>
-    <a href="unggah_materi.php"><i class="bi bi-upload"></i> Unggah Materi</a>
-    <a href="buat_soal.php"><i class="bi bi-pencil-square"></i> Buat Soal</a>
-    <a href="jadwal_kelas.php" class="active"><i class="bi bi-calendar-event"></i> Jadwal Kelas</a>
-    <a href="forum.php"><i class="bi bi-chat-dots"></i> Forum</a>
-    <a href="data_siswa.php"><i class="bi bi-people"></i> Data Siswa</a>
-</div>
-
-<div class="content">
-<div class="container py-4">
-  <h3 class="mb-4"><?= $edit_id ? 'Edit Jadwal Kelas' : 'Tambah Jadwal Kelas Online' ?></h3>
+<div class="content p-4">
+  <h3 class="mb-4 fw-bold text-primary">
+    <?= $edit_id ? '✏️ Edit Jadwal Kelas' : '➕ Tambah Jadwal Kelas Online' ?>
+  </h3>
 
   <?php if ($success): ?>
     <div class="alert alert-success"><?= $success ?></div>
@@ -203,38 +160,38 @@ $jadwal_result = mysqli_query($conn, "
     </button>
   </form>
 
-  <hr>
-  <h5>Daftar Jadwal Kelas:</h5>
-  <table class="table table-bordered table-striped mt-3">
-    <thead class="table-dark">
-      <tr>
-        <th>Topik</th>
-        <th>Tanggal</th>
-        <th>Jam</th>
-        <th>Kelas</th>
-        <th>Mapel</th>
-        <th>Link</th>
-        <th>Aksi</th>
-      </tr>
-    </thead>
-    <tbody>
-      <?php while ($row = mysqli_fetch_assoc($jadwal_result)): ?>
+  <h5>📅 Daftar Jadwal Kelas:</h5>
+  <div class="table-responsive">
+    <table class="table table-bordered table-striped mt-3 text-center">
+      <thead class="table-dark">
         <tr>
-          <td><?= htmlspecialchars($row['topik']) ?></td>
-          <td><?= htmlspecialchars($row['tanggal']) ?></td>
-          <td><?= htmlspecialchars($row['waktu_mulai']) ?> - <?= htmlspecialchars($row['waktu_selesai']) ?></td>
-          <td><?= htmlspecialchars($row['nama_kelas']) ?: '-' ?></td>
-          <td><?= htmlspecialchars($row['nama_kategori']) ?: '-' ?></td>
-          <td><a href="<?= htmlspecialchars($row['link_zoom']) ?>" target="_blank">Gabung</a></td>
-          <td>
-            <a href="?edit=<?= $row['id'] ?>" class="btn btn-sm btn-warning">Edit</a>
-            <a href="?hapus=<?= $row['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Yakin ingin menghapus jadwal ini?')">Hapus</a>
-          </td>
+          <th>Topik</th>
+          <th>Tanggal</th>
+          <th>Jam</th>
+          <th>Kelas</th>
+          <th>Mapel</th>
+          <th>Link</th>
+          <th>Aksi</th>
         </tr>
-      <?php endwhile; ?>
-    </tbody>
-  </table>
-</div>
+      </thead>
+      <tbody>
+        <?php while ($row = mysqli_fetch_assoc($jadwal_result)): ?>
+          <tr>
+            <td><?= htmlspecialchars($row['topik']) ?></td>
+            <td><?= htmlspecialchars($row['tanggal']) ?></td>
+            <td><?= htmlspecialchars($row['waktu_mulai']) ?> - <?= htmlspecialchars($row['waktu_selesai']) ?></td>
+            <td><?= htmlspecialchars($row['nama_kelas']) ?: '-' ?></td>
+            <td><?= htmlspecialchars($row['nama_kategori']) ?: '-' ?></td>
+            <td><a href="<?= htmlspecialchars($row['link_zoom']) ?>" target="_blank" class="btn btn-sm btn-info">Gabung</a></td>
+            <td>
+              <a href="?edit=<?= $row['id'] ?>" class="btn btn-sm btn-warning">Edit</a>
+              <a href="?hapus=<?= $row['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Yakin ingin menghapus jadwal ini?')">Hapus</a>
+            </td>
+          </tr>
+        <?php endwhile; ?>
+      </tbody>
+    </table>
+  </div>
 </div>
 
-<?php include '../includes/footer.php'; ?>
+<?php include '../includes/tutor_footer.php'; ?>
