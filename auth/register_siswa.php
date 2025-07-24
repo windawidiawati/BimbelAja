@@ -40,8 +40,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 ?>
 
-<?php include '../includes/header.php'; ?>
-
 <div class="container d-flex justify-content-center align-items-center" style="min-height: 80vh;">
   <div class="card shadow-sm w-100" style="max-width: 500px;">
     <div class="card-body">
@@ -110,7 +108,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 const kelasOptions = {
   SD: ['1', '2', '3', '4', '5', '6'],
   SMP: ['7', '8', '9'],
-  SMA: ['10', '11', '12']
+  SMA: ['10 IPA', '10 IPS', '11 IPA', '11 IPS', '12 IPA', '12 IPS']
 };
 
 document.getElementById('jenjang').addEventListener('change', function () {
@@ -143,5 +141,3 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 });
 </script>
-
-<?php include '../includes/footer.php'; ?>
