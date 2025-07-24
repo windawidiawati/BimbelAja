@@ -67,10 +67,10 @@ $notif_result = $conn->query($notif_query);
     <div class="card-body">
       <h5 class="card-title mb-3">📄 Daftar Notifikasi Terkirim</h5>
       <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
-        <table class="table table-bordered table-hover align-middle text-center">
-          <thead class="table-dark">
+        <table class="table table-bordered bg-white shadow-sm">
+        <thead class="table-primary">
             <tr>
-              <th scope="col">#</th>
+              <th scope="col">No</th>
               <th scope="col">Judul</th>
               <th scope="col">Pesan</th>
               <th scope="col">Penerima</th>
