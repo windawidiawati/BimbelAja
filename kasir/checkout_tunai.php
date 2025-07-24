@@ -11,7 +11,7 @@ $success = $error = '';
 
 // Ambil daftar siswa yang belum aktif
 $siswa_result = mysqli_query($conn, "
-    SELECT id, email, kelas 
+    SELECT id, email, kelas, jenjang 
     FROM users 
     WHERE role='siswa' AND status='belum_aktif'
     ORDER BY email ASC
@@ -26,7 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $paket_id = intval($_POST['paket']);
     $metode   = 'tunai';
     $status   = 'lunas';
-    $tanggal  = date('Y-m-d'); // Hanya tanggal (tanpa jam)
+    $tanggal  = date('Y-m-d'); // Tanggal transaksi
 
     if (!$user_id || !$paket_id) {
         $error = "Semua field wajib dipilih!";
@@ -48,7 +48,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($stmt->execute()) {
                 // Update status user jadi aktif
                 mysqli_query($conn, "UPDATE users SET status='aktif' WHERE id=$user_id");
-                $success = "Transaksi tunai berhasil ditambahkan dan status siswa diubah menjadi aktif!";
+
+                // Ambil jenjang dan kelas user
+                $user_result = mysqli_query($conn, "SELECT kelas, jenjang FROM users WHERE id=$user_id");
+                $user_data = mysqli_fetch_assoc($user_result);
+                $kelas = $user_data['kelas'];
+                $jenjang = $user_data['jenjang'];
+
+                // Hitung tanggal mulai dan tanggal berakhir
+                $tanggal_mulai = $tanggal;
+                $date_end = new DateTime($tanggal_mulai);
+                if (strtolower($paket_data['nama']) === 'bulanan') {
+                    $date_end->modify('+1 month');
+                } elseif (strtolower($paket_data['nama']) === 'mingguan') {
+                    $date_end->modify('+7 days');
+                } else {
+                    $date_end->modify('+1 month'); // default
+                }
+                $tanggal_berakhir = $date_end->format('Y-m-d');
+
+                // Masukkan ke tabel langganan
+                $stmt2 = $conn->prepare("
+                    INSERT INTO langganan (user_id, paket, jenjang, kelas, tanggal_mulai, tanggal_berakhir, status, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, 'aktif', NOW())
+                ");
+                $stmt2->bind_param("isssss", $user_id, $paket_data['nama'], $jenjang, $kelas, $tanggal_mulai, $tanggal_berakhir);
+                $stmt2->execute();
+                $stmt2->close();
+
+                $success = "Transaksi tunai berhasil dan langganan ditambahkan!";
             } else {
                 $error = "Gagal menyimpan transaksi.";
             }
@@ -59,7 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 include '../includes/kasir_header.php';
 
-// Format hari + tanggal untuk tampilan
+// Format hari + tanggal
 $hari = [
     'Sunday' => 'Minggu',
     'Monday' => 'Senin',
