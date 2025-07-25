@@ -15,7 +15,7 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
 // Setujui Materi
 if (isset($_POST['setujui'])) {
   $id = (int)$_POST['id'];
-  $query = "UPDATE materi SET status = 'disetujui' WHERE id = $id";
+  $query = "UPDATE materi SET status = 'diterima' WHERE id = $id";
   if (mysqli_query($conn, $query)) {
     redirectWith('success', 'setujui');
   } else {
@@ -71,7 +71,7 @@ if (isset($_POST['tambah_admin'])) {
 
   if (move_uploaded_file($file['tmp_name'], $path)) {
     $query = "INSERT INTO materi (judul, deskripsi, kategori_id, kelas_id, file, tipe_file, status, created_at)
-              VALUES ('$judul', '$deskripsi', $kategori_id, $kelas_id, '$filename', '$tipe', 'disetujui', '$created_at')";
+              VALUES ('$judul', '$deskripsi', $kategori_id, $kelas_id, '$filename', '$tipe', 'diterima', '$created_at')";
     if (mysqli_query($conn, $query)) redirectWith('success', 'tambah');
     else redirectWith('error', 'tambah');
   } else {
@@ -117,7 +117,7 @@ if (isset($_POST['edit_admin'])) {
 
   // Update ke database
   $update = "UPDATE materi 
-             SET judul='$judul', deskripsi='$deskripsi', kategori_id=$kategori_id, kelas_id=$kelas_id, file='$new_file', tipe_file='$tipe_file', status='disetujui'
+             SET judul='$judul', deskripsi='$deskripsi', kategori_id=$kategori_id, kelas_id=$kelas_id, file='$new_file', tipe_file='$tipe_file', status='diterima'
              WHERE id = $id";
 
   if (mysqli_query($conn, $update)) {
