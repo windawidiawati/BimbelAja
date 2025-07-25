@@ -50,7 +50,8 @@ ob_end_flush(); // Mengakhiri output buffering dan mengirim output
 ?>
 
 
-<div class="content">
+
+<div class="content pt-5" style="margin-top: 70px;">
     <div class="card shadow">
         <div class="card-header bg-white">
             <h3 class="card-title mb-0"><i class="bi bi-credit-card me-2"></i> Data Verifikasi Pembayaran</h3>
@@ -60,7 +61,7 @@ ob_end_flush(); // Mengakhiri output buffering dan mengirim output
                 <table class="table table-striped table-hover">
                     <thead class="table-light">
                         <tr>
-                            <th>ID</th>
+                            <th>No</th>
                             <th>Nama</th>
                             <th>Username</th>
                             <th>Paket</th>
@@ -72,39 +73,38 @@ ob_end_flush(); // Mengakhiri output buffering dan mengirim output
                     </thead>
                     <tbody>
                         <?php if ($result && $result->num_rows > 0): ?>
-                              <?php $no = 1; while ($row = $result->fetch_assoc()): ?>
-                                 <tr>
-                                  <td><?= $no++ ?></td>
+        <?php $no = 1; while ($row = $result->fetch_assoc()): ?>
+            <tr>
+                <td><?= $no++ ?></td>
+                <td><?= htmlspecialchars($row['nama']) ?></td>          <!-- Nama -->
+                <td><?= htmlspecialchars($row['username']) ?></td>      <!-- Username -->
+                <td><?= htmlspecialchars($row['paket']) ?></td>         <!-- Paket -->
+                <td>Rp <?= number_format($row['harga'], 0, ',', '.') ?></td> <!-- Harga -->
+                <td class="status-<?= $row['status'] ?>"><?= strtoupper($row['status']) ?></td> <!-- Status -->
+                <td><?= date('d M Y H:i', strtotime($row['tanggal'])) ?></td> <!-- Tanggal -->
+                <td>
+                    <button class="btn btn-sm btn-primary btn-edit"
+                        data-id="<?= $row['id'] ?>"
+                        data-nama="<?= htmlspecialchars($row['nama']) ?>"
+                        data-username="<?= htmlspecialchars($row['username']) ?>"
+                        data-paket="<?= htmlspecialchars($row['paket']) ?>"
+                        data-harga="<?= number_format($row['harga'], 0, ',', '.') ?>"
+                        data-status="<?= $row['status'] ?>"
+                        data-bs-toggle="modal"
+                        data-bs-target="#editModal">
+                        Edit
+                    </button>
+                    <a href="?action=delete&id=<?= $row['id'] ?>"
+                       onclick="return confirm('Yakin ingin menghapus pembayaran ini?')"
+                       class="btn btn-sm btn-danger">Hapus</a>
+                </td>
+            </tr>
+        <?php endwhile; ?>
+    <?php else: ?>
+        <tr><td colspan="8" class="text-center">Tidak ada data pembayaran</td></tr>
+    <?php endif; ?>
+</tbody>
 
-                                    <td><?= $row['id'] ?></td>
-                                    <td><?= htmlspecialchars($row['nama']) ?></td>
-                                    <td><?= htmlspecialchars($row['username']) ?></td>
-                                    <td><?= htmlspecialchars($row['paket']) ?></td>
-                                    <td>Rp <?= number_format($row['harga'], 0, ',', '.') ?></td>
-                                    <td class="status-<?= $row['status'] ?>"><?= strtoupper($row['status']) ?></td>
-                                    <td><?= date('d M Y H:i', strtotime($row['tanggal'])) ?></td>
-                                    <td>
-                                        <button class="btn btn-sm btn-primary btn-edit"
-                                            data-id="<?= $row['id'] ?>"
-                                            data-nama="<?= htmlspecialchars($row['nama']) ?>"
-                                            data-username="<?= htmlspecialchars($row['username']) ?>"
-                                            data-paket="<?= htmlspecialchars($row['paket']) ?>"
-                                            data-harga="<?= number_format($row['harga'], 0, ',', '.') ?>"
-                                            data-status="<?= $row['status'] ?>"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#editModal">
-                                            Edit
-                                        </button>
-                                        <a href="?action=delete&id=<?= $row['id'] ?>"
-                                           onclick="return confirm('Yakin ingin menghapus pembayaran ini?')"
-                                           class="btn btn-sm btn-danger">Hapus</a>
-                                    </td>
-                                </tr>
-                            <?php endwhile; ?>
-                        <?php else: ?>
-                            <tr><td colspan="8" class="text-center">Tidak ada data pembayaran</td></tr>
-                        <?php endif; ?>
-                    </tbody>
                 </table>
             </div>
         </div>
