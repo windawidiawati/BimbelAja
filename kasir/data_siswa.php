@@ -8,6 +8,9 @@ if ($_SESSION['user']['role'] !== 'kasir') {
     exit;
 }
 
+// Ambil data kelas dari database
+$kelas_result = mysqli_query($conn, "SELECT nama_kelas FROM kelas ORDER BY nama_kelas ASC");
+
 // Proses Tambah Siswa
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['tambah_siswa'])) {
     $nama     = trim($_POST['nama']);
@@ -123,7 +126,7 @@ include '../includes/kasir_header.php';
                             </td>
                         </tr>
 
-                        <!-- Modal Edit -->
+                        <!-- Modal Edit (masih tetap input manual, bisa diupgrade nanti) -->
                         <div class="modal fade" id="editModal<?= $user_id ?>" tabindex="-1" aria-hidden="true">
                             <div class="modal-dialog">
                                 <div class="modal-content">
@@ -220,7 +223,14 @@ include '../includes/kasir_header.php';
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Kelas</label>
-                        <input type="text" name="kelas" class="form-control" required>
+                        <select name="kelas" class="form-select" required>
+                            <option value="">-- Pilih Kelas --</option>
+                            <?php while ($k = mysqli_fetch_assoc($kelas_result)) : ?>
+                                <option value="<?= htmlspecialchars($k['nama_kelas']) ?>">
+                                    <?= htmlspecialchars($k['nama_kelas']) ?>
+                                </option>
+                            <?php endwhile; ?>
+                        </select>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Jenjang</label>
