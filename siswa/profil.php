@@ -42,6 +42,8 @@ $success = $error = '';
             <a href="?mode=hapus" class="btn btn-danger" onclick="return confirm('Yakin ingin menghapus akun ini?')">
               <i class="bi bi-trash"></i> Hapus Akun
             </a>
+            <a href="../auth/logout.php" class="btn btn-dark"><i class="bi bi-box-arrow-right"></i> Logout</a>
+
             <a href="dashboard.php" class="btn btn-secondary"><i class="bi bi-arrow-left-circle"></i> Kembali</a>
           </div>
 
@@ -107,36 +109,56 @@ $success = $error = '';
 
         <!-- MODE: GANTI PASSWORD -->
         <?php elseif ($mode === 'password'):
-          if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $p1 = $_POST['password'];
-            $p2 = $_POST['password2'];
-            if ($p1 !== $p2) {
-              $error = "Password tidak cocok!";
-            } elseif (strlen($p1) < 6) {
-              $error = "Password minimal 6 karakter.";
-            } else {
-              $hash = password_hash($p1, PASSWORD_DEFAULT);
-              $stmt = mysqli_prepare($conn, "UPDATE users SET password=? WHERE id=?");
-              mysqli_stmt_bind_param($stmt, 'si', $hash, $user['id']);
-              mysqli_stmt_execute($stmt);
-              $success = "Password berhasil diganti.";
-            }
-          }
-        ?>
-          <?php if ($error): ?><div class="alert alert-danger"><?= $error ?></div><?php endif; ?>
-          <?php if ($success): ?><div class="alert alert-success"><?= $success ?></div><?php endif; ?>
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+          $old = $_POST['old_password'];
+          $p1 = $_POST['password'];
+          $p2 = $_POST['password2'];
+          // Ambil hash password dari database
+          $stmt = mysqli_prepare($conn, "SELECT password FROM users WHERE id=?");
+          mysqli_stmt_bind_param($stmt, 'i', $user['id']);
+          mysqli_stmt_execute($stmt);
+          mysqli_stmt_bind_result($stmt, $hashed);
+          mysqli_stmt_fetch($stmt);
+          mysqli_stmt_close($stmt);
+
+    if (!password_verify($old, $hashed)) {
+      $error = "Password lama salah!";
+    } elseif ($p1 !== $p2) {
+      $error = "Password baru tidak cocok!";
+    } elseif (strlen($p1) < 6) {
+      $error = "Password baru minimal 6 karakter.";
+    } else {
+      $hash = password_hash($p1, PASSWORD_DEFAULT);
+      $stmt = mysqli_prepare($conn, "UPDATE users SET password=? WHERE id=?");
+      mysqli_stmt_bind_param($stmt, 'si', $hash, $user['id']);
+      mysqli_stmt_execute($stmt);
+      $success = "Password berhasil diganti.";
+    }
+  }
+?><?php if ($success): ?>
+  <div class="alert alert-success"><?= $success ?></div>
+<?php endif; ?>
+
+<?php if ($error): ?>
+  <div class="alert alert-danger"><?= $error ?></div>
+<?php endif; ?>
           <form method="POST">
-            <div class="mb-3">
-              <label>Password Baru</label>
-              <input type="password" name="password" class="form-control" required>
-            </div>
-            <div class="mb-3">
-              <label>Ulangi Password</label>
-              <input type="password" name="password2" class="form-control" required>
-            </div>
-            <button class="btn btn-primary" type="submit">Ganti Password</button>
-            <a href="profil.php" class="btn btn-secondary">Batal</a>
-          </form>
+  <div class="mb-3">
+    <label>Password Lama</label>
+    <input type="password" name="old_password" class="form-control" required>
+  </div>
+  <div class="mb-3">
+    <label>Password Baru</label>
+    <input type="password" name="password" class="form-control" required>
+  </div>
+  <div class="mb-3">
+    <label>Ulangi Password Baru</label>
+    <input type="password" name="password2" class="form-control" required>
+  </div>
+  <button class="btn btn-primary" type="submit">Ganti Password</button>
+  <a href="profil.php" class="btn btn-secondary">Batal</a>
+</form>
+
 
         <!-- MODE: HAPUS AKUN -->
         <?php elseif ($mode === 'hapus'):
@@ -149,7 +171,7 @@ $success = $error = '';
         ?>
 
         <!-- MODE: RIWAYAT LANGGANAN -->
-        <?php elseif ($mode === 'langganan'):
+         <?php elseif ($mode === 'langganan'):
           $result = $conn->query("SELECT * FROM pembayaran WHERE user_id = {$user['id']} ORDER BY tanggal DESC");
         ?>
           <h5>Riwayat Langganan Paket</h5>

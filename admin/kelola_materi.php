@@ -6,6 +6,16 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
     header("Location: ../index.php");
     exit;
 }
+
+$edit_id = $_GET['edit'] ?? null;
+$edit_data = null;
+if ($edit_id) {
+  $stmt = mysqli_prepare($conn, "SELECT * FROM materi WHERE id = ?");
+  mysqli_stmt_bind_param($stmt, "i", $edit_id);
+  mysqli_stmt_execute($stmt);
+  $result = mysqli_stmt_get_result($stmt);
+  $edit_data = mysqli_fetch_assoc($result);
+}
 ?>
 
 <div class="content">
@@ -19,6 +29,7 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
       <?php 
         $successMessages = [
           'tambah' => 'Materi berhasil ditambahkan!',
+          'edit' => 'Materi berhasil diedit!',
           'setujui' => 'Materi berhasil disetujui!',
           'tolak' => 'Materi berhasil ditolak!',
           'hapus' => 'Materi berhasil dihapus!'
@@ -31,9 +42,10 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
       <?php 
         $errorMessages = [
           'tambah' => 'Gagal menambahkan materi. Silakan coba lagi.',
-          'setujui' => 'Gagal menyetujui materi. Silakan coba lagi.',
-          'tolak' => 'Gagal menolak materi. Silakan coba lagi.',
-          'hapus' => 'Gagal menghapus materi. Silakan coba lagi.',
+          'edit' => 'Gagal mengedit materi.',
+          'setujui' => 'Gagal menyetujui materi.',
+          'tolak' => 'Gagal menolak materi.',
+          'hapus' => 'Gagal menghapus materi.',
           'file' => 'Format file tidak valid. Hanya PDF dan video yang diperbolehkan.',
           'ukuran' => 'Ukuran file terlalu besar. Maksimal 10MB.'
         ];
@@ -82,21 +94,22 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
           <td>
             <span class="badge 
               <?= $row['status'] == 'disetujui' ? 'bg-success' : ($row['status'] == 'ditolak' ? 'bg-danger' : 'bg-warning text-dark') ?>">
-              <?= ucfirst($row['status']) ?>
+              <?= $row['status'] ? ucfirst($row['status']) : 'Menunggu' ?>
             </span>
           </td>
           <td>
+            <a href="?edit=<?= $row['id'] ?>" class="btn btn-warning btn-sm">✏</a>
             <form action="proses_materi.php" method="POST" class="d-inline">
               <input type="hidden" name="id" value="<?= $row['id'] ?>">
-              <button name="setujui" class="btn btn-success btn-sm" onclick="return confirm('Apakah Anda yakin ingin menyetujui materi ini?')">✔</button>
+              <button name="setujui" class="btn btn-success btn-sm" onclick="return confirm('Setujui materi ini?')">✔</button>
             </form>
             <form action="proses_materi.php" method="POST" class="d-inline">
               <input type="hidden" name="id" value="<?= $row['id'] ?>">
-              <button name="tolak" class="btn btn-danger btn-sm" onclick="return confirm('Apakah Anda yakin ingin menolak materi ini?')">✖</button>
+              <button name="tolak" class="btn btn-danger btn-sm" onclick="return confirm('Tolak materi ini?')">✖</button>
             </form>
             <form action="proses_materi.php" method="POST" class="d-inline">
               <input type="hidden" name="id" value="<?= $row['id'] ?>">
-              <button name="hapus" class="btn btn-secondary btn-sm" onclick="return confirm('Apakah Anda yakin ingin menghapus materi ini?')">🗑</button>
+              <button name="hapus" class="btn btn-secondary btn-sm" onclick="return confirm('Hapus materi ini?')">🗑</button>
             </form>
           </td>
         </tr>
@@ -108,22 +121,25 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
   </div>
 </div>
 
-<!-- Modal Tambah Materi -->
-<div class="modal fade" id="modalTambah" tabindex="-1" aria-labelledby="modalTambahLabel" aria-hidden="true">
+<!-- Modal Tambah/Edit Materi -->
+<div class="modal fade show" id="modalTambah" tabindex="-1" aria-labelledby="modalTambahLabel" aria-modal="true" style="display:<?= $edit_id ? 'block' : 'none' ?>;">
   <div class="modal-dialog modal-lg">
     <form method="POST" action="proses_materi.php" enctype="multipart/form-data" class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="modalTambahLabel">Tambah Materi</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+        <h5 class="modal-title" id="modalTambahLabel">
+          <?= $edit_id ? 'Edit Materi' : 'Tambah Materi' ?>
+        </h5>
+        <a href="kelola_materi.php" class="btn-close"></a>
       </div>
       <div class="modal-body">
+        <?php if ($edit_id): ?><input type="hidden" name="id" value="<?= $edit_data['id'] ?>"><?php endif; ?>
         <div class="mb-3">
           <label>Judul Materi</label>
-          <input type="text" name="judul" class="form-control" required>
+          <input type="text" name="judul" class="form-control" value="<?= $edit_data['judul'] ?? '' ?>" required>
         </div>
         <div class="mb-3">
           <label>Deskripsi</label>
-          <textarea name="deskripsi" class="form-control" required></textarea>
+          <textarea name="deskripsi" class="form-control" required><?= $edit_data['deskripsi'] ?? '' ?></textarea>
         </div>
         <div class="mb-3">
           <label>Kategori</label>
@@ -132,8 +148,9 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
             <?php
             $kategori = mysqli_query($conn, "SELECT * FROM kategori_materi");
             while ($k = mysqli_fetch_assoc($kategori)):
+              $selected = ($edit_data['kategori_id'] ?? '') == $k['id'] ? 'selected' : '';
             ?>
-              <option value="<?= $k['id'] ?>"><?= htmlspecialchars($k['nama_kategori']) ?></option>
+              <option value="<?= $k['id'] ?>" <?= $selected ?>><?= htmlspecialchars($k['nama_kategori']) ?></option>
             <?php endwhile; ?>
           </select>
         </div>
@@ -144,19 +161,22 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
             <?php
             $kelas = mysqli_query($conn, "SELECT * FROM kelas");
             while ($k = mysqli_fetch_assoc($kelas)):
+              $selected = ($edit_data['kelas_id'] ?? '') == $k['id'] ? 'selected' : '';
             ?>
-              <option value="<?= $k['id'] ?>"><?= htmlspecialchars($k['nama_kelas']) ?></option>
+              <option value="<?= $k['id'] ?>" <?= $selected ?>><?= htmlspecialchars($k['nama_kelas']) ?></option>
             <?php endwhile; ?>
           </select>
         </div>
         <div class="mb-3">
-          <label>File Materi (PDF/Video)</label>
-          <input type="file" name="file" class="form-control" accept=".pdf,.mp4,.mkv,.avi,.mov" required>
+          <label>File Materi <?= $edit_id ? '(Kosongkan jika tidak diubah)' : '' ?></label>
+          <input type="file" name="file" class="form-control" accept=".pdf,.mp4,.mkv,.avi,.mov" <?= $edit_id ? '' : 'required' ?>>
           <small class="text-muted">Format file yang diperbolehkan: PDF, MP4, MKV, AVI, MOV. Maksimal ukuran: 10MB</small>
         </div>
       </div>
       <div class="modal-footer">
-        <button type="submit" name="tambah_admin" class="btn btn-primary">Unggah Materi</button>
+        <button type="submit" name="<?= $edit_id ? 'edit_admin' : 'tambah_admin' ?>" class="btn btn-primary">
+          <?= $edit_id ? 'Simpan Perubahan' : 'Unggah Materi' ?>
+        </button>
       </div>
     </form>
   </div>

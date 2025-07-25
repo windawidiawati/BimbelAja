@@ -118,9 +118,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <div class="text-center mt-3">
           <span>Belum punya akun?
-            <a href="register_siswa.php">Daftar Siswa</a> |
-            <a href="register_tutor.php">Daftar Tutor</a>
-            <a href="register_kasir.php">Daftar Kasir</a>
+            <a href="register_siswa.php">Daftar Siswa</a> 
           </span>
         </div>
       </div>

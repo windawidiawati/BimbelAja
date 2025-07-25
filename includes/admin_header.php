@@ -78,7 +78,7 @@ $role = $_SESSION['user']['role'] ?? null;
 <body>
 
 <!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm sticky-top">
   <div class="container-fluid">
     <a class="navbar-brand me-3" href="/BimbelAja/index.php">
       <i class="bi bi-mortarboard-fill me-2"></i>BimbelAja
@@ -158,5 +158,7 @@ $role = $_SESSION['user']['role'] ?? null;
   </a>
   <a class="<?= ($current_page === 'statistik.php') ? 'active' : '' ?>" href="/BimbelAja/admin/statistik.php">
     <i class="bi bi-bar-chart me-2"></i> Statistik
+    <a class="<?= ($current_page === 'kelola_soal.php') ? 'active' : '' ?>" href="/BimbelAja/admin/kelola_soal.php">
+    <i class="bi bi-bar-chart me-2"></i> Kelola Soal
   </a>
 </div>
