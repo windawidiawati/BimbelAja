@@ -3,7 +3,7 @@ include '../includes/auth.php';
 if ($_SESSION['user']['role'] !== 'siswa') {
   header('Location: ../index.php'); exit;
 }
-include '../includes/header.php';
+include '../includes/siswa_header_langganan.php';
 ?>
 
 <div class="container mt-5">

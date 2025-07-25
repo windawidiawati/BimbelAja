@@ -155,10 +155,14 @@ $role = $_SESSION['user']['role'] ?? null;
   </a>
   <a class="<?= ($current_page === 'verifikasi_pembayaran.php') ? 'active' : '' ?>" href="/BimbelAja/admin/verifikasi_pembayaran.php">
     <i class="bi bi-credit-card me-2"></i> Verifikasi Pembayaran
+  <a class="<?= ($current_page === 'kelola_soal.php') ? 'active' : '' ?>" href="/BimbelAja/admin/kelola_soal.php">
+    <i class="bi bi-journal-text"></i> Kelola Soal
+  <a class="<?= ($current_page === 'kelola_notifikasi.php') ? 'active' : '' ?>" href="/BimbelAja/admin/kelola_notifikasi.php">
+    <i class="bi bi-bell "></i> Kelola Notifikasi
+  <a class="<?= ($current_page === 'kelola_jadwal_offline.php') ? 'active' : '' ?>" href="/BimbelAja/admin/kelola_jadwal_offline.php">
+    <i class="bi bi-calendar-event"></i> Kelola Jadwal Offline
   </a>
   <a class="<?= ($current_page === 'statistik.php') ? 'active' : '' ?>" href="/BimbelAja/admin/statistik.php">
     <i class="bi bi-bar-chart me-2"></i> Statistik
-    <a class="<?= ($current_page === 'kelola_soal.php') ? 'active' : '' ?>" href="/BimbelAja/admin/kelola_soal.php">
-    <i class="bi bi-bar-chart me-2"></i> Kelola Soal
   </a>
 </div>

@@ -78,7 +78,7 @@ $role = $_SESSION['user']['role'] ?? null;
 <body>
 
 <!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+ <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm sticky-top">
   <div class="container-fluid">
     <a class="navbar-brand me-3" href="/BimbelAja/index.php">
       <i class="bi bi-mortarboard-fill me-2"></i>BimbelAja
