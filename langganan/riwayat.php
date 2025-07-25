@@ -1,7 +1,7 @@
 <?php
 session_start();
 include '../config/database.php';
-include '../includes/header.php';
+include '../includes/siswa_header_langganan.php';
 
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'siswa') {
     header("Location: ../auth/login.php");

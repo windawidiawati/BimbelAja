@@ -49,9 +49,7 @@ if (isset($_POST['edit_status']) && isset($_POST['id'])) {
 ob_end_flush(); // Mengakhiri output buffering dan mengirim output
 ?>
 
-
-
-<div class="content pt-5" style="margin-top: 70px;">
+<div class="content px-3 pt-3">
     <div class="card shadow">
         <div class="card-header bg-white">
             <h3 class="card-title mb-0"><i class="bi bi-credit-card me-2"></i> Data Verifikasi Pembayaran</h3>
