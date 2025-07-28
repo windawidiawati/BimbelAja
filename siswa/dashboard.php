@@ -72,7 +72,7 @@ $paket = $row['paket'] ?? 'none';
         "icon" => "bi-camera-video-fill",
         "warna" => "danger",
         "file" => "kelas_online.php",
-        "akses" => "premium"
+        "akses" => "semua"
       ],
       [
         "judul" => "Forum Diskusi",
@@ -80,20 +80,38 @@ $paket = $row['paket'] ?? 'none';
         "icon" => "bi-chat-dots-fill",
         "warna" => "warning",
         "file" => "forum.php",
-        "akses" => "premium"
+        "akses" => "semua"
       ],
       [
         "judul" => "Progress Belajar",
         "deskripsi" => "Lihat perkembangan belajarmu secara berkala.",
         "icon" => "bi-bar-chart-line-fill",
         "warna" => "info",
-        "file" => "progress.php",
-        "akses" => "premium"
-      ]
+        "file" => "progres.php",
+        "akses" => "semua"
+      ],
+      [
+        "judul" => "Jadwal Kelas",
+        "deskripsi" => "Lihat jadwal kelas online yang telah kamu ikuti.",
+        "icon" => "bi-calendar-event-fill",
+        "warna" => "secondary",
+        "file" => "jadwal_kelas.php",
+        "akses" => "semua"
+      ],
+      [
+        "judul" => "Rekap Absensi",
+        "deskripsi" => "Pantau kehadiranmu selama mengikuti kelas.",
+        "icon" => "bi-clipboard-check-fill",
+        "warna" => "dark",
+        "file" => "rekap_absensi.php",
+        "akses" => "semua"
+      ],
+
     ];
 
     foreach ($fitur as $f) :
-      $bisa_akses = ($f['akses'] === 'semua') || ($paket === 'premium');
+      $bisa_akses = true; // Semua yang sudah langganan aktif bisa akses semua fitur
+      //$bisa_akses = ($f['akses'] === 'semua') || ($paket === 'premium');
       $link = $bisa_akses ? $f['file'] : '#';
       $style = $bisa_akses ? 'text-dark' : 'text-muted';
       $cardStyle = $bisa_akses ? '' : 'opacity-50';
