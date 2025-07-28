@@ -8,13 +8,14 @@ include '../config/database.php';
 
 $user_id = $_SESSION['user']['id'];
 $jenjang = $_SESSION['user']['jenjang'];
+$query = "
+  SELECT m.* 
+  FROM materi m
+  JOIN users u ON m.kelas_id = u.kelas_id
+  WHERE m.status = 'approved' AND u.id = $user_id
+";
 
-// Ambil paket langganan aktif siswa
-$qPaket = mysqli_query($conn, "
-  SELECT paket FROM langganan 
-  WHERE user_id = $user_id AND status = 'aktif' 
-  ORDER BY created_at DESC LIMIT 1
-");
+$qPaket = mysqli_query($conn, "SELECT * FROM langganan WHERE user_id = $user_id AND status = 'aktif' ORDER BY id DESC LIMIT 1");
 $dataPaket = mysqli_fetch_assoc($qPaket);
 $paket_siswa = $dataPaket['paket'] ?? null;
 
@@ -41,15 +42,16 @@ if (count($kelasIdList) === 0) {
 $idListStr = implode(',', array_map('intval', $kelasIdList));
 
 // Ambil materi yang sesuai jenjang + status disetujui + sesuai paket
-$sqlMateri = "
-  SELECT m.*, k.nama_kategori, ks.nama_kelas
-  FROM materi m
-  LEFT JOIN kategori_materi k ON m.kategori_id = k.id
-  LEFT JOIN kelas ks ON m.kelas_id = ks.id
-  WHERE m.kelas_id IN ($idListStr)
-    AND m.status = 'diterima'
-    AND m.paket = '$paket_siswa'
+// sementara testing, jangan filter berdasarkan paket
+$sql = "SELECT m.*, k.nama_kelas FROM materi m
+        JOIN kelas k ON m.kelas_id = k.id
+        WHERE k.nama_kelas = '{$kelas}' 
+        AND k.jenjang = '{$jenjang}'
+        AND m.status = 'diterima';
+
+
 ";
+
 $resMateri = $conn->query($sqlMateri);
 ?>
 

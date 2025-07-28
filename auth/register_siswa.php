@@ -8,7 +8,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $username = trim($_POST['username']);
   $password = trim($_POST['password']);
   $nama     = trim($_POST['nama']);
-  $kelas    = trim($_POST['kelas']);
+  $kelas_id = intval($_POST['kelas_id'] ?? 0);
   $jenjang  = trim($_POST['jenjang']);
   $email    = trim($_POST['email']);
   $no_hp    = trim($_POST['no_hp']);
@@ -29,7 +29,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
       $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
-      $stmt = mysqli_prepare($conn, "INSERT INTO users (username, password, role, nama, kelas, jenjang, email, no_hp, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+      $stmt = mysqli_prepare($conn, "INSERT INTO users (username, password, role, nama, kelas_id, jenjang, email, no_hp, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+mysqli_stmt_bind_param($stmt, "ssssissss", $username, $hashed_password, $role, $nama, $kelas_id, $jenjang, $email, $no_hp, $status);
+;
       mysqli_stmt_bind_param($stmt, "sssssssss", $username, $hashed_password, $role, $nama, $kelas, $jenjang, $email, $no_hp, $status);
       mysqli_stmt_execute($stmt);
 
@@ -38,8 +40,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
   }
 }
-?>
 
+?>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
 <div class="container d-flex justify-content-center align-items-center" style="min-height: 80vh;">
   <div class="card shadow-sm w-100" style="max-width: 500px;">
     <div class="card-body">
@@ -87,10 +91,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <div class="mb-4">
           <label class="form-label">Kelas</label>
-          <select name="kelas" id="kelas" class="form-select" required>
-            <option value="">-- Pilih Kelas --</option>
-          </select>
-        </div>
+          <select name="kelas_id" class="form-select" required>
+  <option value="">-- Pilih Kelas --</option>
+  <?php
+  $res = mysqli_query($conn, "SELECT * FROM kelas ORDER BY jenjang, nama_kelas");
+  while ($row = mysqli_fetch_assoc($res)) {
+    $selected = ($row['id'] == ($_POST['kelas_id'] ?? '')) ? 'selected' : '';
+    echo "<option value='{$row['id']}' $selected>{$row['nama_kelas']} ({$row['jenjang']})</option>";
+  }
+  ?>
+</select>
 
         <div class="d-grid">
           <button type="submit" class="btn btn-success"><i class="bi bi-check-circle me-1"></i>Daftar Siswa</button>
