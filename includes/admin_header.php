@@ -30,7 +30,7 @@ $role = $_SESSION['user']['role'] ?? null;
       font-weight: bold;
       font-size: 1.5rem;
     }
-    
+
     .nav-link.active {
       font-weight: bold;
       border-bottom: 2px solid #ffc107;
@@ -78,7 +78,7 @@ $role = $_SESSION['user']['role'] ?? null;
 <body>
 
 <!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary position-fixed top-0 start-0 end-0">
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm sticky-top">
   <div class="container-fluid">
     <a class="navbar-brand me-3" href="/BimbelAja/index.php">
       <i class="bi bi-mortarboard-fill me-2"></i>BimbelAja
@@ -155,14 +155,14 @@ $role = $_SESSION['user']['role'] ?? null;
   </a>
   <a class="<?= ($current_page === 'verifikasi_pembayaran.php') ? 'active' : '' ?>" href="/BimbelAja/admin/verifikasi_pembayaran.php">
     <i class="bi bi-credit-card me-2"></i> Verifikasi Pembayaran
+  <a class="<?= ($current_page === 'kelola_soal.php') ? 'active' : '' ?>" href="/BimbelAja/admin/kelola_soal.php">
+    <i class="bi bi-journal-text"></i> Kelola Soal
+  <a class="<?= ($current_page === 'kelola_notifikasi.php') ? 'active' : '' ?>" href="/BimbelAja/admin/kelola_notifikasi.php">
+    <i class="bi bi-bell "></i> Kelola Notifikasi
+  <a class="<?= ($current_page === 'kelola_jadwal_offline.php') ? 'active' : '' ?>" href="/BimbelAja/admin/kelola_jadwal_offline.php">
+    <i class="bi bi-calendar-event"></i> Kelola Jadwal Offline
   </a>
   <a class="<?= ($current_page === 'statistik.php') ? 'active' : '' ?>" href="/BimbelAja/admin/statistik.php">
     <i class="bi bi-bar-chart me-2"></i> Statistik
-    <a class="<?= ($current_page === 'kelola_soal.php') ? 'active' : '' ?>" href="/BimbelAja/admin/kelola_soal.php">
-    <i class="bi bi-journal-text"></i> Kelola Soal
-    <a class="<?= ($current_page === 'kelola_notifikasi.php') ? 'active' : '' ?>" href="/BimbelAja/admin/kelola_notifikasi.php">
-    <i class="bi bi-bell "></i> Kelola Notifikasi
-    <a class="<?= ($current_page === 'kelola_jadwal_offline.php') ? 'active' : '' ?>" href="/BimbelAja/admin/kelola_jadwal_offline.php">
-    <i class="bi bi-calendar-event"></i> Kelola Jadwal Offline
   </a>
 </div>
