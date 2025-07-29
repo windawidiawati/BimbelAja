@@ -20,25 +20,23 @@ $siswa_result = mysqli_query($conn, "
 // Ambil daftar paket aktif
 $paket_result = mysqli_query($conn, "SELECT * FROM paket WHERE status='aktif' ORDER BY nama ASC");
 
-// Proses form pembayaran tunai
+// Proses form pembayaran
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $user_id  = intval($_POST['user_id']);
     $paket_id = intval($_POST['paket']);
-    $metode   = 'tunai';
+    $metode   = 'transfer'; // langsung di-set ke transfer
     $status   = 'lunas';
-    $tanggal  = date('Y-m-d'); // Tanggal transaksi
+    $tanggal  = date('Y-m-d');
 
     if (!$user_id || !$paket_id) {
         $error = "Semua field wajib dipilih!";
     } else {
-        // Ambil data paket
         $paket_query = mysqli_query($conn, "SELECT * FROM paket WHERE id=$paket_id AND status='aktif'");
         $paket_data = mysqli_fetch_assoc($paket_query);
 
         if (!$paket_data) {
             $error = "Data paket tidak ditemukan.";
         } else {
-            // Insert pembayaran
             $stmt = $conn->prepare("
                 INSERT INTO pembayaran (user_id, paket, harga, metode, status, tanggal) 
                 VALUES (?, ?, ?, ?, ?, ?)
@@ -46,16 +44,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->bind_param("isssss", $user_id, $paket_data['nama'], $paket_data['harga'], $metode, $status, $tanggal);
 
             if ($stmt->execute()) {
-                // Update status user jadi aktif
                 mysqli_query($conn, "UPDATE users SET status='aktif' WHERE id=$user_id");
 
-                // Ambil jenjang dan kelas user
                 $user_result = mysqli_query($conn, "SELECT kelas, jenjang FROM users WHERE id=$user_id");
                 $user_data = mysqli_fetch_assoc($user_result);
                 $kelas = $user_data['kelas'];
                 $jenjang = $user_data['jenjang'];
 
-                // Hitung tanggal mulai dan tanggal berakhir
                 $tanggal_mulai = $tanggal;
                 $date_end = new DateTime($tanggal_mulai);
                 if (strtolower($paket_data['nama']) === 'bulanan') {
@@ -63,11 +58,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 } elseif (strtolower($paket_data['nama']) === 'mingguan') {
                     $date_end->modify('+7 days');
                 } else {
-                    $date_end->modify('+1 month'); // default
+                    $date_end->modify('+1 month');
                 }
                 $tanggal_berakhir = $date_end->format('Y-m-d');
 
-                // Masukkan ke tabel langganan
                 $stmt2 = $conn->prepare("
                     INSERT INTO langganan (user_id, paket, jenjang, kelas, tanggal_mulai, tanggal_berakhir, status, created_at)
                     VALUES (?, ?, ?, ?, ?, ?, 'aktif', NOW())
@@ -76,7 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt2->execute();
                 $stmt2->close();
 
-                $success = "Transaksi tunai berhasil dan langganan ditambahkan!";
+                $success = "Pembayaran transfer berhasil dan langganan ditambahkan!";
             } else {
                 $error = "Gagal menyimpan transaksi.";
             }
@@ -87,7 +81,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 include '../includes/kasir_header.php';
 
-// Format hari + tanggal
 $hari = [
     'Sunday' => 'Minggu',
     'Monday' => 'Senin',
@@ -101,7 +94,7 @@ $hari_ini = $hari[date('l')] . ', ' . date('d-m-Y');
 ?>
 
 <div class="container-fluid">
-    <h4 class="fw-bold mb-4"><i class="bi bi-cash me-2"></i>Pembayaran Tunai</h4>
+    <h4 class="fw-bold mb-4"><i class="bi bi-bank2 me-2"></i>Pembayaran Transfer (Langsung ke Kasir)</h4>
 
     <?php if (!empty($error)): ?>
         <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
@@ -139,14 +132,14 @@ $hari_ini = $hari[date('l')] . ', ' . date('d-m-Y');
                     </select>
                 </div>
 
-                <!-- Tanggal Transaksi (readonly) -->
+                <!-- Tanggal Transaksi -->
                 <div class="mb-3">
                     <label class="form-label">Tanggal Transaksi</label>
                     <input type="text" class="form-control" value="<?= $hari_ini ?>" readonly>
                 </div>
 
-                <button type="submit" class="btn btn-primary w-100">
-                    <i class="bi bi-check-circle me-1"></i> Simpan Transaksi
+                <button type="submit" class="btn btn-success w-100">
+                    <i class="bi bi-cash-coin me-1"></i> Simpan Transaksi Transfer
                 </button>
             </form>
         </div>

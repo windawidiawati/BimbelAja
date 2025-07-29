@@ -9,7 +9,10 @@ if ($_SESSION['user']['role'] !== 'tutor') {
 
 $tutor_id = $_SESSION['user']['id'];
 $kelas_id = isset($_GET['kelas_id']) ? intval($_GET['kelas_id']) : 0;
+$bulan = isset($_GET['bulan']) ? intval($_GET['bulan']) : date('m');
+$tahun = isset($_GET['tahun']) ? intval($_GET['tahun']) : date('Y');
 
+// Ambil nama kelas
 $kelas_nama = '';
 $kelas_res = mysqli_query($conn, "SELECT nama_kelas FROM kelas WHERE id='$kelas_id'");
 if ($kelas_res && mysqli_num_rows($kelas_res) > 0) {
@@ -17,7 +20,7 @@ if ($kelas_res && mysqli_num_rows($kelas_res) > 0) {
     $kelas_nama = $kelas_row['nama_kelas'];
 }
 
-// Ambil data rekap
+// Ambil data siswa dan rekap absensi
 $siswa_query = mysqli_query($conn, "
     SELECT u.nama, u.jenjang,
         SUM(CASE WHEN ao.status = 'hadir' THEN 1 ELSE 0 END) AS jml_hadir,
@@ -26,21 +29,73 @@ $siswa_query = mysqli_query($conn, "
     FROM users u
     LEFT JOIN absensi_offline ao ON ao.siswa_id = u.id
     LEFT JOIN jadwal_offline jo ON ao.jadwal_id = jo.id
-    WHERE u.role = 'siswa' AND u.kelas = '$kelas_nama' AND jo.tutor_id = '$tutor_id'
+    WHERE u.role = 'siswa' 
+        AND u.kelas = '$kelas_nama' 
+        AND jo.tutor_id = '$tutor_id'
+        AND MONTH(ao.created_at) = '$bulan'
+        AND YEAR(ao.created_at) = '$tahun'
     GROUP BY u.id
     ORDER BY u.nama ASC
 ");
 
-$filename = "rekap_absensi_{$kelas_nama}_" . date('Y-m-d') . ".xls";
+// Nama file
+$bulan_nama = date('F', mktime(0, 0, 0, $bulan, 10)); // contoh: July
+$filename = "rekap_absensi_{$kelas_nama}_{$bulan_nama}_{$tahun}.xls";
 header("Content-Type: application/vnd.ms-excel");
 header("Content-Disposition: attachment; filename=$filename");
 header("Pragma: no-cache");
 header("Expires: 0");
 
-echo "No\tNama Siswa\tJenjang\tHadir\tIzin\tAlpa\n";
+// Output HTML table
+echo "
+<html>
+<head>
+    <meta charset='UTF-8'>
+    <style>
+        table, th, td {
+            border: 1px solid black;
+            border-collapse: collapse;
+            padding: 5px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h3 style='text-align: center;'>REKAP ABSENSI SISWA</h3>
+    <p><strong>Kelas:</strong> {$kelas_nama}</p>
+    <p><strong>Bulan:</strong> {$bulan_nama} {$tahun}</p>
+
+    <table>
+        <tr>
+            <th>No</th>
+            <th>Nama Siswa</th>
+            <th>Jenjang</th>
+            <th>Hadir</th>
+            <th>Izin</th>
+            <th>Alpa</th>
+        </tr>";
+
 $no = 1;
 while ($row = mysqli_fetch_assoc($siswa_query)) {
-    echo $no++ . "\t" . $row['nama'] . "\t" . $row['jenjang'] . "\t" . $row['jml_hadir'] . "\t" . $row['jml_izin'] . "\t" . $row['jml_alpa'] . "\n";
+    echo "
+        <tr>
+            <td>{$no}</td>
+            <td>{$row['nama']}</td>
+            <td>{$row['jenjang']}</td>
+            <td>{$row['jml_hadir']}</td>
+            <td>{$row['jml_izin']}</td>
+            <td>{$row['jml_alpa']}</td>
+        </tr>";
+    $no++;
 }
+
+echo "
+    </table>
+</body>
+</html>
+";
 exit;
 ?>

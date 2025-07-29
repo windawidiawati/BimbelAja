@@ -2,13 +2,11 @@
 include '../config/database.php';
 include '../includes/auth.php';
 
-// Pastikan hanya kasir yang bisa akses
 if ($_SESSION['user']['role'] !== 'kasir') {
     header("Location: ../index.php");
     exit;
 }
 
-// Ambil semua data pembayaran + nama siswa
 $query = mysqli_query($conn, "
     SELECT p.*, u.nama 
     FROM pembayaran p 
@@ -16,7 +14,6 @@ $query = mysqli_query($conn, "
     ORDER BY p.id DESC
 ");
 
-// Array untuk terjemahkan hari
 $hari = [
     'Sunday' => 'Minggu',
     'Monday' => 'Senin',
@@ -27,7 +24,7 @@ $hari = [
     'Saturday' => 'Sabtu'
 ];
 
-include '../includes/kasir_header.php'; // ✅ Sidebar & layout otomatis
+include '../includes/kasir_header.php';
 ?>
 
 <div class="container-fluid">
@@ -39,21 +36,18 @@ include '../includes/kasir_header.php'; // ✅ Sidebar & layout otomatis
                 <table class="table table-bordered table-striped align-middle text-center">
                     <thead class="table-dark">
                         <tr>
-                            <th>No</th>
-                            <th>Nama Siswa</th>
-                            <th>Paket</th>
-                            <th>Harga</th>
-                            <th>Metode</th>
-                            <th>Kode Unik</th>
-                            <th>Status</th>
-                            <th>Tanggal</th>
-                            <th>Bukti Transfer</th>
+                            <th class="text-nowrap">No</th>
+                            <th class="text-nowrap">Nama Siswa</th>
+                            <th class="text-nowrap">Paket</th>
+                            <th class="text-nowrap">Harga</th>
+                            <th class="text-nowrap">Metode</th>
+                            <th class="text-nowrap">Status</th>
+                            <th class="text-nowrap">Tanggal</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php $no = 1; while ($row = mysqli_fetch_assoc($query)): ?>
                             <?php
-                            // Format tanggal (contoh: Rabu, 23-07-2025)
                             $tanggal_format = '-';
                             if (!empty($row['tanggal'])) {
                                 $day = $hari[date('l', strtotime($row['tanggal']))];
@@ -61,13 +55,12 @@ include '../includes/kasir_header.php'; // ✅ Sidebar & layout otomatis
                             }
                             ?>
                             <tr>
-                                <td><?= $no++ ?></td>
-                                <td><?= htmlspecialchars($row['nama']) ?></td>
-                                <td><?= htmlspecialchars($row['paket']) ?></td>
-                                <td>Rp<?= number_format($row['harga'], 0, ',', '.') ?></td>
-                                <td><?= ucfirst($row['metode']) ?></td>
-                                <td><?= $row['kode_unik'] ?: '-' ?></td>
-                                <td>
+                                <td class="text-nowrap"><?= $no++ ?></td>
+                                <td class="text-nowrap"><?= htmlspecialchars($row['nama']) ?></td>
+                                <td class="text-nowrap"><?= htmlspecialchars($row['paket']) ?></td>
+                                <td class="text-nowrap">Rp<?= number_format($row['harga'], 0, ',', '.') ?></td>
+                                <td class="text-nowrap small text-capitalize"><?= $row['metode'] ?></td>
+                                <td class="text-nowrap">
                                     <?php
                                     $badgeClass = match($row['status']) {
                                         'lunas' => 'bg-success',
@@ -78,16 +71,7 @@ include '../includes/kasir_header.php'; // ✅ Sidebar & layout otomatis
                                     ?>
                                     <span class="badge <?= $badgeClass ?>"><?= ucfirst($row['status']) ?></span>
                                 </td>
-                                <td><?= $tanggal_format ?></td>
-                                <td>
-                                    <?php if (!empty($row['bukti_transfer'])): ?>
-                                        <a href="../uploads/bukti_transfer/<?= htmlspecialchars($row['bukti_transfer']) ?>" target="_blank" class="btn btn-sm btn-outline-primary">
-                                            Lihat Bukti
-                                        </a>
-                                    <?php else: ?>
-                                        <span class="text-muted">Tidak ada</span>
-                                    <?php endif; ?>
-                                </td>
+                                <td class="text-nowrap"><?= $tanggal_format ?></td>
                             </tr>
                         <?php endwhile; ?>
                     </tbody>

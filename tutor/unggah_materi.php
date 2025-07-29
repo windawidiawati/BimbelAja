@@ -203,6 +203,12 @@ $materi = mysqli_query($conn, $query);
         </div>
     </form>
 
+    <!-- Catatan untuk tutor baru -->
+        <div class="alert alert-warning" role="alert">
+             <strong>Catatan:</strong> Semua materi yang diunggah akan diperiksa terlebih dahulu oleh admin.
+            Status materi akan otomatis berubah menjadi <strong>"Diterima"</strong> setelah disetujui.
+        </div>
+
     <!-- Tabel Materi -->
     <h5>Materi yang Telah Diunggah:</h5>
     <table class="table table-bordered table-striped">

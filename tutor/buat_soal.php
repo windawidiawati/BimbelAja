@@ -27,9 +27,16 @@ if (isset($_POST['simpan_latihan'])) {
     $kelas_id = (int) $_POST['kelas_id'];
     $kategori_id = (int) $_POST['kategori_id'];
     $durasi_menit = (int) $_POST['durasi_menit'];
+    $tanggal_publish = $_POST['tanggal_publish'];
+    $tenggat_waktu = $_POST['tenggat_waktu'];
 
-    $insert_latihan = "INSERT INTO latihan (judul, tutor_id, kelas_id, kategori_id, durasi_menit, created_at) 
-                       VALUES ('$judul_latihan', $tutor_id, $kelas_id, $kategori_id, $durasi_menit, NOW())";
+    // Konversi ke format DATETIME
+    $tanggal_publish = date('Y-m-d H:i:s', strtotime($tanggal_publish));
+    $tenggat_waktu = date('Y-m-d H:i:s', strtotime($tenggat_waktu));
+
+
+    $insert_latihan = "INSERT INTO latihan (judul, tutor_id, kelas_id, kategori_id, durasi_menit, tanggal_publish, tenggat_waktu, created_at) 
+                       VALUES ('$judul_latihan', '$tutor_id', '$kelas_id', '$kategori_id', '$durasi_menit', '$tanggal_publish', '$tenggat_waktu', NOW())";
     if (mysqli_query($conn, $insert_latihan)) {
         $latihan_id = mysqli_insert_id($conn);
 
@@ -104,6 +111,14 @@ include '../includes/tutor_header.php';
                 <label class="form-label">Durasi (menit)</label>
                 <input type="number" name="durasi_menit" class="form-control" value="30" required>
             </div>
+             <div class="mb-3">
+                <label for="tanggal_publish">Tanggal Publish</label>
+                <input type="datetime-local" class="form-control" name="tanggal_publish" required>
+                    </div>
+            <div class="mb-3">
+                <label for="tenggat_waktu">Tenggat Waktu</label>
+                <input type="datetime-local" class="form-control" name="tenggat_waktu" required>
+                    </div>
 
             <h5>Daftar Soal</h5>
             <div id="soalContainer">
@@ -171,6 +186,8 @@ include '../includes/tutor_header.php';
                         <th>Durasi (menit)</th>
                         <th>Total Soal</th>
                         <th>Dibuat</th>
+                        <th>Tanggal Publish</th>
+                        <th>Tenggat Waktu</th>
                         <th>Aksi</th>
                     </tr>
                 </thead>
@@ -184,7 +201,10 @@ include '../includes/tutor_header.php';
                             <td><?= $row['durasi_menit'] ?></td>
                             <td><?= $row['total_soal'] ?></td>
                             <td><?= $row['created_at'] ?></td>
+                            <td><?= $row['tanggal_publish'] ?></td>
+                            <td><?= $row['tenggat_waktu'] ?></td>
                             <td><a href="lihat_soal.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-info">👁 Lihat Soal</a></td>
+
                         </tr>
                     <?php endwhile; ?>
                 </tbody>

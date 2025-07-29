@@ -311,88 +311,115 @@ $result = mysqli_query($conn, $query);
             </div>
         </div>
 
-        <!-- Jadwal Offline Per Hari -->
-        <div class="card shadow-sm p-4 mt-5">
-            <h5 class="fw-bold mb-3">📅 Jadwal Offline Per Hari</h5>
-            <!-- Filter kelas per hari -->
-            <form method="GET" class="row mb-3">
-                <div class="col-md-4">
-                    <select name="filter_kelas_perhari" class="form-select" onchange="this.form.submit()">
-                        <option value="">Semua Kelas</option>
-                        <?php 
-                        mysqli_data_seek($kelas_result, 0); 
-                        $filter_kelas_perhari = $_GET['filter_kelas_perhari'] ?? '';
-                        while ($k = mysqli_fetch_assoc($kelas_result)) { 
-                            $selected = ($filter_kelas_perhari == $k['id']) ? 'selected' : '';
-                            echo "<option value='{$k['id']}' $selected>{$k['nama_kelas']}</option>";
-                        } 
-                        ?>
-                    </select>
-                </div>
-            </form>
-            <?php
-            $jadwal_perhari_query = "
-                SELECT jo.tanggal, k.nama_kelas, km.nama_kategori, jo.jam_mulai, jo.jam_selesai
-                FROM jadwal_offline jo
-                JOIN kelas k ON jo.kelas_id = k.id
-                JOIN kategori_materi km ON jo.kategori_id = km.id
-                WHERE jo.tutor_id = '$tutor_id'
-            ";
-            if ($filter_kelas_perhari) $jadwal_perhari_query .= " AND jo.kelas_id = '$filter_kelas_perhari'";
-            $jadwal_perhari_query .= " ORDER BY jo.tanggal ASC, jo.jam_mulai ASC";
-            $jadwal_perhari = mysqli_query($conn, $jadwal_perhari_query);
-
-            $hari_indo = [
-                'Sunday' => 'Minggu',
-                'Monday' => 'Senin',
-                'Tuesday' => 'Selasa',
-                'Wednesday' => 'Rabu',
-                'Thursday' => 'Kamis',
-                'Friday' => 'Jumat',
-                'Saturday' => 'Sabtu'
-            ];
-
-            if (mysqli_num_rows($jadwal_perhari) == 0) {
-                echo "<div class='alert alert-warning'>Tidak ada jadwal offline.</div>";
-            } else {
-                $current_day = '';
-                $current_class = '';
-                while ($row = mysqli_fetch_assoc($jadwal_perhari)) {
-                    $hari = $hari_indo[date('l', strtotime($row['tanggal']))];
-                    $tanggal = date('d-m-Y', strtotime($row['tanggal']));
-                    $kelas = $row['nama_kelas'];
-
-                    if ($hari != $current_day) {
-                        if ($current_day != '') echo "</tbody></table>";
-                        echo "<h6 class='mt-4 text-primary fw-bold'>📆 $hari ($tanggal)</h6>";
-                        $current_day = $hari;
-                        $current_class = '';
-                    }
-
-                    if ($kelas != $current_class) {
-                        if ($current_class != '') echo "</tbody></table>";
-                        echo "<h6 class='mt-3 text-success fw-bold'>Kelas: $kelas</h6>";
-                        echo "<table class='table table-bordered text-center'>
-                                <thead class='table-secondary'>
-                                    <tr>
-                                        <th>Jam</th>
-                                        <th>Mapel</th>
-                                    </tr>
-                                </thead>
-                                <tbody>";
-                        $current_class = $kelas;
-                    }
-
-                    echo "<tr>
-                            <td>{$row['jam_mulai']} - {$row['jam_selesai']}</td>
-                            <td>{$row['nama_kategori']}</td>
-                          </tr>";
-                }
-                echo "</tbody></table>";
-            }
-            ?>
+<!-- Jadwal Offline Per Hari -->
+<div class="card shadow-sm p-4 mt-5">
+    <h5 class="fw-bold mb-3">📅 Jadwal Offline Per Hari</h5>
+    
+    <!-- Filter kelas per hari -->
+    <form method="GET" class="row mb-3">
+        <div class="col-md-4">
+            <select name="filter_kelas_perhari" class="form-select" onchange="this.form.submit()">
+                <option value="">Semua Kelas</option>
+                <?php 
+                mysqli_data_seek($kelas_result, 0); 
+                $filter_kelas_perhari = $_GET['filter_kelas_perhari'] ?? '';
+                while ($k = mysqli_fetch_assoc($kelas_result)) { 
+                    $selected = ($filter_kelas_perhari == $k['id']) ? 'selected' : '';
+                    echo "<option value='{$k['id']}' $selected>{$k['nama_kelas']}</option>";
+                } 
+                ?>
+            </select>
         </div>
-    </div>
+    </form>
+
+    <?php
+    // Ambil semua jadwal
+    $jadwal_perhari_query = "
+        SELECT jo.tanggal, k.nama_kelas, km.nama_kategori, jo.jam_mulai, jo.jam_selesai
+        FROM jadwal_offline jo
+        JOIN kelas k ON jo.kelas_id = k.id
+        JOIN kategori_materi km ON jo.kategori_id = km.id
+        WHERE jo.tutor_id = '$tutor_id'
+    ";
+    if ($filter_kelas_perhari) {
+        $jadwal_perhari_query .= " AND jo.kelas_id = '$filter_kelas_perhari'";
+    }
+    $jadwal_perhari_query .= " ORDER BY jo.tanggal ASC, jo.jam_mulai ASC";
+    $jadwal_perhari = mysqli_query($conn, $jadwal_perhari_query);
+
+    $hari_indo = [
+        'Sunday' => 'Minggu',
+        'Monday' => 'Senin',
+        'Tuesday' => 'Selasa',
+        'Wednesday' => 'Rabu',
+        'Thursday' => 'Kamis',
+        'Friday' => 'Jumat',
+        'Saturday' => 'Sabtu'
+    ];
+
+    $hari_ini = date('Y-m-d');
+    $besok = date('Y-m-d', strtotime('+1 day'));
+
+    $jadwal_today = [];
+    $jadwal_tomorrow = [];
+    $jadwal_others = [];
+
+    while ($row = mysqli_fetch_assoc($jadwal_perhari)) {
+        if ($row['tanggal'] == $hari_ini) {
+            $jadwal_today[] = $row;
+        } elseif ($row['tanggal'] == $besok) {
+            $jadwal_tomorrow[] = $row;
+        } else {
+            $jadwal_others[] = $row;
+        }
+    }
+
+    $all_jadwal = array_merge($jadwal_today, $jadwal_tomorrow, $jadwal_others);
+
+    if (count($all_jadwal) == 0) {
+        echo "<div class='alert alert-warning'>Tidak ada jadwal offline.</div>";
+    } else {
+        $current_day = '';
+        $current_date = '';
+        $current_class = '';
+
+        foreach ($all_jadwal as $row) {
+            $hari = $hari_indo[date('l', strtotime($row['tanggal']))];
+            $tanggal = date('d-m-Y', strtotime($row['tanggal']));
+            $kelas = $row['nama_kelas'];
+
+            if ($row['tanggal'] != $current_date) {
+                if ($current_class != '') echo "</tbody></table>";
+                echo "<h6 class='mt-4 text-primary fw-bold'>📆 $hari ($tanggal)</h6>";
+                $current_day = $hari;
+                $current_date = $row['tanggal'];
+                $current_class = '';
+            }
+
+            if ($kelas != $current_class) {
+                if ($current_class != '') echo "</tbody></table>";
+                echo "<h6 class='mt-3 text-success fw-bold'>Kelas: $kelas</h6>";
+                echo "<table class='table table-bordered text-center'>
+                        <thead class='table-secondary'>
+                            <tr>
+                                <th>Jam</th>
+                                <th>Mapel</th>
+                            </tr>
+                        </thead>
+                        <tbody>";
+                $current_class = $kelas;
+            }
+
+            echo "<tr>
+                    <td>{$row['jam_mulai']} - {$row['jam_selesai']}</td>
+                    <td>{$row['nama_kategori']}</td>
+                  </tr>";
+        }
+
+        if ($current_class != '') echo "</tbody></table>";
+    }
+    ?>
 </div>
+
 
 <?php include '../includes/tutor_footer.php'; ?>
