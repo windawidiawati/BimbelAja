@@ -81,6 +81,7 @@ $current_page = basename($_SERVER['SCRIPT_NAME']);
     <a class="<?= ($current_page === 'checkout_tunai.php') ? 'active' : '' ?>" href="checkout_tunai.php"><i class="bi bi-cash-coin me-2"></i>Checkout Tunai</a>
     <a class="<?= ($current_page === 'data_siswa.php') ? 'active' : '' ?>" href="data_siswa.php"><i class="bi bi-people me-2"></i>Data Siswa</a>
     <a class="<?= ($current_page === 'transaksi.php') ? 'active' : '' ?>" href="transaksi.php"><i class="bi bi-receipt-cutoff me-2"></i>Riwayat Transaksi</a>
+    <a class="<?= ($current_page === 'pendapatan.php') ? 'active' : '' ?>" href="pendapatan.php"><i class="bi bi-cash-coin me-2"></i>Rincian Pendapatan</a>
 </div>
 
 <div class="content">

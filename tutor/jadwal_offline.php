@@ -61,6 +61,35 @@ if (isset($_POST['tambah'])) {
     $jam_selesai = mysqli_real_escape_string($conn, $_POST['jam_selesai']);
     $materi_file = '';
 
+
+
+//jadwal bentrok
+$tutor_id = $_SESSION['user']['id'];
+$kategori_id = $_POST['kategori_id'];
+$kelas_id = $_POST['kelas_id'];
+$tanggal = $_POST['tanggal'];
+$jam_mulai = $_POST['jam_mulai'];
+$jam_selesai = $_POST['jam_selesai'];
+$keterangan = $_POST['keterangan'];
+
+// Cek apakah ada jadwal bentrok
+$cek = mysqli_query($conn, "
+    SELECT * FROM jadwal_offline 
+    WHERE tutor_id = $tutor_id 
+    AND tanggal = '$tanggal'
+    AND (
+        ('$jam_mulai' BETWEEN jam_mulai AND jam_selesai)
+        OR ('$jam_selesai' BETWEEN jam_mulai AND jam_selesai)
+        OR (jam_mulai BETWEEN '$jam_mulai' AND '$jam_selesai')
+    )
+");
+
+if (mysqli_num_rows($cek) > 0) {
+    echo "<script>alert('Jadwal bentrok dengan jadwal lain! Silakan pilih waktu lain.');history.back();</script>";
+    exit;
+}
+    
+
     // Upload materi
     if (!empty($_FILES['materi_file']['name'])) {
         $allowed_types = ['pdf','ppt','pptx','doc','docx'];
@@ -155,6 +184,7 @@ if (isset($_POST['update'])) {
         $form_mode = "tambah";
     }
 }
+
 
 // Query jadwal offline
 $query = "SELECT jo.*, k.nama_kelas, km.nama_kategori
