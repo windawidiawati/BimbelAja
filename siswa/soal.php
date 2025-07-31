@@ -3,8 +3,6 @@ session_start();
 include '../config/database.php';
 include '../includes/siswa_header_langganan.php';
 
-
-
 // Pastikan user adalah siswa
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'siswa') {
     header("Location: ../index.php");
@@ -19,8 +17,6 @@ echo '<div class="container my-4">';
 if (isset($_GET['latihan_id'])) {
     $latihan_id = (int)$_GET['latihan_id'];
 
-    
-
     // Ambil info latihan & pastikan kelas_id cocok
     $qLatihan = mysqli_query($conn, "SELECT * FROM latihan WHERE id = $latihan_id AND kelas_id = $kelas_id");
     $latihan = mysqli_fetch_assoc($qLatihan);
@@ -28,32 +24,46 @@ if (isset($_GET['latihan_id'])) {
     if ($latihan) {
         echo "<h4 class='mb-3'>Latihan: {$latihan['judul']}</h4>";
 
-        // Ambil soal-soal yang cocok dengan latihan_id dan kelas_id
+        // Ambil soal-soal
         $qSoal = mysqli_query($conn, "SELECT * FROM soal WHERE latihan_id = $latihan_id AND kelas_id = $kelas_id");
         if (mysqli_num_rows($qSoal) > 0) {
-    // Tampilkan tombol Keluar di atas soal
-    echo '<div class="mb-3">';
-    echo '<button type="button" onclick="konfirmasiKeluar()" class="btn btn-danger">Keluar</button>';
-    echo '</div>';
+            echo '<div class="mb-3">';
+            echo '<button type="button" onclick="konfirmasiKeluar()" class="btn btn-danger">Keluar</button>';
+            echo '</div>';
 
-    $no = 1;
-    while ($soal = mysqli_fetch_assoc($qSoal)) {
-        echo "
+          echo "<form method='POST' action='proses_jawaban.php'>";
+$no = 1;
 
-                
-                <div class='card mb-3'>
-                    <div class='card-body'>
-                        <p><strong>Soal $no:</strong> {$soal['pertanyaan']}</p>
-                        <ul class='list-unstyled'>
-                            <li><input type='radio' name='jawaban_$no'> A. {$soal['opsi_a']}</li>
-                            <li><input type='radio' name='jawaban_$no'> B. {$soal['opsi_b']}</li>
-                            <li><input type='radio' name='jawaban_$no'> C. {$soal['opsi_c']}</li>
-                            <li><input type='radio' name='jawaban_$no'> D. {$soal['opsi_d']}</li>
-                        </ul>
-                    </div>
-                </div>";
-                $no++;
-            }
+while ($soal = mysqli_fetch_assoc($qSoal)) {
+    echo "
+    <div class='card mb-3'>
+        <div class='card-body'>
+            <p><strong>Soal $no:</strong> {$soal['pertanyaan']}</p>
+            <ul class='list-unstyled'>
+                <li><input type='radio' name='jawaban[{$soal['id']}]' value='A' required> A. {$soal['opsi_a']}
+                <li><input type='radio' name='jawaban[{$soal['id']}]' value='B'> B. {$soal['opsi_b']}
+                <li><input type='radio' name='jawaban[{$soal['id']}]' value='C'> C. {$soal['opsi_c']}
+                <li><input type='radio' name='jawaban[{$soal['id']}]' value='D'> D. {$soal['opsi_d']}
+            </ul>
+            <input type='hidden' name='soal_ids[]' value='{$soal['id']}'>
+        </div>
+    </div>";
+    $no++;
+  echo "<input type='hidden' name='soal_ids[]' value='{$soal['id']}'>";
+
+}
+
+// input hidden untuk mengirim id latihan
+$latihan_id = isset($_GET['latihan_id']) ? (int)$_GET['latihan_id'] : 0;
+
+if ($latihan_id === 0) {
+  echo "Latihan ID tidak valid.";
+  exit;
+}
+echo "<input type='hidden' name='latihan_id' value='{$_GET['latihan_id']}'>";
+echo "<button type='submit' class='btn btn-primary float-end'>Selesai Mengerjakan</button>";
+echo "</form>";
+ // FORM ditutup
         } else {
             echo "<div class='alert alert-warning'>Belum ada soal untuk latihan ini.</div>";
         }
@@ -61,29 +71,45 @@ if (isset($_GET['latihan_id'])) {
         echo "<div class='alert alert-danger'>Latihan tidak ditemukan atau bukan untuk kelas kamu.</div>";
     }
 } else {
-    // Daftar latihan berdasarkan kelas_id
-    $qLatihan = mysqli_query($conn, "SELECT * FROM latihan WHERE kelas_id = '$kelas_id' ORDER BY created_at DESC");
+    // Tampilkan daftar latihan
+$qLatihan = mysqli_query($conn, "SELECT * FROM latihan WHERE kelas_id = '$kelas_id' ORDER BY created_at DESC");
 
-    echo "<h4 class='mb-3'>Daftar Latihan</h4>";
-    if (mysqli_num_rows($qLatihan) > 0) {
-        echo "<div class='list-group'>";
-        while ($latihan = mysqli_fetch_assoc($qLatihan)) {
-            $judul = $latihan['judul'];
-            $durasi = $latihan['durasi_menit'];
-            $tenggat_waktu = date('d M Y', strtotime($latihan['tenggat_waktu']));
-            $id = $latihan['id'];
-            echo "<a href='soal.php?latihan_id=$id' class='list-group-item list-group-item-action'>
-                    <strong>$judul</strong> <br>
+echo "<h4 class='mb-3'>Daftar Latihan</h4>";
+if (mysqli_num_rows($qLatihan) > 0) {
+    echo "<div class='list-group'>";
+    while ($latihan = mysqli_fetch_assoc($qLatihan)) {
+        $judul = $latihan['judul'];
+        $durasi = $latihan['durasi_menit'];
+        $tenggat_waktu = date('d M Y', strtotime($latihan['tenggat_waktu']));
+        $id = $latihan['id'];
+
+        // Cek apakah sudah dikerjakan
+        $cek = mysqli_query($conn, "SELECT 1 FROM jawaban_siswa WHERE user_id = $siswa_id AND latihan_id = $id LIMIT 1");
+        $sudah_dikerjakan = mysqli_num_rows($cek) > 0;
+
+        if ($sudah_dikerjakan) {
+            echo "
+            <div class='list-group-item bg-light'>
+                <strong>$judul</strong><br>
+                Durasi: $durasi menit | Deadline: $tenggat_waktu<br>
+                <span class='badge bg-success text-white mt-2'>Sudah Dikerjakan</span>
+
+            </div>";
+        } else {
+            echo "<a href='soal.php?latihan_id=$id&start=1' class='list-group-item list-group-item-action'>
+                    <strong>$judul</strong><br>
                     Durasi: $durasi menit | Deadline: $tenggat_waktu
                   </a>";
         }
-        echo "</div>";
-    } else {
-        echo "<div class='alert alert-info'>Belum ada latihan tersedia untuk kelas kamu.</div>";
     }
+    echo "</div>";
+} else {
+    echo "<div class='alert alert-info'>Belum ada latihan tersedia untuk kelas kamu.</div>";
 }
-echo '<div class="container my-4" style="padding-bottom: 100px;">';
-'</div>';
+
+}
+
+echo '</div>'; // akhir .container;
 ?>
 <!-- Modal, Timer, dan Validasi JavaScript -->
 <script>
@@ -158,21 +184,68 @@ function konfirmasiKeluar() {
 <?php endif; ?>
 
 <!-- Tambahkan ini di bagian soal -->
-<?php if (isset($_GET['start']) && $latihan): ?>
+<?php if (isset($_GET['latihan_id']) && mysqli_num_rows($qSoal) > 0): ?>
   <div id="floating-timer">
     Sisa Waktu: <span id="timer"></span>
   </div>
   <script>mulaiTimer(<?= $latihan['durasi_menit'] ?>);</script>
 <?php endif; ?>
 
+<?php if (isset($_GET['selesai'])): ?>
+<!-- Modal Bootstrap -->
+<div class="modal fade show" id="selesaiModal" style="display: block;" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Hasil Latihan</h5>
+      </div>
+      <div class="modal-body">
+        <?php 
+        include '../config/database.php';
+        $latihan_id = $_GET['latihan_id'];
+        $user_id = $_SESSION['user']['id'];
 
-<?php if (isset($_GET['start'])): ?>
-  <form id="formLatihan" method="POST" action="soal.php?latihan_id=<?= $latihan_id ?>">
-    <!-- Soal ditampilkan di sini -->
+        // Ambil jumlah soal
+        $qSoal = mysqli_query($conn, "SELECT COUNT(*) as total FROM soal WHERE latihan_id = $latihan_id");
+        $jumlah_soal = mysqli_fetch_assoc($qSoal)['total'];
 
-    <button type="submit" name="submit_jawaban" class="btn btn-success">Selesai Mengerjakan</button>
-    <?php endif; ?>
-</form>
+        // Ambil jawaban benar siswa
+        $qJawaban = mysqli_query($conn, "
+          SELECT COUNT(*) as benar 
+          FROM jawaban_siswa js
+          JOIN soal s ON js.soal_id = s.id 
+          WHERE js.user_id = $user_id 
+            AND s.latihan_id = $latihan_id 
+            AND js.jawaban = s.jawaban
+        ");
+        $jawaban_benar = mysqli_fetch_assoc($qJawaban)['benar'];
+
+        $skor = round(($jawaban_benar / $jumlah_soal) * 100);
+        ?>
+
+        <p><strong>Jumlah Soal:</strong> <?= $jumlah_soal ?></p>
+        <p><strong>Jawaban Benar:</strong> <?= $jawaban_benar ?></p>
+        <p><strong>Skor:</strong> <?= $skor ?></p>
+      </div>
+      <div class="modal-footer">
+        <a href="dashboard_siswa.php" class="btn btn-primary">Kembali ke Dashboard</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Background gelap modal -->
+<div class="modal-backdrop fade show"></div>
+
+<script>
+  // Optional: auto scroll ke modal
+  window.onload = function() {
+    document.getElementById('selesaiModal').scrollIntoView();
+  };
+</script>
+<?php endif; ?>
+
+
 
 <style>
 #floating-timer {
@@ -254,5 +327,53 @@ h4.mb-3 {
 .btn {
   border-radius: 6px;
 }
-</style>
+/* Modal container centering fix */
+.modal.fade.show {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+}
 
+/* Modal box styling */
+.modal-content {
+  border-radius: 10px;
+  box-shadow: 0 5px 30px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.4s ease-out;
+}
+
+/* Optional: animation effect */
+@keyframes slideUp {
+  from {
+    transform: translateY(50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Modal header */
+.modal-header {
+  background-color: #007bff;
+  color: white;
+  border-bottom: none;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+}
+
+/* Modal footer */
+.modal-footer {
+  border-top: none;
+  justify-content: center;
+}
+
+/* Button */
+.modal-footer .btn-primary {
+  background-color: #28a745;
+  border: none;
+}
+.modal-footer .btn-primary:hover {
+  background-color: #218838;
+}
+</style>
