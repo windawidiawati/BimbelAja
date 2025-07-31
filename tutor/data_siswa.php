@@ -16,18 +16,25 @@ $daftar_kelas = [
     'Kelas 10 SMA IPS', 'Kelas 11 SMA IPS', 'Kelas 12 SMA IPS'
 ];
 
+// Ambil semua paket
+$paket_result = mysqli_query($conn, "SELECT id, nama FROM paket");
+$daftar_paket = [];
+while ($p = mysqli_fetch_assoc($paket_result)) {
+    $daftar_paket[] = $p;
+}
+
 // Filter dari URL
 $filter_kelas = isset($_GET['kelas']) ? $_GET['kelas'] : '';
-$filter_kategori = isset($_GET['kategori_id']) ? $_GET['kategori_id'] : '';
+$filter_paket = isset($_GET['paket_id']) ? $_GET['paket_id'] : '';
 ?>
 
 <div class="content">
     <div class="card shadow-sm p-4 mb-5">
-        <h3 class="mb-4 fw-bold text-primary">📊 Data Siswa & Nilai Per Mata Pelajaran</h3>
+        <h3 class="mb-4 fw-bold text-primary">📋 Data Siswa</h3>
 
         <!-- Filter -->
         <form method="GET" class="row g-3 mb-4 align-items-end">
-            <div class="col-md-3">
+            <div class="col-md-4">
                 <label class="form-label">Filter Kelas:</label>
                 <select name="kelas" class="form-select">
                     <option value="">Semua Kelas</option>
@@ -39,21 +46,19 @@ $filter_kategori = isset($_GET['kategori_id']) ? $_GET['kategori_id'] : '';
                 </select>
             </div>
 
-            <div class="col-md-3">
-                <label class="form-label">Filter Mata Pelajaran:</label>
-                <select name="kategori_id" class="form-select">
-                    <option value="">Semua Mapel</option>
-                    <?php
-                    $kategori_result = mysqli_query($conn, "SELECT * FROM kategori_materi");
-                    while ($row = mysqli_fetch_assoc($kategori_result)) { ?>
-                        <option value="<?= $row['id']; ?>" <?= ($filter_kategori == $row['id']) ? 'selected' : ''; ?>>
-                            <?= $row['nama_kategori']; ?>
+            <div class="col-md-4">
+                <label class="form-label">Filter Paket:</label>
+                <select name="paket_id" class="form-select">
+                    <option value="">Semua Paket</option>
+                    <?php foreach ($daftar_paket as $paket) { ?>
+                        <option value="<?= $paket['id']; ?>" <?= ($filter_paket == $paket['id']) ? 'selected' : ''; ?>>
+                            <?= $paket['nama']; ?>
                         </option>
                     <?php } ?>
                 </select>
             </div>
 
-            <div class="col-md-3">
+            <div class="col-md-4">
                 <button type="submit" class="btn btn-primary w-100">
                     <i class="bi bi-funnel-fill"></i> Terapkan Filter
                 </button>
@@ -61,31 +66,28 @@ $filter_kategori = isset($_GET['kategori_id']) ? $_GET['kategori_id'] : '';
         </form>
 
         <?php
-        // Query utama nilai siswa
         $query = "
             SELECT 
                 u.id AS user_id,
-                u.nama,
-                u.kelas,
-                u.jenjang,
-                km.nama_kategori,
-                COUNT(js.id) AS total_dikerjakan,
-                SUM(js.benar) AS total_benar
+                MAX(u.nama) AS nama,
+                MAX(u.kelas) AS kelas,
+                MAX(u.jenjang) AS jenjang,
+                MAX(p.nama) AS nama_paket
             FROM users u
-            LEFT JOIN jawaban_siswa js ON u.id = js.user_id
-            LEFT JOIN soal s ON js.soal_id = s.id
-            LEFT JOIN kategori_materi km ON s.kategori_id = km.id
+            LEFT JOIN langganan l ON l.user_id = u.id
+            LEFT JOIN paket p ON l.paket_id = p.id
             WHERE u.role = 'siswa'
         ";
 
         if ($filter_kelas !== '') {
             $query .= " AND u.kelas = '" . mysqli_real_escape_string($conn, $filter_kelas) . "'";
         }
-        if ($filter_kategori !== '') {
-            $query .= " AND s.kategori_id = '" . mysqli_real_escape_string($conn, $filter_kategori) . "'";
+
+        if ($filter_paket !== '') {
+            $query .= " AND p.id = '" . mysqli_real_escape_string($conn, $filter_paket) . "'";
         }
 
-        $query .= " GROUP BY u.id, s.kategori_id ORDER BY u.nama ASC";
+        $query .= " GROUP BY u.id ORDER BY nama ASC";
         $result = mysqli_query($conn, $query);
         ?>
 
@@ -97,32 +99,26 @@ $filter_kategori = isset($_GET['kategori_id']) ? $_GET['kategori_id'] : '';
                         <th>Nama Siswa</th>
                         <th>Kelas</th>
                         <th>Jenjang</th>
-                        <th>Mata Pelajaran</th>
-                        <th>Nilai</th>
+                        <th>Paket</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php
                     $no = 1;
                     while ($row = mysqli_fetch_assoc($result)) {
-                        $nama_kategori = $row['nama_kategori'] ?? '-';
-                        $nilai = ($row['total_dikerjakan'] > 0)
-                            ? round(($row['total_benar'] / $row['total_dikerjakan']) * 100, 2)
-                            : 'Belum Ada';
-
+                        $nama_paket = $row['nama_paket'] ?? '-';
                         echo "<tr>
                                 <td>{$no}</td>
                                 <td>{$row['nama']}</td>
                                 <td>{$row['kelas']}</td>
                                 <td>{$row['jenjang']}</td>
-                                <td>{$nama_kategori}</td>
-                                <td>{$nilai}</td>
+                                <td>{$nama_paket}</td>
                               </tr>";
                         $no++;
                     }
 
                     if ($no === 1) {
-                        echo "<tr><td colspan='6'>Tidak ada data untuk filter ini.</td></tr>";
+                        echo "<tr><td colspan='5'>Tidak ada data untuk filter ini.</td></tr>";
                     }
                     ?>
                 </tbody>
