@@ -115,11 +115,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </button>
           </div>
         </form>
-
-        <div class="text-center mt-3">
-          <span>Belum punya akun?
-            <a href="register_siswa.php">Daftar Siswa</a> 
-          </span>
         </div>
       </div>
     </div>

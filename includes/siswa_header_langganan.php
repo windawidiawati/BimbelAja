@@ -29,6 +29,9 @@ if (!$user || $user['role'] !== 'siswa') {
     }
     .nav-link:hover {
       opacity: 0.9;
+      color: #fdfdfdff;
+      transform: translateY(-2px);
+       text-decoration-thickness: 2px;
     }
     .nav-link.active {
       font-weight: bold;
@@ -50,8 +53,7 @@ if (!$user || $user['role'] !== 'siswa') {
 <body>
 
 <!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-  <div class="container">
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm sticky-top">  <div class="container">
     <a class="navbar-brand" href="/BimbelAja/siswa/dashboard.php">BimbelAja</a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
       <span class="navbar-toggler-icon"></span>
@@ -66,7 +68,7 @@ if (!$user || $user['role'] !== 'siswa') {
           <a class="nav-link" href="/BimbelAja/siswa/materi.php">Materi</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="/BimbelAja/siswa/soal.php">Soal</a>
+          <a class="nav-link" href="/BimbelAja/siswa/soal.php">latihan</a>
         </li>
         <li class="nav-item">
           <a class="nav-link" href="/BimbelAja/siswa/forum.php">Forum</a>
