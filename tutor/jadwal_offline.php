@@ -11,6 +11,7 @@ $tutor_id = $_SESSION['user']['id'];
 
 // Ambil daftar kelas & mapel
 $kelas_result = mysqli_query($conn, "SELECT * FROM kelas ORDER BY nama_kelas ASC");
+$paketList = mysqli_query($conn, "SELECT * FROM paket ORDER BY nama ASC");
 $mapel_result = mysqli_query($conn, "SELECT * FROM kategori_materi ORDER BY nama_kategori ASC");
 
 // Filter utama
@@ -54,6 +55,7 @@ $edit_id = $edit_kelas = $edit_mapel = $edit_tanggal = $edit_mulai = $edit_seles
 
 // Tambah jadwal offline
 if (isset($_POST['tambah'])) {
+    $paket_id = isset($_POST['paket_id']) ? (int)$_POST['paket_id'] : 0;
     $kelas_id = mysqli_real_escape_string($conn, $_POST['kelas_id']);
     $kategori_id = mysqli_real_escape_string($conn, $_POST['kategori_id']);
     $tanggal = mysqli_real_escape_string($conn, $_POST['tanggal']);
@@ -108,8 +110,8 @@ if (mysqli_num_rows($cek) > 0) {
     }
 
     if (empty($error_msg)) {
-        mysqli_query($conn, "INSERT INTO jadwal_offline (tutor_id, kelas_id, kategori_id, tanggal, jam_mulai, jam_selesai, materi_file)
-                             VALUES ('$tutor_id','$kelas_id','$kategori_id','$tanggal','$jam_mulai','$jam_selesai','$materi_file')");
+        mysqli_query($conn, "INSERT INTO jadwal_offline (tutor_id, kelas_id, paket_id, kategori_id, tanggal, jam_mulai, jam_selesai, materi_file)
+                             VALUES ('$tutor_id','$kelas_id', '$paket_id', '$kategori_id','$tanggal','$jam_mulai','$jam_selesai','$materi_file')");
         $success_msg = "Jadwal offline berhasil ditambahkan.";
     }
 }
@@ -186,11 +188,14 @@ if (isset($_POST['update'])) {
 }
 
 
+
 // Query jadwal offline
-$query = "SELECT jo.*, k.nama_kelas, km.nama_kategori
+$query = "SELECT jo.*, k.nama_kelas, p.nama, km.nama_kategori
           FROM jadwal_offline jo
           LEFT JOIN kelas k ON jo.kelas_id=k.id
           LEFT JOIN kategori_materi km ON jo.kategori_id=km.id
+          LEFT JOIN paket p ON jo.paket_id = p.id
+        --   ORDER BY p.nama ASC
           WHERE jo.tutor_id='$tutor_id'";
 if ($filter_kelas) $query .= " AND jo.kelas_id='$filter_kelas'";
 if ($filter_mapel) $query .= " AND jo.kategori_id='$filter_mapel'";
@@ -223,6 +228,15 @@ $result = mysqli_query($conn, $query);
                             <option value="<?= $k['id']; ?>" <?= ($edit_kelas == $k['id']) ? 'selected' : ''; ?>><?= $k['nama_kelas']; ?></option>
                         <?php } ?>
                     </select>
+                </div>
+                <div class="mb-3">
+                <label for="paket" class="form-label">Paket</label>
+                <select name="paket_id" class="form-select" required>
+                    <option value="">-- Pilih Paket --</option>
+                    <?php while ($row = mysqli_fetch_assoc($paketList)) : ?>
+                        <option value="<?= $row['id'] ?>"><?= $row['nama'] ?></option>
+                    <?php endwhile; ?>
+                </select>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Mata Pelajaran:</label>
@@ -283,6 +297,20 @@ $result = mysqli_query($conn, $query);
                         <?php } ?>
                     </select>
                 </div>
+
+                <div class="mb-3">
+    <label for="paket_id" class="form-label">Paket</label>
+    <select name="paket_id" class="form-select" required>
+        <option value="">-- Pilih Paket --</option>
+        <?php
+        $query_paket = mysqli_query($conn, "SELECT * FROM paket");
+        while ($paket = mysqli_fetch_assoc($query_paket)) {
+            echo "<option value='{$paket['id']}'>{$paket['nama_paket']}</option>";
+        }
+        ?>
+    </select>
+</div>
+
                 <div class="col-md-2 d-grid">
                     <button type="submit" class="btn btn-primary"><i class="bi bi-funnel-fill"></i> Filter</button>
                 </div>
@@ -305,6 +333,7 @@ $result = mysqli_query($conn, $query);
                         <tr>
                             <th>No</th>
                             <th>Kelas</th>
+                            <th>Paket</th>
                             <th>Mapel</th>
                             <th>Tanggal</th>
                             <th>Jam</th>
@@ -321,8 +350,9 @@ $result = mysqli_query($conn, $query);
                             echo "<tr>
                                     <td>{$no}</td>
                                     <td>{$row['nama_kelas']}</td>
+                                    <td>" . htmlspecialchars(isset($row['nama']) ? $row['nama'] : '-') . "</td>
                                     <td>{$row['nama_kategori']}</td>
-                                    <td>".date('d-m-Y', strtotime($row['tanggal']))."</td>
+                                    <td>" . date('d-m-Y', strtotime($row['tanggal'])) . "</td>
                                     <td>{$row['jam_mulai']} - {$row['jam_selesai']}</td>
                                     <td>{$materi_link}</td>
                                     <td>
@@ -364,17 +394,19 @@ $result = mysqli_query($conn, $query);
 
     <?php
     // Ambil semua jadwal
-    $jadwal_perhari_query = "
-        SELECT jo.tanggal, k.nama_kelas, km.nama_kategori, jo.jam_mulai, jo.jam_selesai
-        FROM jadwal_offline jo
-        JOIN kelas k ON jo.kelas_id = k.id
-        JOIN kategori_materi km ON jo.kategori_id = km.id
-        WHERE jo.tutor_id = '$tutor_id'
-    ";
-    if ($filter_kelas_perhari) {
-        $jadwal_perhari_query .= " AND jo.kelas_id = '$filter_kelas_perhari'";
-    }
-    $jadwal_perhari_query .= " ORDER BY jo.tanggal ASC, jo.jam_mulai ASC";
+   $jadwal_perhari_query = "
+    SELECT jo.tanggal, k.nama_kelas, p.nama, km.nama_kategori, jo.jam_mulai, jo.jam_selesai
+    FROM jadwal_offline jo
+    JOIN kelas k ON jo.kelas_id = k.id
+    JOIN kategori_materi km ON jo.kategori_id = km.id
+    LEFT JOIN paket p ON jo.paket_id = p.id
+    WHERE jo.tutor_id = '$tutor_id'
+";
+if ($filter_kelas_perhari) {
+    $jadwal_perhari_query .= " AND jo.kelas_id = '$filter_kelas_perhari'";
+}
+$jadwal_perhari_query .= " ORDER BY p.nama ASC, jo.tanggal ASC, jo.jam_mulai ASC";
+
     $jadwal_perhari = mysqli_query($conn, $jadwal_perhari_query);
 
     $hari_indo = [
