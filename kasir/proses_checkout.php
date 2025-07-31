@@ -1,52 +1,69 @@
 <?php
-include '../config/database.php';
-include '../includes/auth.php';
+session_start();
+require_once '../config/database.php';
 
-// Pastikan hanya kasir yang bisa mengakses
-if ($_SESSION['user']['role'] !== 'kasir') {
-  header("Location: ../index.php");
-  exit;
+// Batasi akses hanya kasir
+if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'kasir') {
+    header("Location: ../index.php");
+    exit;
 }
 
-// Cek jika form dikirim
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  $user_id = $_POST['user_id'] ?? '';
-  $paket_id = $_POST['paket_id'] ?? '';
+    $user_id = $_POST['user_id'] ?? '';
+    $paket_id = $_POST['paket_id'] ?? '';
 
-  // Validasi input
-  if (empty($user_id) || empty($paket_id)) {
-    die('Data siswa dan paket harus dipilih.');
-  }
+    // Validasi input
+    if (empty($user_id) || empty($paket_id)) {
+        header("Location: checkout_tunai.php?error=Data siswa dan paket harus dipilih.");
+        exit;
+    }
 
-  // Ambil data paket
-  $paket_query = mysqli_query($conn, "SELECT * FROM paket WHERE id = $paket_id");
-  $paket = mysqli_fetch_assoc($paket_query);
+    // Ambil detail user
+    $user_stmt = $conn->prepare("SELECT id FROM users WHERE id = ? AND role = 'siswa'");
+    $user_stmt->bind_param("i", $user_id);
+    $user_stmt->execute();
+    $user_result = $user_stmt->get_result();
+    if ($user_result->num_rows === 0) {
+        header("Location: checkout_tunai.php?error=Data siswa tidak valid.");
+        exit;
+    }
 
-  if (!$paket) {
-    die('Paket tidak ditemukan.');
-  }
+    // Ambil detail paket
+    $paket_stmt = $conn->prepare("SELECT nama_paket, harga, durasi, satuan FROM paket WHERE id = ?");
+    $paket_stmt->bind_param("i", $paket_id);
+    $paket_stmt->execute();
+    $paket_result = $paket_stmt->get_result();
+    if ($paket_result->num_rows === 0) {
+        header("Location: checkout_tunai.php?error=Paket tidak ditemukan.");
+        exit;
+    }
+    $paket = $paket_result->fetch_assoc();
 
-  // Data transaksi
-  $nama_paket = $paket['nama'];
-  $harga = $paket['harga'];
-  $durasi = $paket['durasi'];
-  $satuan = $paket['satuan_durasi'];
+    $harga = $paket['harga'];
+    $nama_paket = $paket['nama_paket'];
+    $durasi = $paket['durasi'];
+    $satuan = $paket['satuan'];
+    $kode_unik = "TUNAI" . strtoupper(uniqid());
 
-  // Hitung tanggal aktif hingga
-  $aktif_hingga = date('Y-m-d', strtotime("+$durasi $satuan"));
+    // Hitung tanggal aktif_hingga
+    $aktif_hingga = date('Y-m-d', strtotime("+$durasi $satuan"));
 
-  // Insert ke tabel pembayaran
-  $query = "INSERT INTO pembayaran (user_id, paket, harga, metode, status, tanggal, aktif_hingga)
-            VALUES ('$user_id', '$nama_paket', '$harga', 'tunai', 'lunas', NOW(), '$aktif_hingga')";
+    // Simpan ke tabel pembayaran
+    $insert_stmt = $conn->prepare("
+        INSERT INTO pembayaran (user_id, paket_id, kode_unik, harga, metode, status, tanggal, aktif_hingga) 
+        VALUES (?, ?, ?, ?, 'tunai', 'lunas', NOW(), ?)
+    ");
+    $insert_stmt->bind_param("iisds", $user_id, $paket_id, $kode_unik, $harga, $aktif_hingga);
 
-  if (mysqli_query($conn, $query)) {
-    header("Location: transaksi.php?berhasil=1");
-    exit;
-  } else {
-    echo "Gagal menyimpan transaksi: " . mysqli_error($conn);
-  }
+    if ($insert_stmt->execute()) {
+        header("Location: transaksi.php?berhasil=1");
+        exit;
+    } else {
+        header("Location: checkout_tunai.php?error=Gagal menyimpan transaksi.");
+        exit;
+    }
 } else {
-  header("Location: checkout_tunai.php");
-  exit;
+    header("Location: checkout_tunai.php");
+    exit;
 }
 ?>

@@ -1,19 +1,12 @@
 <?php
+ob_start();
 include '../includes/auth.php';
 include '../includes/admin_header.php';
 include '../config/database.php';
 
 if ($_SESSION['user']['role'] !== 'admin') {
-  header('Location: ../index.php'); exit;
-}
-
-// Tambah / Edit
-$edit_mode = isset($_GET['edit']);
-$edit_data = null;
-if ($edit_mode) {
-  $id = $_GET['edit'];
-  $query = mysqli_query($conn, "SELECT * FROM paket WHERE id = $id");
-  $edit_data = mysqli_fetch_assoc($query);
+  header('Location: ../index.php');
+  exit;
 }
 
 // Simpan data
@@ -57,7 +50,7 @@ $paket = mysqli_query($conn, "SELECT * FROM paket ORDER BY harga ASC");
 <div class="content">
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h3>Kelola Paket Langganan</h3>
-    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#paketModal">+ Tambah Paket</button>
+    <button class="btn btn-primary" onclick="openTambahModal()">+ Tambah Paket</button>
   </div>
 
   <!-- Tabel -->
@@ -88,7 +81,7 @@ $paket = mysqli_query($conn, "SELECT * FROM paket ORDER BY harga ASC");
           <td><?= htmlspecialchars($row['deskripsi']) ?></td>
           <td><?= $row['status'] ?></td>
           <td>
-            <a href="?edit=<?= $row['id'] ?>" class="btn btn-sm btn-warning">Edit</a>
+            <button class="btn btn-sm btn-warning" onclick='openEditModal(<?= json_encode($row) ?>)'>Edit</button>
             <a href="?hapus=<?= $row['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Hapus paket ini?')">Hapus</a>
           </td>
         </tr>
@@ -99,76 +92,60 @@ $paket = mysqli_query($conn, "SELECT * FROM paket ORDER BY harga ASC");
 </div>
 
 <!-- Modal -->
-<div class="modal fade" id="paketModal" tabindex="-1" aria-labelledby="paketModalLabel" aria-hidden="true">
+<div class="modal fade" id="paketModal" tabindex="-1">
   <div class="modal-dialog modal-lg modal-dialog-scrollable">
     <div class="modal-content">
       <form method="POST">
-        <input type="hidden" name="id" value="<?= $edit_data['id'] ?? '' ?>">
+        <input type="hidden" name="id" id="paket-id">
         <div class="modal-header bg-primary text-white">
-          <h5 class="modal-title"><?= $edit_mode ? 'Edit Paket' : 'Tambah Paket' ?></h5>
+          <h5 class="modal-title" id="modal-title">Tambah Paket</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          <div class="mb-2">
-            <label>Nama Paket</label>
-            <input type="text" name="nama" class="form-control" required value="<?= $edit_data['nama'] ?? '' ?>">
-          </div>
+          <div class="mb-2"><label>Nama Paket</label><input type="text" name="nama" id="paket-nama" class="form-control" required></div>
           <div class="mb-2">
             <label>Kategori</label>
-            <select name="kategori" class="form-select" required>
+            <select name="kategori" id="paket-kategori" class="form-select" required>
               <option value="">-- Pilih --</option>
-              <?php foreach (['Basic', 'Premium'] as $k): ?>
-              <option value="<?= $k ?>" <?= ($edit_data['kategori'] ?? '') == $k ? 'selected' : '' ?>><?= $k ?></option>
-              <?php endforeach; ?>
+              <option value="Basic">Basic</option>
+              <option value="Premium">Premium</option>
             </select>
           </div>
           <div class="mb-2">
             <label>Jenjang</label>
-            <select name="jenjang" id="jenjang" class="form-select" onchange="updateKelasOptions()" required>
+            <select name="jenjang" id="paket-jenjang" class="form-select" onchange="updateKelasOptions()" required>
               <option value="">-- Pilih --</option>
-              <?php foreach (['SD','SMP','SMA'] as $j): ?>
-              <option value="<?= $j ?>" <?= ($edit_data['jenjang'] ?? '') == $j ? 'selected' : '' ?>><?= $j ?></option>
-              <?php endforeach; ?>
+              <option value="SD">SD</option>
+              <option value="SMP">SMP</option>
+              <option value="SMA">SMA</option>
             </select>
           </div>
           <div class="mb-2">
             <label>Kelas</label>
-            <select name="kelas" id="kelas" class="form-select" required>
-              <?php if (!empty($edit_data['kelas'])): ?>
-              <option value="<?= $edit_data['kelas'] ?>" selected>Kelas <?= $edit_data['kelas'] ?></option>
-              <?php else: ?>
-              <option value="">-- Pilih --</option>
-              <?php endif; ?>
-            </select>
+            <select name="kelas" id="paket-kelas" class="form-select" required></select>
           </div>
-          <div class="mb-2">
-            <label>Harga (Rp)</label>
-            <input type="number" name="harga" class="form-control" required value="<?= $edit_data['harga'] ?? '' ?>">
-          </div>
+          <div class="mb-2"><label>Harga (Rp)</label><input type="number" name="harga" id="paket-harga" class="form-control" required></div>
           <div class="mb-2">
             <label>Durasi</label>
             <div class="input-group">
-              <input type="number" name="durasi" class="form-control" required value="<?= $edit_data['durasi'] ?? '' ?>">
-              <select name="satuan_durasi" class="form-select" required>
-                <option value="bulan" <?= ($edit_data['satuan_durasi'] ?? '') === 'bulan' ? 'selected' : '' ?>>Bulan</option>
-                <option value="tahun" <?= ($edit_data['satuan_durasi'] ?? '') === 'tahun' ? 'selected' : '' ?>>Tahun</option>
+              <input type="number" name="durasi" id="paket-durasi" class="form-control" required>
+              <select name="satuan_durasi" id="paket-satuan" class="form-select" required>
+                <option value="bulan">Bulan</option>
+                <option value="tahun">Tahun</option>
               </select>
             </div>
           </div>
-          <div class="mb-2">
-            <label>Deskripsi</label>
-            <textarea name="deskripsi" class="form-control" required><?= $edit_data['deskripsi'] ?? '' ?></textarea>
-          </div>
+          <div class="mb-2"><label>Deskripsi</label><textarea name="deskripsi" id="paket-deskripsi" class="form-control" required></textarea></div>
           <div class="mb-2">
             <label>Status</label>
-            <select name="status" class="form-select" required>
-              <option value="aktif" <?= ($edit_data['status'] ?? '') === 'aktif' ? 'selected' : '' ?>>Aktif</option>
-              <option value="nonaktif" <?= ($edit_data['status'] ?? '') === 'nonaktif' ? 'selected' : '' ?>>Nonaktif</option>
+            <select name="status" id="paket-status" class="form-select" required>
+              <option value="aktif">Aktif</option>
+              <option value="nonaktif">Nonaktif</option>
             </select>
           </div>
         </div>
         <div class="modal-footer">
-          <button type="submit" class="btn btn-primary"><?= $edit_mode ? 'Update' : 'Tambah' ?></button>
+          <button type="submit" class="btn btn-primary">Simpan</button>
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
         </div>
       </form>
@@ -178,13 +155,13 @@ $paket = mysqli_query($conn, "SELECT * FROM paket ORDER BY harga ASC");
 
 <script>
 function updateKelasOptions() {
-  const jenjang = document.getElementById('jenjang').value;
-  const kelasSelect = document.getElementById('kelas');
+  const jenjang = document.getElementById('paket-jenjang').value;
+  const kelasSelect = document.getElementById('paket-kelas');
   let options = [];
 
   if (jenjang === 'SD') options = ['1','2','3','4','5','6'];
-  if (jenjang === 'SMP') options = ['7','8','9'];
-  if (jenjang === 'SMA') options = ['10','11','12'];
+  else if (jenjang === 'SMP') options = ['7','8','9'];
+  else if (jenjang === 'SMA') options = ['10','11','12'];
 
   kelasSelect.innerHTML = '<option value="">-- Pilih --</option>';
   options.forEach(k => {
@@ -194,6 +171,32 @@ function updateKelasOptions() {
     kelasSelect.appendChild(opt);
   });
 }
+
+function openTambahModal() {
+  document.getElementById('modal-title').innerText = 'Tambah Paket';
+  document.querySelector('form').reset();
+  document.getElementById('paket-id').value = '';
+  new bootstrap.Modal(document.getElementById('paketModal')).show();
+}
+
+function openEditModal(data) {
+  document.getElementById('modal-title').innerText = 'Edit Paket';
+  document.getElementById('paket-id').value = data.id;
+  document.getElementById('paket-nama').value = data.nama;
+  document.getElementById('paket-kategori').value = data.kategori;
+  document.getElementById('paket-jenjang').value = data.jenjang;
+  updateKelasOptions();
+  setTimeout(() => {
+    document.getElementById('paket-kelas').value = data.kelas;
+  }, 200);
+  document.getElementById('paket-harga').value = data.harga;
+  document.getElementById('paket-durasi').value = data.durasi;
+  document.getElementById('paket-satuan').value = data.satuan_durasi;
+  document.getElementById('paket-deskripsi').value = data.deskripsi;
+  document.getElementById('paket-status').value = data.status;
+  new bootstrap.Modal(document.getElementById('paketModal')).show();
+}
 </script>
 
 <?php include '../includes/admin_footer.php'; ?>
+<?php ob_end_flush(); ?>

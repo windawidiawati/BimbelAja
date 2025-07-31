@@ -66,7 +66,7 @@ if ($role === 'siswa' && isset($_SESSION['user']['id'])) {
 <body>
 
 <!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm sticky-top">
   <div class="container">
     <a class="navbar-brand" href="/BimbelAja/index.php">
       <i class="bi bi-mortarboard-fill me-2"></i>BimbelAja
@@ -89,11 +89,25 @@ if ($role === 'siswa' && isset($_SESSION['user']['id'])) {
               <i class="bi bi-person-circle me-1"></i>Profil
             </a>
           </li>
-          <li class="nav-item">
-            <a class="nav-link text-white" href="/BimbelAja/auth/logout.php">
-              <i class="bi bi-box-arrow-right me-1"></i>Logout
-            </a>
-          </li>
+          <!-- Notifikasi -->
+<li class="nav-item dropdown">
+  <a class="nav-link position-relative" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+    <i class="bi bi-bell-fill"></i>
+    <!-- Badge jumlah notifikasi -->
+    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+      3
+    </span>
+  </a>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><h6 class="dropdown-header">Notifikasi</h6></li>
+    <li><a class="dropdown-item" href="#">✅ Materi baru ditambahkan</a></li>
+    <li><a class="dropdown-item" href="#">⏰ Langganan kamu hampir habis</a></li>
+    <li><a class="dropdown-item" href="#">🎉 Promo langganan tersedia</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item text-center text-primary" href="#">Lihat Semua</a></li>
+  </ul>
+</li>
+
         <?php else: ?>
           <!-- Menu untuk pengunjung (belum login) -->
           <li class="nav-item">

@@ -1,6 +1,6 @@
 <?php
 include '../includes/auth.php';
-include '../includes/header.php';
+include '../includes/siswa_header_langganan.php';
 include '../config/database.php';
 
 if ($_SESSION['user']['role'] !== 'siswa') {
@@ -9,6 +9,29 @@ if ($_SESSION['user']['role'] !== 'siswa') {
 
 $user_id = $_SESSION['user']['id'];
 $username = $_SESSION['user']['username'];
+// Ambil data langganan aktif
+$user_id = $_SESSION['user']['id'];
+$today = date('Y-m-d');
+
+$sql = "SELECT * FROM langganan WHERE user_id = $user_id AND status = 'aktif' ORDER BY tanggal_berakhir DESC LIMIT 1";
+$result = mysqli_query($conn, $sql);
+
+if ($row = mysqli_fetch_assoc($result)) {
+    if ($row['tanggal_berakhir'] < $today) {
+        // Update jadi expired
+        $update = "UPDATE langganan SET status = 'expired' WHERE id = " . $row['id'];
+        mysqli_query($conn, $update);
+
+        // Redirect ke halaman riwayat atau notifikasi
+        header("Location: ../langganan/riwayat.php?expired=1");
+        exit;
+    }
+} else {
+    // Kalau tidak ada langganan aktif
+    header("Location: ../langganan/riwayat.php?belum_langganan=1");
+    exit;
+}
+
 
 // Ambil jenis paket langganan aktif siswa
 $query = "SELECT paket FROM langganan WHERE user_id = $user_id AND status = 'aktif' ORDER BY created_at DESC LIMIT 1";
@@ -49,7 +72,7 @@ $paket = $row['paket'] ?? 'none';
         "icon" => "bi-camera-video-fill",
         "warna" => "danger",
         "file" => "kelas_online.php",
-        "akses" => "premium"
+        "akses" => "semua"
       ],
       [
         "judul" => "Forum Diskusi",
@@ -57,20 +80,38 @@ $paket = $row['paket'] ?? 'none';
         "icon" => "bi-chat-dots-fill",
         "warna" => "warning",
         "file" => "forum.php",
-        "akses" => "premium"
+        "akses" => "semua"
       ],
       [
         "judul" => "Progress Belajar",
         "deskripsi" => "Lihat perkembangan belajarmu secara berkala.",
         "icon" => "bi-bar-chart-line-fill",
         "warna" => "info",
-        "file" => "progress.php",
-        "akses" => "premium"
-      ]
+        "file" => "progres.php",
+        "akses" => "semua"
+      ],
+      [
+        "judul" => "Jadwal Kelas",
+        "deskripsi" => "Lihat jadwal kelas online yang telah kamu ikuti.",
+        "icon" => "bi-calendar-event-fill",
+        "warna" => "secondary",
+        "file" => "jadwal_kelas.php",
+        "akses" => "semua"
+      ],
+      [
+        "judul" => "Rekap Absensi",
+        "deskripsi" => "Pantau kehadiranmu selama mengikuti kelas.",
+        "icon" => "bi-clipboard-check-fill",
+        "warna" => "dark",
+        "file" => "rekap_absensi.php",
+        "akses" => "semua"
+      ],
+
     ];
 
     foreach ($fitur as $f) :
-      $bisa_akses = ($f['akses'] === 'semua') || ($paket === 'premium');
+      $bisa_akses = true; // Semua yang sudah langganan aktif bisa akses semua fitur
+      //$bisa_akses = ($f['akses'] === 'semua') || ($paket === 'premium');
       $link = $bisa_akses ? $f['file'] : '#';
       $style = $bisa_akses ? 'text-dark' : 'text-muted';
       $cardStyle = $bisa_akses ? '' : 'opacity-50';

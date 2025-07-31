@@ -34,7 +34,7 @@ $tutor_result = $conn->query("SELECT * FROM users WHERE role = 'tutor'");
 ?>
 
  <div class="content">
-  <div class="container-fluid pt-4 px-4">
+  <div class="container-fluid pt-4 px-4" style="margin-top: 50px;">
       <h2 class="mb-4">Kelola Jadwal Kelas Offline</h2>
 
       <!-- Filter -->

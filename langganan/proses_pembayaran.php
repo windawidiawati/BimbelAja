@@ -1,11 +1,13 @@
 <?php
 if (session_status() == PHP_SESSION_NONE) session_start();
+
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'siswa') {
     header("Location: /BimbelAja/auth/login.php");
     exit;
 }
 
 include_once __DIR__ . '/../config/database.php';
+include '../includes/header.php';
 
 $user_id = $_POST['user_id'] ?? null;
 $paket_id = $_POST['paket_id'] ?? null;
@@ -16,46 +18,78 @@ if (!$paket_id || !$user_id || !$metode) {
     exit;
 }
 
-// Ambil data paket
-$query = mysqli_query($conn, "SELECT * FROM paket WHERE id = $paket_id AND status = 'aktif'");
-if (!$query || mysqli_num_rows($query) === 0) {
+// Ambil data paket (pastikan paket aktif)
+$stmt_paket = $conn->prepare("SELECT * FROM paket WHERE id = ? AND status = 'aktif'");
+$stmt_paket->bind_param("i", $paket_id);
+$stmt_paket->execute();
+$result = $stmt_paket->get_result();
+
+if ($result->num_rows === 0) {
     echo "Paket tidak ditemukan atau tidak aktif.";
     exit;
 }
 
-$paket = mysqli_fetch_assoc($query);
+$paket = $result->fetch_assoc();
 $nama_paket = $paket['nama'];
 $harga = $paket['harga'];
 $tanggal = date('Y-m-d H:i:s');
 
-// Tentukan status dan kode bayar
+$kode_unik = null;
+$bukti_transfer = null;
+$status = 'pending'; // default status
+
 if ($metode === 'tunai') {
-    $status = 'menunggu_kasir';
-    $kode_bayar = 'TUNAI' . rand(100000, 999999);
-} else {
-    $status = 'pending';
-    $kode_bayar = null;
-}
-
-// Simpan ke tabel pembayaran
-$stmt = $conn->prepare("INSERT INTO pembayaran (user_id, paket, harga, metode, status, kode_bayar, tanggal) VALUES (?, ?, ?, ?, ?, ?, ?)");
-$stmt->bind_param("isissss", $user_id, $nama_paket, $harga, $metode, $status, $kode_bayar, $tanggal);
-
-if ($stmt->execute()) {
-    if ($metode === 'tunai') {
-        // Tampilkan kode bayar untuk siswa
-        echo "<div style='text-align:center; font-family:Arial; margin-top:50px;'>
-                <h2>Pembayaran Tunai</h2>
-                <p>Berikan kode berikut ke kasir untuk verifikasi pembayaran:</p>
-                <h1 style='color:green;'>$kode_bayar</h1>
-                <a href='/BimbelAja/langganan/riwayat.php' style='display:inline-block;margin-top:20px;padding:10px 20px;background:#28a745;color:white;text-decoration:none;border-radius:5px;'>Lihat Riwayat</a>
-              </div>";
+    $_SESSION['success'] = "Untuk pembayaran tunai, silakan datang langsung ke kasir tanpa perlu melalui sistem.";
+    header("Location: ../siswa/dashboard.php");
+    exit;
+}elseif ($metode === 'transfer') {
+    // Cek apakah file diupload
+    if (!isset($_FILES['bukti_transfer']) || $_FILES['bukti_transfer']['error'] !== UPLOAD_ERR_OK) {
+        echo "Bukti transfer wajib diunggah untuk metode transfer.";
         exit;
+    }
+
+    $target_dir = "../uploads/bukti_transfer/";
+    if (!is_dir($target_dir)) mkdir($target_dir, 0777, true);
+
+    $ext = pathinfo($_FILES['bukti_transfer']['name'], PATHINFO_EXTENSION);
+    $filename = uniqid("bukti_") . "." . strtolower($ext);
+    $target_file = $target_dir . $filename;
+
+    if (move_uploaded_file($_FILES['bukti_transfer']['tmp_name'], $target_file)) {
+        $bukti_transfer = $filename;
     } else {
-        header("Location: /BimbelAja/langganan/riwayat.php");
+        echo "Gagal mengunggah bukti transfer.";
         exit;
     }
 } else {
+    echo "Metode pembayaran tidak valid.";
+    exit;
+}
+
+
+$stmt = $conn->prepare("INSERT INTO pembayaran (user_id, paket, harga, metode, kode_unik, status, tanggal, bukti_transfer) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+$stmt->bind_param("isisssss", $user_id, $nama_paket, $harga, $metode, $kode_unik, $status, $tanggal, $bukti_transfer);
+
+if ($stmt->execute()) {
+    // Jika metode bukan transfer, redirect langsung ke dashboard
+if ($metode === 'tunai') {
+    $_SESSION['success'] = "Untuk pembayaran tunai, silakan langsung ke kasir.";
+    header("Location: ../siswa/dashboard.php");
+    exit;
+}
+
+// SISANYA BARU JALAN UNTUK TRANSFER
+$stmt = $conn->prepare("INSERT INTO pembayaran (user_id, paket, harga, metode, kode_unik, status, tanggal, bukti_transfer) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+$stmt->bind_param("isisssss", $user_id, $nama_paket, $harga, $metode, $kode_unik, $status, $tanggal, $bukti_transfer);
+
+if ($stmt->execute()) {
+    header("Location: /BimbelAja/langganan/riwayat.php");
+} else {
     echo "Gagal menyimpan pembayaran.";
 }
+
+}
 ?>
+<?php
+include '../includes/footer.php';

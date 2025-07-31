@@ -158,7 +158,9 @@ $role = $_SESSION['user']['role'] ?? null;
   <a class="<?= ($current_page === 'kelola_soal.php') ? 'active' : '' ?>" href="/BimbelAja/admin/kelola_soal.php">
     <i class="bi bi-journal-text"></i> Kelola Soal
   <a class="<?= ($current_page === 'kelola_notifikasi.php') ? 'active' : '' ?>" href="/BimbelAja/admin/kelola_notifikasi.php">
-    <i class="bi bi-bell "></i> Kelola Notifikasi
+     <i class="bi bi-journal-text"></i> Kelola notifikasi
+  <a class="<?= ($current_page === 'kelola_latihan.php') ? 'active' : '' ?>" href="/BimbelAja/admin/kelola_latihan.php">
+    <i class="bi bi-bell "></i> Kelola Latihan
   <a class="<?= ($current_page === 'kelola_jadwal_offline.php') ? 'active' : '' ?>" href="/BimbelAja/admin/kelola_jadwal_offline.php">
     <i class="bi bi-calendar-event"></i> Kelola Jadwal Offline
   </a>
