@@ -9,15 +9,24 @@ if ($_SESSION['user']['role'] !== 'tutor') {
 
 $tutor_id = $_SESSION['user']['id'];
 $kelas_id = isset($_GET['kelas_id']) ? intval($_GET['kelas_id']) : 0;
+$paket_id = isset($_GET['paket_id']) ? intval($_GET['paket_id']) : 0;
 $bulan = isset($_GET['bulan']) ? intval($_GET['bulan']) : date('m');
 $tahun = isset($_GET['tahun']) ? intval($_GET['tahun']) : date('Y');
 
 // Ambil nama kelas
 $kelas_nama = '';
-$kelas_res = mysqli_query($conn, "SELECT nama_kelas FROM kelas WHERE id='$kelas_id'");
-if ($kelas_res && mysqli_num_rows($kelas_res) > 0) {
-    $kelas_row = mysqli_fetch_assoc($kelas_res);
+$res_kelas = mysqli_query($conn, "SELECT nama_kelas FROM kelas WHERE id='$kelas_id'");
+if ($res_kelas && mysqli_num_rows($res_kelas) > 0) {
+    $kelas_row = mysqli_fetch_assoc($res_kelas);
     $kelas_nama = $kelas_row['nama_kelas'];
+}
+
+// Ambil nama paket
+$paket_nama = '';
+$res_paket = mysqli_query($conn, "SELECT nama FROM paket WHERE id='$paket_id'");
+if ($res_paket && mysqli_num_rows($res_paket) > 0) {
+    $paket_row = mysqli_fetch_assoc($res_paket);
+    $paket_nama = $paket_row['nama'];
 }
 
 // Ambil data siswa dan rekap absensi
@@ -27,6 +36,7 @@ $siswa_query = mysqli_query($conn, "
         SUM(CASE WHEN ao.status = 'izin' THEN 1 ELSE 0 END) AS jml_izin,
         SUM(CASE WHEN ao.status = 'alpa' THEN 1 ELSE 0 END) AS jml_alpa
     FROM users u
+    JOIN langganan l ON l.user_id = u.id AND l.paket_id = '$paket_id'
     LEFT JOIN absensi_offline ao ON ao.siswa_id = u.id
     LEFT JOIN jadwal_offline jo ON ao.jadwal_id = jo.id
     WHERE u.role = 'siswa' 
@@ -40,7 +50,7 @@ $siswa_query = mysqli_query($conn, "
 
 // Nama file
 $bulan_nama = date('F', mktime(0, 0, 0, $bulan, 10)); // contoh: July
-$filename = "rekap_absensi_{$kelas_nama}_{$bulan_nama}_{$tahun}.xls";
+$filename = "rekap_absensi_{$kelas_nama}_{$paket_nama}_{$bulan_nama}_{$tahun}.xls";
 header("Content-Type: application/vnd.ms-excel");
 header("Content-Disposition: attachment; filename=$filename");
 header("Pragma: no-cache");
@@ -66,6 +76,7 @@ echo "
 <body>
     <h3 style='text-align: center;'>REKAP ABSENSI SISWA</h3>
     <p><strong>Kelas:</strong> {$kelas_nama}</p>
+    <p><strong>Paket:</strong> {$paket_nama}</p>
     <p><strong>Bulan:</strong> {$bulan_nama} {$tahun}</p>
 
     <table>
