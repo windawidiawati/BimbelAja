@@ -163,6 +163,8 @@ $role = $_SESSION['user']['role'] ?? null;
     <i class="bi bi-bell "></i> Kelola Latihan
   <a class="<?= ($current_page === 'kelola_jadwal_offline.php') ? 'active' : '' ?>" href="/BimbelAja/admin/kelola_jadwal_offline.php">
     <i class="bi bi-calendar-event"></i> Kelola Jadwal Offline
+    <a class="<?= ($current_page === 'kelola_absensi.php') ? 'active' : '' ?>" href="/BimbelAja/admin/kelola_absensi.php">
+    <i class="bi bi-calendar-event"></i> Kelola Absensi
   </a>
   <a class="<?= ($current_page === 'statistik.php') ? 'active' : '' ?>" href="/BimbelAja/admin/statistik.php">
     <i class="bi bi-bar-chart me-2"></i> Statistik

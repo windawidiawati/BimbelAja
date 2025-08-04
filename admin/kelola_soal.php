@@ -1,6 +1,52 @@
 <?php
-session_start();
 include '../config/database.php';
+include '../includes/admin_header.php';
+
+// Ambil data kategori_materi untuk dropdown
+$kategori_result = $conn->query("SELECT * FROM kategori_materi");
+$kategori_map = [];
+while ($k = $kategori_result->fetch_assoc()) {
+    $kategori_map[$k['id']] = $k['nama_kategori'];
+}
+
+// Filter
+$jenjang = isset($_POST['jenjang']) ? $_POST['jenjang'] : '';
+$mata_pelajaran = isset($_POST['mata_pelajaran']) ? $_POST['mata_pelajaran'] : '';
+
+$query = "SELECT soal.*, kategori_materi.nama_kategori 
+          FROM soal 
+          JOIN kategori_materi ON soal.kategori_id = kategori_materi.id 
+          WHERE 1=1";
+
+$params = [];
+$types = '';
+if ($jenjang) {
+    $query .= " AND soal.kelas_id = ?";
+    $types .= 'i';
+    $params[] = $jenjang;
+}
+if ($mata_pelajaran) {
+    $query .= " AND soal.kategori_id = ?";
+    $types .= 'i';
+    $params[] = $mata_pelajaran;
+}
+
+$stmt = $conn->prepare($query);
+if (!empty($params)) {
+    $stmt->bind_param($types, ...$params);
+}
+$stmt->execute();
+$result = $stmt->get_result();
+
+// Hapus soal
+if (isset($_GET['action']) && $_GET['action'] == 'delete' && isset($_GET['id'])) {
+    $id = $_GET['id'];
+    $stmt = $conn->prepare("DELETE FROM soal WHERE id = ?");
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    header("Location: kelola_soal.php");
+    exit;
+}
 
 // Tambah soal
 if (isset($_POST['tambah_soal'])) {
@@ -39,54 +85,6 @@ if (isset($_POST['edit_soal'])) {
     header("Location: kelola_soal.php");
     exit;
 }
-
-// Hapus soal
-if (isset($_GET['action']) && $_GET['action'] == 'delete' && isset($_GET['id'])) {
-    $id = $_GET['id'];
-    $stmt = $conn->prepare("DELETE FROM soal WHERE id = ?");
-    $stmt->bind_param("i", $id);
-    $stmt->execute();
-    header("Location: kelola_soal.php");
-    exit;
-}
-
-include '../includes/admin_header.php';
-
-// Ambil data kategori_materi untuk dropdown
-$kategori_result = $conn->query("SELECT * FROM kategori_materi");
-$kategori_map = [];
-while ($k = $kategori_result->fetch_assoc()) {
-    $kategori_map[$k['id']] = $k['nama_kategori'];
-}
-
-// Filter
-$jenjang = isset($_POST['jenjang']) ? $_POST['jenjang'] : '';
-$mata_pelajaran = isset($_POST['mata_pelajaran']) ? $_POST['mata_pelajaran'] : '';
-
-$query = "SELECT soal.*, kategori_materi.nama_kategori 
-          FROM soal 
-          JOIN kategori_materi ON soal.kategori_id = kategori_materi.id 
-          WHERE 1=1";
-
-$params = [];
-$types = '';
-if ($jenjang) {
-    $query .= " AND soal.kelas_id = ?";
-    $types .= 'i';
-    $params[] = $jenjang;
-}
-if ($mata_pelajaran) {
-    $query .= " AND soal.kategori_id = ?";
-    $types .= 'i';
-    $params[] = $mata_pelajaran;
-}
-
-$stmt = $conn->prepare($query);
-if (!empty($params)) {
-    $stmt->bind_param($types, ...$params);
-}
-$stmt->execute();
-$result = $stmt->get_result();
 ?>
 
 <div class="content">
@@ -124,11 +122,13 @@ $result = $stmt->get_result();
     <!-- Button Tambah -->
     <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#tambahSoalModal">Tambah Soal</button>
 
-    <!-- Tabel -->
-    <table class="table table-bordered bg-white shadow-sm">
-        <thead class="table-primary">
+    
+  <!-- Tabel -->
+<div class="table-responsive" style="max-height: 500px; overflow: auto;">
+    <table class="table table-striped table-bordered align-middle">
+        <thead class="table-primary text-center">
             <tr>
-                <th>No</th>
+                <th>ID</th>
                 <th>Pertanyaan</th>
                 <th>Opsi A</th>
                 <th>Opsi B</th>
@@ -178,6 +178,7 @@ $result = $stmt->get_result();
         </tbody>
     </table>
 </div>
+
 
 <!-- Modal Tambah Soal -->
 <div class="modal fade" id="tambahSoalModal" tabindex="-1">
