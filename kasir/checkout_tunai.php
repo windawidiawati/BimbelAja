@@ -30,8 +30,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $satuan_durasi = $paket_data['satuan_durasi'];
 
     // Insert ke tabel users
-    $insert_user = mysqli_query($conn, "INSERT INTO users (username, password, role, nama, kelas, jenjang, email, no_hp, status) 
-        VALUES ('$username', '$password', 'siswa', '$nama', '$kelas', '$jenjang', '$email', '$no_hp', 'aktif')");
+    $insert_user = mysqli_query($conn, "INSERT INTO users (username, password, role, nama, kelas_id, jenjang, email, no_hp, status) 
+        VALUES ('$username', '$password', 'siswa', '$nama', '$kelas_id', '$jenjang', '$email', '$no_hp', 'aktif')");
 
     if ($insert_user) {
         $user_id = mysqli_insert_id($conn);
@@ -52,8 +52,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         // Insert ke langganan
-        $insert_langganan = mysqli_query($conn, "INSERT INTO langganan (user_id, paket, jenjang, kelas, tanggal_mulai, tanggal_berakhir, status, created_at)
-            VALUES ($user_id, '$paket', '$jenjang', '$kelas', '$tanggal_mulai', '$tanggal_berakhir', 'Aktif', NOW())");
+        $insert_langganan = mysqli_query($conn, "INSERT INTO langganan (
+            user_id, paket_id, paket, jenjang, kelas_id, tanggal_mulai, tanggal_berakhir, status, created_at
+        ) VALUES (
+            $user_id, $paket_id, '$paket', '$jenjang', $kelas_id, '$tanggal_mulai', '$tanggal_berakhir', 'Aktif', NOW()
+        )");
+
 
         if ($insert_bayar && $insert_langganan) {
             $pesan = '<div class="alert alert-success">Siswa berhasil ditambahkan dan pembayaran tercatat.</div>';

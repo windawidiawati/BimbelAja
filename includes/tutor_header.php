@@ -11,7 +11,7 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'tutor') {
 }
 
 $current_page = basename($_SERVER['SCRIPT_NAME']);
-$role = $_SESSION['user']['role'] ?? null;
+// $role = $_SESSION['user']['role'] ?? null;
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -91,7 +91,9 @@ $role = $_SESSION['user']['role'] ?? null;
       <!-- Menu utama (khusus tampilan kecil) -->
       <ul class="navbar-nav me-auto d-lg-none">
         <li class="nav-item"><a class="nav-link <?= ($current_page === 'dashboard.php') ? 'active' : '' ?>" href="/BimbelAja/tutor/dashboard.php"><i class="bi bi-speedometer2 me-1"></i> Dashboard</a></li>
+        
         <li class="nav-item"><a class="nav-link <?= ($current_page === 'unggah_materi.php') ? 'active' : '' ?>" href="/BimbelAja/tutor/unggah_materi.php"><i class="bi bi-upload me-1"></i> Unggah Materi</a></li>
+        
         <li class="nav-item"><a class="nav-link <?= ($current_page === 'buat_soal.php') ? 'active' : '' ?>" href="/BimbelAja/tutor/buat_soal.php"><i class="bi bi-pencil-square me-1"></i> Buat Soal</a></li>
         <li class="nav-item"><a class="nav-link <?= ($current_page === 'jawaban_siswa.php') ? 'active' : '' ?>" href="/BimbelAja/tutor/jawaban_siswa.php"><i class="bi bi-calendar-event me-1"></i> Jawaban Siswa</a></li>
         <li class="nav-item"><a class="nav-link <?= ($current_page === 'jadwal_offline.php') ? 'active' : '' ?>" href="/BimbelAja/tutor/jadwal_offline.php"><i class="bi bi-calendar3 me-1"></i> Jadwal Offline</a></li>

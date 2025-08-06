@@ -37,22 +37,21 @@ if ($kelas_id > 0 && $paket_id > 0) {
         $where_bulan = "AND MONTH(ao.created_at) = '$filter_bulan' AND YEAR(ao.created_at) = '$filter_tahun'";
     }
 
-    $siswa_query = mysqli_query($conn, "
-        SELECT u.id, u.nama, u.jenjang,
-            SUM(CASE WHEN ao.status = 'hadir' THEN 1 ELSE 0 END) AS jml_hadir,
-            SUM(CASE WHEN ao.status = 'izin' THEN 1 ELSE 0 END) AS jml_izin,
-            SUM(CASE WHEN ao.status = 'alpa' THEN 1 ELSE 0 END) AS jml_alpa
-        FROM users u
-        JOIN langganan l ON l.user_id = u.id AND l.paket_id = '$paket_id'
-        LEFT JOIN absensi_offline ao ON ao.siswa_id = u.id
-        LEFT JOIN jadwal_offline jo ON ao.jadwal_id = jo.id
-        WHERE u.role = 'siswa' 
-        AND u.kelas = '$kelas_nama' 
-        AND jo.tutor_id = '$tutor_id'
-        $where_bulan
-        GROUP BY u.id
-        ORDER BY u.nama ASC
-    ");
+   $siswa_query = mysqli_query($conn, "
+    SELECT u.id, u.nama, u.jenjang,
+        SUM(CASE WHEN ao.status = 'hadir' THEN 1 ELSE 0 END) AS jml_hadir,
+        SUM(CASE WHEN ao.status = 'izin' THEN 1 ELSE 0 END) AS jml_izin,
+        SUM(CASE WHEN ao.status = 'alpa' THEN 1 ELSE 0 END) AS jml_alpa
+    FROM users u
+    JOIN langganan l ON l.user_id = u.id AND l.paket_id = '$paket_id'
+    LEFT JOIN absensi_offline ao ON ao.siswa_id = u.id
+    LEFT JOIN jadwal_offline jo ON ao.jadwal_id = jo.id AND jo.tutor_id = '$tutor_id'
+    WHERE u.role = 'siswa' 
+    AND u.kelas = '$kelas_nama'
+    $where_bulan
+    GROUP BY u.id
+    ORDER BY u.nama ASC
+");
 
     while ($row = mysqli_fetch_assoc($siswa_query)) {
         $rekap[] = $row;

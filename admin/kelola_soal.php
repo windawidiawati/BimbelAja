@@ -122,9 +122,11 @@ if (isset($_POST['edit_soal'])) {
     <!-- Button Tambah -->
     <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#tambahSoalModal">Tambah Soal</button>
 
-    <!-- Tabel -->
-    <table class="table table-striped">
-        <thead>
+    
+  <!-- Tabel -->
+<div class="table-responsive" style="max-height: 500px; overflow: auto;">
+    <table class="table table-striped table-bordered align-middle">
+        <thead class="table-primary text-center">
             <tr>
                 <th>ID</th>
                 <th>Pertanyaan</th>
@@ -176,6 +178,7 @@ if (isset($_POST['edit_soal'])) {
         </tbody>
     </table>
 </div>
+
 
 <!-- Modal Tambah Soal -->
 <div class="modal fade" id="tambahSoalModal" tabindex="-1">

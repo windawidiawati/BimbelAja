@@ -3,18 +3,24 @@ include '../includes/kasir_header.php';
 include '../config/database.php';
 
 // Ambil data siswa dari langganan yang sudah pernah langganan
-$query = "
-    SELECT l.*, u.nama
-    FROM langganan l
-    JOIN users u ON l.user_id = u.id
-    ORDER BY l.created_at DESC
-";
+    $query = "
+        SELECT 
+            l.*, 
+            u.nama AS nama_siswa,
+            k.nama_kelas, k.jenjang,
+            p.nama AS nama_paket
+        FROM langganan l
+        JOIN users u ON l.user_id = u.id
+        JOIN kelas k ON l.kelas_id = k.id
+        JOIN paket p ON l.paket_id = p.id
+        ORDER BY l.created_at DESC
+    ";
 $result = mysqli_query($conn, $query);
 
 // Data dropdown kelas & paket
-$kelas_result = mysqli_query($conn, "SELECT DISTINCT nama_kelas FROM kelas");
-$paket_result = mysqli_query($conn, "SELECT DISTINCT nama FROM paket");
-?>
+// $kelas_result = mysqli_query($conn, "SELECT DISTINCT nama_kelas FROM kelas");
+// $paket_result = mysqli_query($conn, "SELECT DISTINCT nama FROM paket");
+// ?>
 
 <div class="container mt-4">
     <h4 class="fw-bold mb-4"><i class="bi bi-people-fill me-2"></i>Data Siswa (Perpanjang Paket)</h4>
@@ -42,10 +48,10 @@ $paket_result = mysqli_query($conn, "SELECT DISTINCT nama FROM paket");
                 <?php $no = 1; while ($row = mysqli_fetch_assoc($result)) : ?>
                     <tr>
                         <td><?= $no++; ?></td>
-                        <td><?= htmlspecialchars($row['nama']); ?></td>
-                        <td><?= htmlspecialchars($row['kelas']); ?></td>
+                        <td><?= htmlspecialchars($row['nama_siswa']); ?></td>
+                        <td><?= htmlspecialchars($row['nama_kelas']); ?></td>
                         <td><?= htmlspecialchars($row['jenjang']); ?></td>
-                        <td><?= htmlspecialchars($row['paket']); ?></td>
+                        <td><?= htmlspecialchars($row['nama_paket']); ?></td>
                         <td><?= htmlspecialchars($row['tanggal_mulai']); ?></td>
                         <td><?= htmlspecialchars($row['tanggal_berakhir']); ?></td>
                         <td>
@@ -83,27 +89,34 @@ $paket_result = mysqli_query($conn, "SELECT DISTINCT nama FROM paket");
                     </select>
                 </div>
 
-                <!-- Kelas -->
+              <!-- Kelas -->
                 <div class="mb-3">
-                    <label for="kelas" class="form-label">Kelas</label>
-                    <select name="kelas" class="form-select" required>
+                    <label for="kelas_id" class="form-label">Kelas</label>
+                    <select name="kelas_id" class="form-select" required>
                         <option value="">-- Pilih Kelas --</option>
-                        <?php while ($k = mysqli_fetch_assoc($kelas_result)) : ?>
-                            <option value="<?= $k['nama_kelas'] ?>"><?= $k['nama_kelas'] ?></option>
+                        <?php
+                        $kelas_result = mysqli_query($conn, "SELECT id, nama_kelas FROM kelas");
+                        while ($k = mysqli_fetch_assoc($kelas_result)) :
+                        ?>
+                            <option value="<?= $k['id'] ?>"><?= $k['nama_kelas'] ?></option>
                         <?php endwhile; ?>
                     </select>
                 </div>
 
                 <!-- Paket -->
                 <div class="mb-3">
-                    <label for="paket" class="form-label">Paket</label>
-                    <select name="paket" class="form-select" required>
+                    <label for="paket_id" class="form-label">Paket</label>
+                    <select name="paket_id" class="form-select" required>
                         <option value="">-- Pilih Paket --</option>
-                        <?php while ($p = mysqli_fetch_assoc($paket_result)) : ?>
-                            <option value="<?= $p['nama'] ?>"><?= $p['nama'] ?></option>
+                        <?php
+                        $paket_result = mysqli_query($conn, "SELECT id, nama FROM paket");
+                        while ($p = mysqli_fetch_assoc($paket_result)) :
+                        ?>
+                            <option value="<?= $p['id'] ?>"><?= $p['nama'] ?></option>
                         <?php endwhile; ?>
                     </select>
                 </div>
+
 
                 <!-- Tanggal mulai dan berakhir -->
                 <div class="mb-3">
