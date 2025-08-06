@@ -1,156 +1,133 @@
 <?php
+include '../includes/kasir_header.php';
 include '../config/database.php';
-include '../includes/auth.php';
 
-if ($_SESSION['user']['role'] !== 'kasir') {
-    header("Location: ../index.php");
-    exit;
-}
+$pesan = '';
 
-$success = $error = '';
-
-// Ambil daftar siswa yang belum aktif
-$siswa_result = mysqli_query($conn, "
-    SELECT id, email, kelas, jenjang 
-    FROM users 
-    WHERE role='siswa' AND status='belum_aktif'
-    ORDER BY email ASC
-");
-
-// Ambil daftar paket aktif
-$paket_result = mysqli_query($conn, "SELECT * FROM paket WHERE status='aktif' ORDER BY nama ASC");
-
-// Proses form pembayaran tunai
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $user_id  = intval($_POST['user_id']);
-    $paket_id = intval($_POST['paket']);
-    $metode   = 'tunai';
-    $status   = 'lunas';
-    $tanggal  = date('Y-m-d'); // Tanggal transaksi
+    // Ambil data dari form
+    $nama = $_POST['nama'];
+    $username = $_POST['username'];
+    $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
+    $email = $_POST['email'];
+    $no_hp = $_POST['no_hp'];
+    $kelas_id = $_POST['kelas_id'];
+    $paket_id = $_POST['paket_id'];
+    $metode = $_POST['metode'];
 
-    if (!$user_id || !$paket_id) {
-        $error = "Semua field wajib dipilih!";
-    } else {
-        // Ambil data paket
-        $paket_query = mysqli_query($conn, "SELECT * FROM paket WHERE id=$paket_id AND status='aktif'");
-        $paket_data = mysqli_fetch_assoc($paket_query);
+    // Ambil data kelas
+    $kelas_query = mysqli_query($conn, "SELECT * FROM kelas WHERE id = $kelas_id");
+    $kelas_data = mysqli_fetch_assoc($kelas_query);
+    $kelas = $kelas_data['nama_kelas'];
+    $jenjang = $kelas_data['jenjang'];
 
-        if (!$paket_data) {
-            $error = "Data paket tidak ditemukan.";
+    // Ambil data paket
+    $paket_query = mysqli_query($conn, "SELECT * FROM paket WHERE id = $paket_id");
+    $paket_data = mysqli_fetch_assoc($paket_query);
+    $paket = $paket_data['nama'];
+    $harga = $paket_data['harga'];
+    $durasi = $paket_data['durasi'];
+    $satuan_durasi = $paket_data['satuan_durasi'];
+
+    // Insert ke tabel users
+    $insert_user = mysqli_query($conn, "INSERT INTO users (username, password, role, nama, kelas, jenjang, email, no_hp, status) 
+        VALUES ('$username', '$password', 'siswa', '$nama', '$kelas', '$jenjang', '$email', '$no_hp', 'aktif')");
+
+    if ($insert_user) {
+        $user_id = mysqli_insert_id($conn);
+        $tanggal = date('Y-m-d');
+
+        // Insert ke pembayaran
+        $insert_bayar = mysqli_query($conn, "INSERT INTO pembayaran (user_id, paket_id, paket, harga, metode, status, tanggal) 
+            VALUES ($user_id, $paket_id, '$paket', $harga, '$metode', 'Lunas', '$tanggal')");
+
+        // Hitung tanggal berakhir langganan
+        $tanggal_mulai = $tanggal;
+        if ($satuan_durasi === 'bulan') {
+            $tanggal_berakhir = date('Y-m-d', strtotime("+$durasi months"));
+        } elseif ($satuan_durasi === 'tahun') {
+            $tanggal_berakhir = date('Y-m-d', strtotime("+$durasi years"));
         } else {
-            // Insert pembayaran
-            $stmt = $conn->prepare("
-                INSERT INTO pembayaran (user_id, paket, harga, metode, status, tanggal) 
-                VALUES (?, ?, ?, ?, ?, ?)
-            ");
-            $stmt->bind_param("isssss", $user_id, $paket_data['nama'], $paket_data['harga'], $metode, $status, $tanggal);
-
-            if ($stmt->execute()) {
-                // Update status user jadi aktif
-                mysqli_query($conn, "UPDATE users SET status='aktif' WHERE id=$user_id");
-
-                // Ambil jenjang dan kelas user
-                $user_result = mysqli_query($conn, "SELECT kelas, jenjang FROM users WHERE id=$user_id");
-                $user_data = mysqli_fetch_assoc($user_result);
-                $kelas = $user_data['kelas'];
-                $jenjang = $user_data['jenjang'];
-
-                // Hitung tanggal mulai dan tanggal berakhir
-                $tanggal_mulai = $tanggal;
-                $date_end = new DateTime($tanggal_mulai);
-                if (strtolower($paket_data['nama']) === 'bulanan') {
-                    $date_end->modify('+1 month');
-                } elseif (strtolower($paket_data['nama']) === 'mingguan') {
-                    $date_end->modify('+7 days');
-                } else {
-                    $date_end->modify('+1 month'); // default
-                }
-                $tanggal_berakhir = $date_end->format('Y-m-d');
-
-                // Masukkan ke tabel langganan
-                $stmt2 = $conn->prepare("
-                    INSERT INTO langganan (user_id, paket, jenjang, kelas, tanggal_mulai, tanggal_berakhir, status, created_at)
-                    VALUES (?, ?, ?, ?, ?, ?, 'aktif', NOW())
-                ");
-                $stmt2->bind_param("isssss", $user_id, $paket_data['nama'], $jenjang, $kelas, $tanggal_mulai, $tanggal_berakhir);
-                $stmt2->execute();
-                $stmt2->close();
-
-                $success = "Transaksi tunai berhasil dan langganan ditambahkan!";
-            } else {
-                $error = "Gagal menyimpan transaksi.";
-            }
-            $stmt->close();
+            $tanggal_berakhir = date('Y-m-d', strtotime("+$durasi days"));
         }
+
+        // Insert ke langganan
+        $insert_langganan = mysqli_query($conn, "INSERT INTO langganan (user_id, paket, jenjang, kelas, tanggal_mulai, tanggal_berakhir, status, created_at)
+            VALUES ($user_id, '$paket', '$jenjang', '$kelas', '$tanggal_mulai', '$tanggal_berakhir', 'Aktif', NOW())");
+
+        if ($insert_bayar && $insert_langganan) {
+            $pesan = '<div class="alert alert-success">Siswa berhasil ditambahkan dan pembayaran tercatat.</div>';
+        } else {
+            $pesan = '<div class="alert alert-danger">Gagal menyimpan pembayaran atau langganan.</div>';
+        }
+    } else {
+        $pesan = '<div class="alert alert-danger">Gagal menyimpan data siswa.</div>';
     }
 }
-
-include '../includes/kasir_header.php';
-
-// Format hari + tanggal
-$hari = [
-    'Sunday' => 'Minggu',
-    'Monday' => 'Senin',
-    'Tuesday' => 'Selasa',
-    'Wednesday' => 'Rabu',
-    'Thursday' => 'Kamis',
-    'Friday' => 'Jumat',
-    'Saturday' => 'Sabtu'
-];
-$hari_ini = $hari[date('l')] . ', ' . date('d-m-Y');
 ?>
 
-<div class="container-fluid">
-    <h4 class="fw-bold mb-4"><i class="bi bi-cash me-2"></i>Pembayaran Tunai</h4>
-
-    <?php if (!empty($error)): ?>
-        <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
-    <?php endif; ?>
-    <?php if (!empty($success)): ?>
-        <div class="alert alert-success"><?= htmlspecialchars($success) ?></div>
-    <?php endif; ?>
-
-    <div class="card shadow border-0">
-        <div class="card-body">
-            <form method="POST">
-                <!-- Dropdown Siswa -->
-                <div class="mb-3">
-                    <label class="form-label">Pilih Siswa (Email - Kelas)</label>
-                    <select name="user_id" class="form-select" required>
-                        <option value="">-- Pilih Siswa --</option>
-                        <?php while ($s = mysqli_fetch_assoc($siswa_result)): ?>
-                            <option value="<?= $s['id'] ?>">
-                                <?= htmlspecialchars($s['email']) ?> (<?= htmlspecialchars($s['kelas']) ?>)
-                            </option>
-                        <?php endwhile; ?>
-                    </select>
-                </div>
-
-                <!-- Dropdown Paket -->
-                <div class="mb-3">
-                    <label class="form-label">Pilih Paket</label>
-                    <select name="paket" class="form-select" required>
-                        <option value="">-- Pilih Paket --</option>
-                        <?php while ($p = mysqli_fetch_assoc($paket_result)): ?>
-                            <option value="<?= $p['id'] ?>">
-                                <?= htmlspecialchars($p['nama']) ?> - Rp<?= number_format($p['harga'], 0, ',', '.') ?>
-                            </option>
-                        <?php endwhile; ?>
-                    </select>
-                </div>
-
-                <!-- Tanggal Transaksi (readonly) -->
-                <div class="mb-3">
-                    <label class="form-label">Tanggal Transaksi</label>
-                    <input type="text" class="form-control" value="<?= $hari_ini ?>" readonly>
-                </div>
-
-                <button type="submit" class="btn btn-primary w-100">
-                    <i class="bi bi-check-circle me-1"></i> Simpan Transaksi
-                </button>
-            </form>
+<div class="container mt-4">
+    <h4 class="mb-3">Form Tambah Siswa & Pembayaran</h4>
+    <?= $pesan ?>
+    <form method="POST">
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label>Nama Lengkap</label>
+                <input type="text" name="nama" required class="form-control">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label>Username</label>
+                <input type="text" name="username" required class="form-control">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label>Password</label>
+                <input type="text" name="password" required class="form-control">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label>Email</label>
+                <input type="email" name="email" required class="form-control">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label>No. HP</label>
+                <input type="text" name="no_hp" required class="form-control">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label>Pilih Kelas</label>
+                <select name="kelas_id" class="form-control" required>
+                    <option value="">-- Pilih --</option>
+                    <?php
+                    $kelas_result = mysqli_query($conn, "SELECT * FROM kelas ORDER BY jenjang, nama_kelas");
+                    while ($k = mysqli_fetch_assoc($kelas_result)) {
+                        echo "<option value='{$k['id']}'>{$k['jenjang']} - {$k['nama_kelas']}</option>";
+                    }
+                    ?>
+                </select>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label>Pilih Paket</label>
+                <select name="paket_id" class="form-control" required>
+                    <option value="">-- Pilih --</option>
+                    <?php
+                    $paket_result = mysqli_query($conn, "SELECT * FROM paket WHERE status='Aktif'");
+                    while ($p = mysqli_fetch_assoc($paket_result)) {
+                        echo "<option value='{$p['id']}'>{$p['nama']} - Rp " . number_format($p['harga'], 0, ',', '.') . "</option>";
+                    }
+                    ?>
+                </select>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label>Metode Pembayaran</label>
+                <select name="metode" class="form-control" required>
+                    <option value="">-- Pilih --</option>
+                    <option value="Tunai">Tunai</option>
+                    <option value="Transfer">Transfer</option>
+                </select>
+            </div>
+            <div class="col-12">
+                <button class="btn btn-primary" type="submit">Simpan & Bayar</button>
+            </div>
         </div>
-    </div>
+    </form>
 </div>
 
 <?php include '../includes/kasir_footer.php'; ?>

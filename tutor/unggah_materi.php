@@ -1,6 +1,6 @@
 <?php
 include '../includes/auth.php';
-include '../includes/tutor_header.php'; // Ganti header ke tutor_header
+include '../includes/tutor_header.php';
 include '../config/database.php';
 
 if ($_SESSION['user']['role'] !== 'tutor') {
@@ -10,15 +10,14 @@ if ($_SESSION['user']['role'] !== 'tutor') {
 
 $tutor_id = $_SESSION['user']['id'];
 
-// Ambil data kategori dan kelas
 $kategori_result = mysqli_query($conn, "SELECT * FROM kategori_materi");
 $kelas_result = mysqli_query($conn, "SELECT * FROM kelas");
+$paket_result = mysqli_query($conn, "SELECT id, nama FROM paket WHERE status = 'aktif'");
 
-// Inisialisasi variabel untuk edit
 $edit_id = null;
-$judul_edit = $deskripsi_edit = $kategori_edit = $kelas_edit = "";
+$judul_edit = $deskripsi_edit = $kategori_edit = $kelas_edit = $paket_edit = "";
 
-// Proses Edit
+// EDIT
 if (isset($_GET['edit'])) {
     $edit_id = (int) $_GET['edit'];
     $res = mysqli_query($conn, "SELECT * FROM materi WHERE id = $edit_id AND tutor_id = $tutor_id");
@@ -28,13 +27,14 @@ if (isset($_GET['edit'])) {
         $deskripsi_edit = $row_edit['deskripsi'];
         $kategori_edit = $row_edit['kategori_id'];
         $kelas_edit = $row_edit['kelas_id'];
+        $paket_edit = $row_edit['paket_id'];
         $file_lama = $row_edit['file'];
     } else {
         $error = "Materi tidak ditemukan untuk diedit.";
     }
 }
 
-// Proses Hapus
+// HAPUS
 if (isset($_GET['hapus'])) {
     $hapus_id = (int) $_GET['hapus'];
     $res = mysqli_query($conn, "SELECT file FROM materi WHERE id = $hapus_id AND tutor_id = $tutor_id");
@@ -46,12 +46,13 @@ if (isset($_GET['hapus'])) {
     }
 }
 
-// Proses Upload / Update
+// UPLOAD / UPDATE
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $judul       = mysqli_real_escape_string($conn, $_POST['judul']);
     $deskripsi   = mysqli_real_escape_string($conn, $_POST['deskripsi']);
     $kategori_id = (int) $_POST['kategori_id'];
     $kelas_id    = (int) $_POST['kelas_id'];
+    $paket_id    = (int) $_POST['paket_id'];
 
     $allowed_extensions = ['pdf', 'mp4', 'avi', 'mkv', 'mov'];
     $fileName = $_FILES['file']['name'];
@@ -75,12 +76,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 @unlink($uploadDir . '/' . $file_lama);
                 $query = "UPDATE materi 
                           SET judul='$judul', deskripsi='$deskripsi', kategori_id=$kategori_id, kelas_id=$kelas_id, 
-                              file='$newFileName', tipe_file='$tipe_file', status='proses' 
+                              paket_id=$paket_id, file='$newFileName', tipe_file='$tipe_file', status='proses' 
                           WHERE id = $id_edit AND tutor_id = $tutor_id";
             }
         } else {
             $query = "UPDATE materi 
-                      SET judul='$judul', deskripsi='$deskripsi', kategori_id=$kategori_id, kelas_id=$kelas_id 
+                      SET judul='$judul', deskripsi='$deskripsi', kategori_id=$kategori_id, kelas_id=$kelas_id, paket_id=$paket_id 
                       WHERE id = $id_edit AND tutor_id = $tutor_id";
         }
 
@@ -97,8 +98,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $tipe_file = ($ext === 'pdf') ? 'pdf' : 'video';
 
             if (move_uploaded_file($fileTmp, $filePath)) {
-                $query = "INSERT INTO materi (judul, deskripsi, kategori_id, kelas_id, file, tipe_file, tutor_id, status, created_at)
-                          VALUES ('$judul', '$deskripsi', $kategori_id, $kelas_id, '$newFileName', '$tipe_file', $tutor_id, 'proses', NOW())";
+                $query = "INSERT INTO materi (judul, deskripsi, kategori_id, kelas_id, paket_id, file, tipe_file, tutor_id, status, created_at)
+                          VALUES ('$judul', '$deskripsi', $kategori_id, $kelas_id, $paket_id, '$newFileName', '$tipe_file', $tutor_id, 'proses', NOW())";
                 mysqli_query($conn, $query);
                 $success = "Materi berhasil diunggah.";
             } else {
@@ -110,28 +111,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Filter
+// FILTER
 $filter_kelas = isset($_GET['kelas_id']) ? (int) $_GET['kelas_id'] : 0;
 $filter_kategori = isset($_GET['kategori_id']) ? (int) $_GET['kategori_id'] : 0;
 $where = "WHERE m.tutor_id = $tutor_id";
 if ($filter_kelas > 0) $where .= " AND m.kelas_id = $filter_kelas";
 if ($filter_kategori > 0) $where .= " AND m.kategori_id = $filter_kategori";
 
-$query = "SELECT m.*, k.nama_kategori, kl.nama_kelas 
+$query = "SELECT m.*, k.nama_kategori, kl.nama_kelas, p.nama AS nama_paket
           FROM materi m
           LEFT JOIN kategori_materi k ON m.kategori_id = k.id
           LEFT JOIN kelas kl ON m.kelas_id = kl.id
+          LEFT JOIN paket p ON m.paket_id = p.id
           $where ORDER BY m.id DESC";
 $materi = mysqli_query($conn, $query);
 ?>
 
 <div class="content">
     <h3 class="mb-4"><?= $edit_id ? 'Edit Materi' : 'Unggah Materi' ?></h3>
-
     <?php if (isset($success)) echo "<div class='alert alert-success'>$success</div>"; ?>
     <?php if (isset($error)) echo "<div class='alert alert-danger'>$error</div>"; ?>
 
-    <!-- Form Upload -->
+    <!-- FORM -->
     <form method="POST" enctype="multipart/form-data" class="card p-4 shadow-sm mb-4">
         <?php if ($edit_id): ?>
             <input type="hidden" name="id_edit" value="<?= $edit_id ?>">
@@ -168,6 +169,17 @@ $materi = mysqli_query($conn, $query);
             </select>
         </div>
         <div class="mb-3">
+            <label>Paket</label>
+            <select name="paket_id" class="form-select" required>
+                <option value="">-- Pilih Paket --</option>
+                <?php mysqli_data_seek($paket_result, 0); while ($p = mysqli_fetch_assoc($paket_result)): ?>
+                    <option value="<?= $p['id'] ?>" <?= ($p['id'] == $paket_edit) ? 'selected' : '' ?>>
+                        <?= htmlspecialchars($p['nama']) ?>
+                    </option>
+                <?php endwhile; ?>
+            </select>
+        </div>
+        <div class="mb-3">
             <label>File Materi (PDF/Video)</label>
             <input type="file" name="file" class="form-control" accept=".pdf,.mp4,.avi,.mkv,.mov">
         </div>
@@ -176,7 +188,7 @@ $materi = mysqli_query($conn, $query);
         </button>
     </form>
 
-    <!-- Filter -->
+    <!-- FILTER -->
     <form method="GET" class="row g-2 mb-4">
         <div class="col-md-4">
             <select name="kelas_id" class="form-select">
@@ -203,8 +215,9 @@ $materi = mysqli_query($conn, $query);
         </div>
     </form>
 
-    <!-- Tabel Materi -->
-    <h5>Materi yang Telah Diunggah:</h5>
+    <div class="alert alert-warning"><strong>Catatan:</strong> Materi akan dicek oleh admin sebelum tampil ke siswa.</div>
+
+    <!-- TABEL -->
     <table class="table table-bordered table-striped">
         <thead class="table-dark">
             <tr>
@@ -212,6 +225,7 @@ $materi = mysqli_query($conn, $query);
                 <th>Deskripsi</th>
                 <th>Kategori</th>
                 <th>Kelas</th>
+                <th>Paket</th>
                 <th>File</th>
                 <th>Status</th>
                 <th>Aksi</th>
@@ -224,6 +238,7 @@ $materi = mysqli_query($conn, $query);
                     <td><?= htmlspecialchars($row['deskripsi']) ?></td>
                     <td><?= htmlspecialchars($row['nama_kategori']) ?: '-' ?></td>
                     <td><?= htmlspecialchars($row['nama_kelas']) ?: '-' ?></td>
+                    <td><?= htmlspecialchars($row['nama_paket']) ?: '-' ?></td>
                     <td>
                         <a href="../assets/uploads/<?= htmlspecialchars($row['file']) ?>" target="_blank">
                             <?= ($row['tipe_file'] === 'video') ? 'Tonton Video' : 'Lihat PDF'; ?>

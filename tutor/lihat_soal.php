@@ -67,6 +67,8 @@ $total_soal = mysqli_num_rows(mysqli_query($conn, "SELECT id FROM soal WHERE lat
                 <p><b>Kelas:</b> <?= htmlspecialchars($data['nama_kelas']) ?></p>
                 <p><b>Mata Pelajaran:</b> <?= htmlspecialchars($data['nama_kategori']) ?></p>
                 <p><b>Durasi:</b> <?= $data['durasi_menit'] ?> menit</p>
+                <p><b>Tanggal Publish:</b> <?= date('d-m-Y H:i', strtotime($data['tanggal_publish'])) ?></p>
+                <p><b>Tenggat Waktu:</b> <?= date('d-m-Y H:i', strtotime($data['tenggat_waktu'])) ?></p>
                 <p><b>Total Soal:</b> <?= $total_soal ?></p>
             </div>
 

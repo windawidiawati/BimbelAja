@@ -27,9 +27,16 @@ if (isset($_POST['simpan_latihan'])) {
     $kelas_id = (int) $_POST['kelas_id'];
     $kategori_id = (int) $_POST['kategori_id'];
     $durasi_menit = (int) $_POST['durasi_menit'];
+    $tanggal_publish = $_POST['tanggal_publish'];
+    $tenggat_waktu = $_POST['tenggat_waktu'];
 
-    $insert_latihan = "INSERT INTO latihan (judul, tutor_id, kelas_id, kategori_id, durasi_menit, created_at) 
-                       VALUES ('$judul_latihan', $tutor_id, $kelas_id, $kategori_id, $durasi_menit, NOW())";
+    // Konversi ke format DATETIME
+    $tanggal_publish = date('Y-m-d H:i:s', strtotime($tanggal_publish));
+    $tenggat_waktu = date('Y-m-d H:i:s', strtotime($tenggat_waktu));
+    $paket_id = $_POST['paket_id'];
+
+    $insert_latihan = "INSERT INTO latihan (judul, tutor_id, kelas_id, kategori_id, durasi_menit, tanggal_publish, tenggat_waktu, paket_id, created_at) 
+                       VALUES ('$judul_latihan', '$tutor_id', '$kelas_id', '$kategori_id', '$durasi_menit', '$tanggal_publish', '$tenggat_waktu', '$paket_id', NOW())";
     if (mysqli_query($conn, $insert_latihan)) {
         $latihan_id = mysqli_insert_id($conn);
 
@@ -54,13 +61,15 @@ if (isset($_POST['simpan_latihan'])) {
 }
 
 // Ambil daftar latihan beserta jumlah soal
-$query_latihan = "SELECT l.*, k.nama_kelas, km.nama_kategori, 
+$query_latihan = "SELECT l.*, k.nama_kelas, km.nama_kategori, p.nama AS nama_paket, 
                  (SELECT COUNT(*) FROM soal s WHERE s.latihan_id = l.id) AS total_soal
                  FROM latihan l
                  LEFT JOIN kelas k ON l.kelas_id = k.id
                  LEFT JOIN kategori_materi km ON l.kategori_id = km.id
+                 LEFT JOIN paket p ON l.paket_id = p.id
                  $where
                  ORDER BY l.created_at DESC";
+                 
 $latihan_list = mysqli_query($conn, $query_latihan);
 
 // Ambil data kelas & kategori untuk filter tabel
@@ -104,6 +113,26 @@ include '../includes/tutor_header.php';
                 <label class="form-label">Durasi (menit)</label>
                 <input type="number" name="durasi_menit" class="form-control" value="30" required>
             </div>
+             <div class="mb-3">
+                <label for="tanggal_publish">Tanggal Publish</label>
+                <input type="datetime-local" class="form-control" name="tanggal_publish" required>
+                    </div>
+            <div class="mb-3">
+                <label for="tenggat_waktu">Tenggat Waktu</label>
+                <input type="datetime-local" class="form-control" name="tenggat_waktu" required>
+                    </div>
+            <div class="mb-3">
+                <label for="paket" class="form-label">Paket</label>
+                <select class="form-select" name="paket_id" id="paket" required>
+                    <option value="">-- Pilih Paket --</option>
+                    <?php
+                    $queryPaket = mysqli_query($conn, "SELECT * FROM paket");
+                    while ($paket = mysqli_fetch_assoc($queryPaket)) {
+                       echo '<option value="'.$paket['id'].'">'.$paket['nama'].'</option>';
+                    }
+                    ?>
+                </select>
+                    </div>
 
             <h5>Daftar Soal</h5>
             <div id="soalContainer">
@@ -171,6 +200,9 @@ include '../includes/tutor_header.php';
                         <th>Durasi (menit)</th>
                         <th>Total Soal</th>
                         <th>Dibuat</th>
+                        <th>Tanggal Publish</th>
+                        <th>Tenggat Waktu</th>
+                        <th>Paket</th>
                         <th>Aksi</th>
                     </tr>
                 </thead>
@@ -184,7 +216,11 @@ include '../includes/tutor_header.php';
                             <td><?= $row['durasi_menit'] ?></td>
                             <td><?= $row['total_soal'] ?></td>
                             <td><?= $row['created_at'] ?></td>
+                            <td><?= $row['tanggal_publish'] ?></td>
+                            <td><?= $row['tenggat_waktu'] ?></td>
+                            <td><?= htmlspecialchars($row['nama_paket'] ?? '') ?></td>
                             <td><a href="lihat_soal.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-info">👁 Lihat Soal</a></td>
+
                         </tr>
                     <?php endwhile; ?>
                 </tbody>
