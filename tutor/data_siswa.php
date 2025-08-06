@@ -8,13 +8,12 @@ if ($_SESSION['user']['role'] !== 'tutor' && $_SESSION['user']['role'] !== 'admi
     exit;
 }
 
-// Daftar kelas (hardcode)
-$daftar_kelas = [
-    'Kelas 1 SD', 'Kelas 2 SD', 'Kelas 3 SD', 'Kelas 4 SD', 'Kelas 5 SD', 'Kelas 6 SD',
-    'Kelas 7 SMP', 'Kelas 8 SMP', 'Kelas 9 SMP',
-    'Kelas 10 SMA IPA', 'Kelas 11 SMA IPA', 'Kelas 12 SMA IPA',
-    'Kelas 10 SMA IPS', 'Kelas 11 SMA IPS', 'Kelas 12 SMA IPS'
-];
+// Ambil semua kelas untuk dropdown filter
+$kelas_result = mysqli_query($conn, "SELECT id, nama_kelas, jenjang FROM kelas ORDER BY jenjang, nama_kelas");
+$daftar_kelas = [];
+while ($k = mysqli_fetch_assoc($kelas_result)) {
+    $daftar_kelas[] = $k;
+}
 
 // Ambil semua paket untuk dropdown filter
 $paket_result = mysqli_query($conn, "SELECT id, nama FROM paket");
@@ -24,16 +23,16 @@ while ($p = mysqli_fetch_assoc($paket_result)) {
 }
 
 // Filter dari URL
-$filter_kelas = isset($_GET['kelas']) ? trim($_GET['kelas']) : '';
+$filter_kelas = isset($_GET['kelas_id']) ? trim($_GET['kelas_id']) : '';
 $filter_paket = isset($_GET['paket_id']) ? trim($_GET['paket_id']) : '';
 
-// Bangun query utama: ambil langganan aktif terbaru per siswa
+// Bangun query utama
 $query = "
     SELECT 
         u.id AS user_id,
         u.nama,
-        u.kelas,
-        u.jenjang,
+        k.nama_kelas,
+        k.jenjang,
         p.nama AS nama_paket
     FROM users u
     LEFT JOIN (
@@ -46,13 +45,14 @@ $query = "
             GROUP BY user_id
         ) l2 ON l1.user_id = l2.user_id AND l1.tanggal_berakhir = l2.max_tanggal
     ) l ON l.user_id = u.id
+    LEFT JOIN kelas k ON u.kelas_id = k.id
     LEFT JOIN paket p ON l.paket_id = p.id
     WHERE u.role = 'siswa'
 ";
 
 if ($filter_kelas !== '') {
     $escaped_kelas = mysqli_real_escape_string($conn, $filter_kelas);
-    $query .= " AND u.kelas = '{$escaped_kelas}'";
+    $query .= " AND u.kelas_id = '{$escaped_kelas}'";
 }
 
 if ($filter_paket !== '') {
@@ -61,7 +61,6 @@ if ($filter_paket !== '') {
 }
 
 $query .= " ORDER BY u.nama ASC";
-
 $result = mysqli_query($conn, $query);
 ?>
 
@@ -73,11 +72,11 @@ $result = mysqli_query($conn, $query);
         <form method="GET" class="row g-3 mb-4 align-items-end">
             <div class="col-md-4">
                 <label class="form-label">Filter Kelas:</label>
-                <select name="kelas" class="form-select">
+                <select name="kelas_id" class="form-select">
                     <option value="">Semua Kelas</option>
-                    <?php foreach ($daftar_kelas as $kelas_option) { ?>
-                        <option value="<?= htmlspecialchars($kelas_option); ?>" <?= ($filter_kelas === $kelas_option) ? 'selected' : ''; ?>>
-                            <?= htmlspecialchars($kelas_option); ?>
+                    <?php foreach ($daftar_kelas as $kelas) { ?>
+                        <option value="<?= htmlspecialchars($kelas['id']); ?>" <?= ($filter_kelas === $kelas['id']) ? 'selected' : ''; ?>>
+                            <?= htmlspecialchars($kelas['nama_kelas'] . ' - ' . $kelas['jenjang']); ?>
                         </option>
                     <?php } ?>
                 </select>
@@ -102,6 +101,7 @@ $result = mysqli_query($conn, $query);
             </div>
         </form>
 
+        <!-- Tabel Data -->
         <div class="table-responsive">
             <table class="table table-bordered table-hover text-center">
                 <thead class="table-primary">
@@ -119,11 +119,13 @@ $result = mysqli_query($conn, $query);
                     if ($result && mysqli_num_rows($result) > 0) {
                         while ($row = mysqli_fetch_assoc($result)) {
                             $nama_paket = $row['nama_paket'] ?? '-';
+                            $nama_kelas = $row['nama_kelas'] ?? '-';
+                            $jenjang = $row['jenjang'] ?? '-';
                             echo "<tr>
                                     <td>{$no}</td>
                                     <td>" . htmlspecialchars($row['nama']) . "</td>
-                                    <td>" . htmlspecialchars($row['kelas']) . "</td>
-                                    <td>" . htmlspecialchars($row['jenjang']) . "</td>
+                                    <td>" . htmlspecialchars($nama_kelas) . "</td>
+                                    <td>" . htmlspecialchars($jenjang) . "</td>
                                     <td>" . htmlspecialchars($nama_paket) . "</td>
                                   </tr>";
                             $no++;
