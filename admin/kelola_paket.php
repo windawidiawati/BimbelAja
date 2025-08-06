@@ -90,6 +90,7 @@ $paket = mysqli_query($conn, "SELECT * FROM paket ORDER BY harga ASC");
           <td><?= $row['status'] ?></td>
           <td>
             <a href="?edit=<?= $row['id'] ?>" class="btn btn-sm btn-warning">Edit</a>
+            <a href="detail_paket.php?id=<?= $row['id'] ?>" class="btn btn-info">Detail</a>
             <a href="?hapus=<?= $row['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Hapus paket ini?')">Hapus</a>
           </td>
         </tr>

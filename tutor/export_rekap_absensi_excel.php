@@ -37,13 +37,16 @@ $siswa_query = mysqli_query($conn, "
         SUM(CASE WHEN ao.status = 'alpa' THEN 1 ELSE 0 END) AS jml_alpa
     FROM users u
     JOIN langganan l ON l.user_id = u.id AND l.paket_id = '$paket_id'
-    LEFT JOIN absensi_offline ao ON ao.siswa_id = u.id
-    LEFT JOIN jadwal_offline jo ON ao.jadwal_id = jo.id
+    LEFT JOIN absensi_offline ao 
+    ON ao.siswa_id = u.id 
+    AND MONTH(ao.created_at) = '$bulan'
+    AND YEAR(ao.created_at) = '$tahun'
+LEFT JOIN jadwal_offline jo 
+    ON ao.jadwal_id = jo.id 
+    AND jo.tutor_id = '$tutor_id'
+
     WHERE u.role = 'siswa' 
         AND u.kelas = '$kelas_nama' 
-        AND jo.tutor_id = '$tutor_id'
-        AND MONTH(ao.created_at) = '$bulan'
-        AND YEAR(ao.created_at) = '$tahun'
     GROUP BY u.id
     ORDER BY u.nama ASC
 ");

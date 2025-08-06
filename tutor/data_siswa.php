@@ -8,7 +8,7 @@ if ($_SESSION['user']['role'] !== 'tutor' && $_SESSION['user']['role'] !== 'admi
     exit;
 }
 
-// Daftar kelas
+// Daftar kelas (hardcode)
 $daftar_kelas = [
     'Kelas 1 SD', 'Kelas 2 SD', 'Kelas 3 SD', 'Kelas 4 SD', 'Kelas 5 SD', 'Kelas 6 SD',
     'Kelas 7 SMP', 'Kelas 8 SMP', 'Kelas 9 SMP',
@@ -16,7 +16,7 @@ $daftar_kelas = [
     'Kelas 10 SMA IPS', 'Kelas 11 SMA IPS', 'Kelas 12 SMA IPS'
 ];
 
-// Ambil semua paket
+// Ambil semua paket untuk dropdown filter
 $paket_result = mysqli_query($conn, "SELECT id, nama FROM paket");
 $daftar_paket = [];
 while ($p = mysqli_fetch_assoc($paket_result)) {
@@ -24,8 +24,45 @@ while ($p = mysqli_fetch_assoc($paket_result)) {
 }
 
 // Filter dari URL
-$filter_kelas = isset($_GET['kelas']) ? $_GET['kelas'] : '';
-$filter_paket = isset($_GET['paket_id']) ? $_GET['paket_id'] : '';
+$filter_kelas = isset($_GET['kelas']) ? trim($_GET['kelas']) : '';
+$filter_paket = isset($_GET['paket_id']) ? trim($_GET['paket_id']) : '';
+
+// Bangun query utama: ambil langganan aktif terbaru per siswa
+$query = "
+    SELECT 
+        u.id AS user_id,
+        u.nama,
+        u.kelas,
+        u.jenjang,
+        p.nama AS nama_paket
+    FROM users u
+    LEFT JOIN (
+        SELECT l1.*
+        FROM langganan l1
+        INNER JOIN (
+            SELECT user_id, MAX(tanggal_berakhir) AS max_tanggal
+            FROM langganan
+            WHERE status = 'Aktif' AND tanggal_berakhir >= CURDATE()
+            GROUP BY user_id
+        ) l2 ON l1.user_id = l2.user_id AND l1.tanggal_berakhir = l2.max_tanggal
+    ) l ON l.user_id = u.id
+    LEFT JOIN paket p ON l.paket_id = p.id
+    WHERE u.role = 'siswa'
+";
+
+if ($filter_kelas !== '') {
+    $escaped_kelas = mysqli_real_escape_string($conn, $filter_kelas);
+    $query .= " AND u.kelas = '{$escaped_kelas}'";
+}
+
+if ($filter_paket !== '') {
+    $escaped_paket = mysqli_real_escape_string($conn, $filter_paket);
+    $query .= " AND p.id = '{$escaped_paket}'";
+}
+
+$query .= " ORDER BY u.nama ASC";
+
+$result = mysqli_query($conn, $query);
 ?>
 
 <div class="content">
@@ -39,8 +76,8 @@ $filter_paket = isset($_GET['paket_id']) ? $_GET['paket_id'] : '';
                 <select name="kelas" class="form-select">
                     <option value="">Semua Kelas</option>
                     <?php foreach ($daftar_kelas as $kelas_option) { ?>
-                        <option value="<?= $kelas_option; ?>" <?= ($filter_kelas == $kelas_option) ? 'selected' : ''; ?>>
-                            <?= $kelas_option; ?>
+                        <option value="<?= htmlspecialchars($kelas_option); ?>" <?= ($filter_kelas === $kelas_option) ? 'selected' : ''; ?>>
+                            <?= htmlspecialchars($kelas_option); ?>
                         </option>
                     <?php } ?>
                 </select>
@@ -51,8 +88,8 @@ $filter_paket = isset($_GET['paket_id']) ? $_GET['paket_id'] : '';
                 <select name="paket_id" class="form-select">
                     <option value="">Semua Paket</option>
                     <?php foreach ($daftar_paket as $paket) { ?>
-                        <option value="<?= $paket['id']; ?>" <?= ($filter_paket == $paket['id']) ? 'selected' : ''; ?>>
-                            <?= $paket['nama']; ?>
+                        <option value="<?= htmlspecialchars($paket['id']); ?>" <?= ($filter_paket === $paket['id']) ? 'selected' : ''; ?>>
+                            <?= htmlspecialchars($paket['nama']); ?>
                         </option>
                     <?php } ?>
                 </select>
@@ -64,32 +101,6 @@ $filter_paket = isset($_GET['paket_id']) ? $_GET['paket_id'] : '';
                 </button>
             </div>
         </form>
-
-        <?php
-        $query = "
-            SELECT 
-                u.id AS user_id,
-                MAX(u.nama) AS nama,
-                MAX(u.kelas) AS kelas,
-                MAX(u.jenjang) AS jenjang,
-                MAX(p.nama) AS nama_paket
-            FROM users u
-            LEFT JOIN langganan l ON l.user_id = u.id
-            LEFT JOIN paket p ON l.paket_id = p.id
-            WHERE u.role = 'siswa'
-        ";
-
-        if ($filter_kelas !== '') {
-            $query .= " AND u.kelas = '" . mysqli_real_escape_string($conn, $filter_kelas) . "'";
-        }
-
-        if ($filter_paket !== '') {
-            $query .= " AND p.id = '" . mysqli_real_escape_string($conn, $filter_paket) . "'";
-        }
-
-        $query .= " GROUP BY u.id ORDER BY nama ASC";
-        $result = mysqli_query($conn, $query);
-        ?>
 
         <div class="table-responsive">
             <table class="table table-bordered table-hover text-center">
@@ -105,19 +116,19 @@ $filter_paket = isset($_GET['paket_id']) ? $_GET['paket_id'] : '';
                 <tbody>
                     <?php
                     $no = 1;
-                    while ($row = mysqli_fetch_assoc($result)) {
-                        $nama_paket = $row['nama_paket'] ?? '-';
-                        echo "<tr>
-                                <td>{$no}</td>
-                                <td>{$row['nama']}</td>
-                                <td>{$row['kelas']}</td>
-                                <td>{$row['jenjang']}</td>
-                                <td>{$nama_paket}</td>
-                              </tr>";
-                        $no++;
-                    }
-
-                    if ($no === 1) {
+                    if ($result && mysqli_num_rows($result) > 0) {
+                        while ($row = mysqli_fetch_assoc($result)) {
+                            $nama_paket = $row['nama_paket'] ?? '-';
+                            echo "<tr>
+                                    <td>{$no}</td>
+                                    <td>" . htmlspecialchars($row['nama']) . "</td>
+                                    <td>" . htmlspecialchars($row['kelas']) . "</td>
+                                    <td>" . htmlspecialchars($row['jenjang']) . "</td>
+                                    <td>" . htmlspecialchars($nama_paket) . "</td>
+                                  </tr>";
+                            $no++;
+                        }
+                    } else {
                         echo "<tr><td colspan='5'>Tidak ada data untuk filter ini.</td></tr>";
                     }
                     ?>
