@@ -67,14 +67,6 @@ $paket = $row['paket'] ?? 'none';
         "akses" => "semua"
       ],
       [
-        "judul" => "Kelas Online",
-        "deskripsi" => "Ikuti kelas online langsung bersama tutor.",
-        "icon" => "bi-camera-video-fill",
-        "warna" => "danger",
-        "file" => "kelas_online.php",
-        "akses" => "semua"
-      ],
-      [
         "judul" => "Forum Diskusi",
         "deskripsi" => "Diskusi bersama teman dan tutor.",
         "icon" => "bi-chat-dots-fill",

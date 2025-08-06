@@ -1,78 +1,87 @@
 <?php
-include '../includes/auth.php';
-include '../includes/admin_header.php';
+session_start();
 include '../config/database.php';
 
-if ($_SESSION['user']['role'] !== 'admin') {
-    header("Location: ../index.php"); exit;
+// Cek login dan role siswa
+if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'siswa') {
+    header("Location: ../index.php");
+    exit;
 }
 
-$query = "
-    SELECT 
-        jk.id,
-        t.nama AS nama_tutor,
-        k.nama_kategori,
-        kl.nama_kelas,
-        jk.tanggal,
-        jk.jam_mulai,
-        jk.jam_selesai,
-        jk.keterangan,
-        jk.materi_file,
-        jk.created_at
-    FROM jadwal_kelas jk
-    LEFT JOIN tutor t ON jk.tutor_id = t.id
-    LEFT JOIN kategori_materi k ON jk.kategori_id = k.id
-    LEFT JOIN kelas kl ON jk.kelas_id = kl.id
-    ORDER BY jk.tanggal DESC, jk.jam_mulai ASC
+$siswa_id = $_SESSION['user']['id'];
+$today = date('Y-m-d');
+
+// Ambil langganan aktif siswa
+$queryLangganan = mysqli_query($conn, "
+    SELECT * FROM langganan 
+    WHERE user_id = $siswa_id 
+      AND status = 'aktif' 
+    ORDER BY tanggal_mulai DESC 
+    LIMIT 1
+");
+
+if (!$queryLangganan || mysqli_num_rows($queryLangganan) === 0) {
+    die("Kamu belum memiliki langganan aktif.");
+}
+
+$langganan = mysqli_fetch_assoc($queryLangganan);
+$kelas_id = isset($langganan['kelas_id']) ? (int)$langganan['kelas_id'] : 0;
+$paket_id = isset($langganan['paket_id']) ? (int)$langganan['paket_id'] : 0;
+
+// Validasi nilai kelas_id dan paket_id
+if ($kelas_id === 0 || $paket_id === 0) {
+    die("Data kelas atau paket langganan tidak valid.");
+}
+
+// Ambil jadwal berdasarkan kelas, paket, dan tanggal
+$queryJadwal = "
+    SELECT j.id, j.tanggal, j.jam_mulai, j.jam_selesai, 
+           k.nama_kelas, kat.nama_kategori, u.nama 
+    FROM jadwal_offline j
+    JOIN kelas k ON j.kelas_id = k.id
+    JOIN kategori_materi kat ON j.kategori_id = kat.id
+    JOIN users u ON j.tutor_id = u.id AND u.role = 'tutor'
+    WHERE j.kelas_id = $kelas_id
+      AND j.paket_id = $paket_id
+      AND j.tanggal >= '$today'
+    ORDER BY j.tanggal ASC, j.jam_mulai ASC
 ";
 
-$result = mysqli_query($conn, $query);
+$result = mysqli_query($conn, $queryJadwal);
+
+if (!$result) {
+    die("Terjadi kesalahan saat mengambil data jadwal: " . mysqli_error($conn));
+}
 ?>
 
-<div class="container mt-4">
-    <h2 class="mb-4">Jadwal Kelas</h2>
-    <table class="table table-bordered table-striped">
-        <thead class="table-dark">
-            <tr>
-                <th>No</th>
-                <th>Tutor</th>
-                <th>Kategori</th>
-                <th>Kelas</th>
-                <th>Tanggal</th>
-                <th>Jam Mulai</th>
-                <th>Jam Selesai</th>
-                <th>Keterangan</th>
-                <th>Materi File</th>
-                <th>Dibuat</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php if (mysqli_num_rows($result) > 0): ?>
-                <?php $no = 1; while ($row = mysqli_fetch_assoc($result)): ?>
-                    <tr>
-                        <td><?= $no++ ?></td>
-                        <td><?= htmlspecialchars($row['nama_tutor']) ?></td>
-                        <td><?= htmlspecialchars($row['nama_kategori']) ?></td>
-                        <td><?= htmlspecialchars($row['nama_kelas']) ?></td>
-                        <td><?= htmlspecialchars($row['tanggal']) ?></td>
-                        <td><?= htmlspecialchars($row['jam_mulai']) ?></td>
-                        <td><?= htmlspecialchars($row['jam_selesai']) ?></td>
-                        <td><?= htmlspecialchars($row['keterangan']) ?></td>
-                        <td>
-                            <?php if (!empty($row['materi_file'])): ?>
-                                <a href="../uploads/materi/<?= $row['materi_file'] ?>" target="_blank">Lihat</a>
-                            <?php else: ?>
-                                <em>-</em>
-                            <?php endif; ?>
-                        </td>
-                        <td><?= $row['created_at'] ?></td>
-                    </tr>
-                <?php endwhile; ?>
-            <?php else: ?>
-                <tr><td colspan="10" class="text-center">Belum ada jadwal</td></tr>
-            <?php endif; ?>
-        </tbody>
-    </table>
-</div>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Jadwal Kelas Kamu</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="container mt-5">
+  <h3>Jadwal Kelas Sesuai Paket</h3>
 
-<?php include '../includes/admin_footer.php'; ?>
+  <?php if (mysqli_num_rows($result) > 0): ?>
+    <ul class="list-group mt-3">
+      <?php while ($row = mysqli_fetch_assoc($result)): ?>
+        <li class="list-group-item">
+          <strong><?= date('l, d M Y', strtotime($row['tanggal'])) ?></strong><br>
+          Pukul: <?= htmlspecialchars($row['jam_mulai']) ?> - <?= htmlspecialchars($row['jam_selesai']) ?><br>
+          Kelas: <?= htmlspecialchars($row['nama_kelas']) ?><br>
+          Kategori: <?= htmlspecialchars($row['nama_kategori']) ?><br>
+          Tutor: <?= htmlspecialchars($row['nama']) ?>
+        </li>
+      <?php endwhile; ?>
+    </ul>
+  <?php else: ?>
+    <div class="alert alert-info mt-3">
+      Belum ada jadwal terdekat untuk kelas dan paket kamu.
+    </div>
+  <?php endif; ?>
+</div>
+</body>
+</html>

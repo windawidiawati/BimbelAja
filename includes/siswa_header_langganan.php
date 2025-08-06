@@ -5,7 +5,7 @@ if (session_status() === PHP_SESSION_NONE) {
 $user = $_SESSION['user'] ?? null;
 
 if (!$user || $user['role'] !== 'siswa') {
-  header("Location: ../auth/login.php");
+  header("Location: BimbelAja/auth/login.php");
   exit;
 }
 ?>

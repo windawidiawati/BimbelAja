@@ -52,6 +52,20 @@ while ($soal = mysqli_fetch_assoc($qSoal)) {
   echo "<input type='hidden' name='soal_ids[]' value='{$soal['id']}'>";
 
 }
+// cek dan simpan waktu mulai
+$cekMulai = mysqli_query($conn, "SELECT * FROM latihan_siswa WHERE siswa_id = $siswa_id AND latihan_id = $latihan_id");
+$dataLatihanSiswa = mysqli_fetch_assoc($cekMulai);
+
+if (!$dataLatihanSiswa) {
+    $now = date('Y-m-d H:i:s');
+    mysqli_query($conn, "INSERT INTO latihan_siswa (siswa_id, latihan_id, waktu_mulai, status) 
+                         VALUES ($siswa_id, $latihan_id, '$now', 'belum')");
+    $waktu_mulai = strtotime($now);
+} else {
+    $waktu_mulai = strtotime($dataLatihanSiswa['waktu_mulai']);
+}
+$durasi = $latihan['durasi_menit'];
+$waktu_selesai = $waktu_mulai + ($durasi * 60);
 
 // input hidden untuk mengirim id latihan
 $latihan_id = isset($_GET['latihan_id']) ? (int)$_GET['latihan_id'] : 0;
@@ -112,67 +126,83 @@ if (mysqli_num_rows($qLatihan) > 0) {
 echo '</div>'; // akhir .container;
 ?>
 <!-- Modal, Timer, dan Validasi JavaScript -->
+ 
+<!-- Pastikan timer ditampilkan di HTML -->
+<div id="timer" class="text-end fw-bold"></div>
+
 <script>
-let timerInterval;
-let waktuSisa;
+  // Ambil waktu selesai dari PHP (dalam milidetik)
+  const waktuSelesai = <?= $waktu_selesai * 1000 ?>;
 
-function tampilkanPopupDetail(judul, durasi, latihanId) {
-  const modalHtml = `
-    <div class="modal fade" id="modalLatihan" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Detail Latihan</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <p><strong>Judul:</strong> ${judul}</p>
-            <p><strong>Durasi:</strong> ${durasi} menit</p>
-            <p>Jika Anda keluar dari latihan, maka dianggap selesai dan soal yang belum dijawab akan dianggap salah.</p>
-          </div>
-          <div class="modal-footer">
-            <a href="soal.php?start=1&latihan_id=${latihanId}" class="btn btn-primary">Kerjakan Sekarang</a>
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-          </div>
-        </div>
-      </div>
-    </div>`;
-
-  document.body.insertAdjacentHTML('beforeend', modalHtml);
-  const modal = new bootstrap.Modal(document.getElementById('modalLatihan'));
-  modal.show();
-}
-
-function mulaiTimer(durasiMenit) {
-  waktuSisa = durasiMenit * 60;
   const timerElement = document.getElementById("timer");
 
-  timerInterval = setInterval(() => {
-    const menit = Math.floor(waktuSisa / 60);
-    const detik = waktuSisa % 60;
-    timerElement.textContent = `${menit}m ${detik}s`;
+  function updateTimer() {
+    const now = new Date().getTime();
+    let waktuTersisa = Math.floor((waktuSelesai - now) / 1000); // dalam detik
 
-    if (--waktuSisa < 0) {
+    if (waktuTersisa <= 0) {
       clearInterval(timerInterval);
+      timerElement.textContent = "0m 0s";
       alert("Waktu habis! Jawaban otomatis dikumpulkan.");
       document.getElementById("formLatihan").submit();
+      return;
     }
-  }, 1000);
-}
 
-window.addEventListener("beforeunload", function (e) {
-  if (document.getElementById("formLatihan")) {
-    e.preventDefault();
-    e.returnValue = 'Jika keluar, latihan akan dianggap selesai dan jawaban kosong dianggap salah.';
+    const menit = Math.floor(waktuTersisa / 60);
+    const detik = waktuTersisa % 60;
+    timerElement.textContent = `${menit}m ${detik}s`;
   }
-});
 
-function konfirmasiKeluar() {
-  if (confirm("Apakah Anda yakin ingin keluar? Latihan akan dianggap selesai.")) {
-    window.location.href = 'soal.php';
+  // Jalankan timer segera & setiap detik
+  updateTimer();
+  const timerInterval = setInterval(updateTimer, 1000);
+
+  // Konfirmasi keluar jika refresh atau tutup halaman
+  window.addEventListener("beforeunload", function (e) {
+    if (document.getElementById("formLatihan")) {
+      e.preventDefault();
+      e.returnValue = 'Jika keluar, latihan akan dianggap selesai dan jawaban kosong dianggap salah.';
+    }
+  });
+
+  function konfirmasiKeluar() {
+    if (confirm("Apakah Anda yakin ingin keluar? Latihan akan dianggap selesai.")) {
+      window.location.href = 'soal.php';
+    }
   }
-}
+
+  function tampilkanPopupDetail(judul, durasi, latihanId) {
+    const modalHtml = `
+      <div class="modal fade" id="modalLatihan" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Detail Latihan</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <p><strong>Judul:</strong> ${judul}</p>
+              <p><strong>Durasi:</strong> ${durasi} menit</p>
+              <p>Jika Anda keluar dari latihan, maka dianggap selesai dan soal yang belum dijawab akan dianggap salah.</p>
+            </div>
+            <div class="modal-footer">
+              <a href="soal.php?start=1&latihan_id=${latihanId}" class="btn btn-primary">Kerjakan Sekarang</a>
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+            </div>
+          </div>
+        </div>
+      </div>`;
+
+    // Cegah duplikasi modal
+    const existingModal = document.getElementById('modalLatihan');
+    if (existingModal) existingModal.remove();
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    const modal = new bootstrap.Modal(document.getElementById('modalLatihan'));
+    modal.show();
+  }
 </script>
+
 
 <!-- Tambahkan ini di tempat latihan ditampilkan -->
 <?php if (!isset($_GET['start']) && isset($_GET['latihan_id'])): ?>
@@ -228,7 +258,7 @@ function konfirmasiKeluar() {
         <p><strong>Skor:</strong> <?= $skor ?></p>
       </div>
       <div class="modal-footer">
-        <a href="dashboard_siswa.php" class="btn btn-primary">Kembali ke Dashboard</a>
+        <a href="soal.php" class="btn btn-primary">Kembali</a>
       </div>
     </div>
   </div>
@@ -258,7 +288,7 @@ function konfirmasiKeluar() {
   padding: 10px 15px;
   border-radius: 10px;
   font-weight: bold;
-  box-shadow: 0 0 10px rgba(0,0,0,0.2);
+  box-shadow: 0 0 10px rgba(0,0,0,0.2)
 }
 .fixed-btn-left {
   position: fixed;
