@@ -13,6 +13,10 @@ $paket_id = isset($_GET['paket_id']) ? intval($_GET['paket_id']) : 0;
 $bulan = isset($_GET['bulan']) ? intval($_GET['bulan']) : date('m');
 $tahun = isset($_GET['tahun']) ? intval($_GET['tahun']) : date('Y');
 
+if ($kelas_id <= 0 || $paket_id <= 0) {
+    die("Parameter kelas_id dan paket_id tidak valid!");
+}
+
 // Ambil nama kelas
 $kelas_nama = '';
 $res_kelas = mysqli_query($conn, "SELECT nama_kelas FROM kelas WHERE id='$kelas_id'");
@@ -38,28 +42,30 @@ $siswa_query = mysqli_query($conn, "
     FROM users u
     JOIN langganan l ON l.user_id = u.id AND l.paket_id = '$paket_id'
     LEFT JOIN absensi_offline ao 
-    ON ao.siswa_id = u.id 
-    AND MONTH(ao.created_at) = '$bulan'
-    AND YEAR(ao.created_at) = '$tahun'
-LEFT JOIN jadwal_offline jo 
-    ON ao.jadwal_id = jo.id 
-    AND jo.tutor_id = '$tutor_id'
-
+        ON ao.siswa_id = u.id 
+        AND MONTH(ao.created_at) = '$bulan'
+        AND YEAR(ao.created_at) = '$tahun'
+    LEFT JOIN jadwal_offline jo 
+        ON ao.jadwal_id = jo.id 
+        AND jo.tutor_id = '$tutor_id'
     WHERE u.role = 'siswa' 
-        AND u.kelas = '$kelas_nama' 
+        AND u.kelas_id = '$kelas_id'
     GROUP BY u.id
     ORDER BY u.nama ASC
 ");
 
-// Nama file
+// Nama file dan header
 $bulan_nama = date('F', mktime(0, 0, 0, $bulan, 10)); // contoh: July
 $filename = "rekap_absensi_{$kelas_nama}_{$paket_nama}_{$bulan_nama}_{$tahun}.xls";
-header("Content-Type: application/vnd.ms-excel");
-header("Content-Disposition: attachment; filename=$filename");
+header("Content-Type: application/vnd.ms-excel; charset=UTF-8");
+header("Content-Disposition: attachment; filename=\"$filename\"");
 header("Pragma: no-cache");
 header("Expires: 0");
 
-// Output HTML table
+// Tambahkan BOM UTF-8 agar Excel bisa baca karakter dengan benar
+echo "\xEF\xBB\xBF";
+
+// Output HTML Table
 echo "
 <html>
 <head>
@@ -104,6 +110,10 @@ while ($row = mysqli_fetch_assoc($siswa_query)) {
             <td>{$row['jml_alpa']}</td>
         </tr>";
     $no++;
+}
+
+if ($no === 1) {
+    echo "<tr><td colspan='6'>Tidak ada data absensi untuk periode ini.</td></tr>";
 }
 
 echo "

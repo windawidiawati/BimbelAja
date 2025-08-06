@@ -47,7 +47,7 @@ if ($kelas_id > 0 && $paket_id > 0) {
     LEFT JOIN absensi_offline ao ON ao.siswa_id = u.id
     LEFT JOIN jadwal_offline jo ON ao.jadwal_id = jo.id AND jo.tutor_id = '$tutor_id'
     WHERE u.role = 'siswa' 
-    AND u.kelas = '$kelas_nama'
+    AND u.kelas_id = '$kelas_id'
     $where_bulan
     GROUP BY u.id
     ORDER BY u.nama ASC
