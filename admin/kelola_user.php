@@ -10,7 +10,7 @@ if ($_SESSION['user']['role'] !== 'admin') {
 
 // Hapus
 if (isset($_GET['hapus'])) {
-  $id = $_GET['hapus'];
+  $id = intval($_GET['hapus']);
   mysqli_query($conn, "DELETE FROM users WHERE id = $id");
   header("Location: kelola_user.php");
   exit;
@@ -136,18 +136,18 @@ $result = mysqli_query($conn, $sql);
         <?php if (mysqli_num_rows($result) > 0): ?>
           <?php while($row = mysqli_fetch_assoc($result)): ?>
             <tr>
-              <td><?= htmlspecialchars($row['nama']) ?></td>
-              <td><?= htmlspecialchars($row['username']) ?></td>
-              <td><?= $row['role'] ?></td>
-              <td><?= $row['role'] === 'siswa' ? $row['jenjang'] : '-' ?></td>
-              <td><?= $row['role'] === 'siswa' ? $row['kelas'] : '-' ?></td>
-              <td><?= $row['role'] === 'tutor' ? $row['keahlian'] : '-' ?></td>
+              <td><?= htmlspecialchars($row['nama'] ?? '-') ?></td>
+              <td><?= htmlspecialchars($row['username'] ?? '-') ?></td>
+              <td><?= $row['role'] ?? '-' ?></td>
+              <td><?= ($row['role'] === 'siswa') ? ($row['jenjang'] ?? '-') : '-' ?></td>
+              <td><?= ($row['role'] === 'siswa') ? ($row['kelas'] ?? '-') : '-' ?></td>
+              <td><?= ($row['role'] === 'tutor') ? ($row['keahlian'] ?? '-') : '-' ?></td>
               <td>
                 <?php if ($row['role'] === 'siswa'): ?>
-                  <a href="kelola_siswa.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-info">Detail</a>
+                  <a href="kelola_siswa.php?id=<?= intval($row['id']) ?>" class="btn btn-sm btn-info">Detail</a>
                 <?php endif; ?>
                 <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#modalEditUser" onclick='editUser(<?= json_encode($row) ?>)'>Edit</button>
-                <a href="?hapus=<?= $row['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Yakin hapus user ini?')">Hapus</a>
+                <a href="?hapus=<?= intval($row['id']) ?>" class="btn btn-sm btn-danger" onclick="return confirm('Yakin hapus user ini?')">Hapus</a>
               </td>
             </tr>
           <?php endwhile; ?>
@@ -259,7 +259,6 @@ $result = mysqli_query($conn, $sql);
   </div>
 </div>
 
-<!-- JavaScript Section -->
 <script>
 function handleRoleChange(role) {
   document.getElementById('siswa-fields').style.display = role === 'siswa' ? 'block' : 'none';
@@ -329,5 +328,5 @@ function updateEditKelasOptions() {
 }
 </script>
 
-<!-- Bootstrap JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<?php include '../includes/admin_footer.php'; ?>

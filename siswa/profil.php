@@ -1,7 +1,7 @@
 <?php
 session_start();
 include '../config/database.php';
-include '../includes/header.php';
+include '../includes/siswa_header_langganan.php';
 
 if (!isset($_SESSION['user']) || !in_array($_SESSION['user']['role'], ['siswa', 'tutor'])) {
   header("Location: ../login.php");
@@ -27,7 +27,7 @@ $success = $error = '';
             <tr><th>Role</th><td><?= ucfirst($user['role']) ?></td></tr>
             <?php if ($user['role'] === 'siswa'): ?>
               <tr><th>Jenjang</th><td><?= htmlspecialchars($user['jenjang']) ?></td></tr>
-              <tr><th>Kelas</th><td><?= htmlspecialchars($user['kelas']) ?></td></tr>
+              <tr><th>Kelas</th><td><?= htmlspecialchars($user['kelas_id']) ?></td></tr>
             <?php else: ?>
               <tr><th>Keahlian</th><td><?= htmlspecialchars($user['keahlian']) ?></td></tr>
             <?php endif; ?>
@@ -49,32 +49,35 @@ $success = $error = '';
 
         <!-- MODE: EDIT PROFIL -->
         <?php elseif ($mode === 'edit'):
-          if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $nama = trim($_POST['nama']);
-            if ($user['role'] === 'siswa') {
-              $kelas = trim($_POST['kelas']);
-              $jenjang = trim($_POST['jenjang']);
-              $stmt = mysqli_prepare($conn, "UPDATE users SET nama=?, kelas=?, jenjang=? WHERE id=?");
-              mysqli_stmt_bind_param($stmt, 'sssi', $nama, $kelas, $jenjang, $user['id']);
-            } else {
-              $keahlian = trim($_POST['keahlian']);
-              $stmt = mysqli_prepare($conn, "UPDATE users SET nama=?, keahlian=? WHERE id=?");
-              mysqli_stmt_bind_param($stmt, 'ssi', $nama, $keahlian, $user['id']);
-            }
-            if (mysqli_stmt_execute($stmt)) {
-              $_SESSION['user'] = array_merge($user, [
-                'nama' => $nama,
-                'kelas' => $kelas ?? '',
-                'jenjang' => $jenjang ?? '',
-                'keahlian' => $keahlian ?? '',
-              ]);
-              header("Location: profil.php");
-              exit;
-            } else {
-              $error = "Gagal menyimpan perubahan.";
-            }
-          }
-        ?>
+  if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $nama = trim($_POST['nama']);
+
+    if ($user['role'] === 'siswa') {
+      $kelas_id = (int) $_POST['kelas'];
+      $jenjang = $_POST['jenjang'];
+      $stmt = mysqli_prepare($conn, "UPDATE users SET nama=?, kelas_id=?, jenjang=? WHERE id=?");
+      mysqli_stmt_bind_param($stmt, 'sisi', $nama, $kelas_id, $jenjang, $user['id']);
+    } else {
+      $keahlian = trim($_POST['keahlian']);
+      $stmt = mysqli_prepare($conn, "UPDATE users SET nama=?, keahlian=? WHERE id=?");
+      mysqli_stmt_bind_param($stmt, 'ssi', $nama, $keahlian, $user['id']);
+    }
+
+    if (mysqli_stmt_execute($stmt)) {
+      $_SESSION['user'] = array_merge($user, [
+        'nama' => $nama,
+        'kelas_id' => $kelas_id ?? '',
+        'jenjang' => $jenjang ?? '',
+        'keahlian' => $keahlian ?? '',
+      ]);
+      header("Location: profil.php");
+      exit;
+    } else {
+      $error = "Gagal menyimpan perubahan.";
+    }
+  }
+?>
+
           <?php if ($error): ?><div class="alert alert-danger"><?= $error ?></div><?php endif; ?>
           <form method="POST">
             <div class="mb-3">
@@ -83,20 +86,34 @@ $success = $error = '';
             </div>
             <?php if ($user['role'] === 'siswa'): ?>
               <div class="mb-3">
-                <label>Jenjang</label>
-                <select name="jenjang" id="jenjang" class="form-select" required>
-                  <option value="">-- Pilih Jenjang --</option>
-                  <option value="SD" <?= $user['jenjang'] === 'SD' ? 'selected' : '' ?>>SD</option>
-                  <option value="SMP" <?= $user['jenjang'] === 'SMP' ? 'selected' : '' ?>>SMP</option>
-                  <option value="SMA" <?= $user['jenjang'] === 'SMA' ? 'selected' : '' ?>>SMA</option>
-                </select>
-              </div>
-              <div class="mb-3">
-                <label>Kelas</label>
-                <select name="kelas" id="kelas" class="form-select" required>
-                  <option value="">-- Pilih Kelas --</option>
-                </select>
-              </div>
+                <div class="mb-3">
+  <label>Jenjang</label>
+  <select name="jenjang" class="form-select" onchange="this.form.submit()" required>
+    <option value="">-- Pilih Jenjang --</option>
+    <option value="SD" <?= $user['jenjang'] === 'SD' ? 'selected' : '' ?>>SD</option>
+    <option value="SMP" <?= $user['jenjang'] === 'SMP' ? 'selected' : '' ?>>SMP</option>
+    <option value="SMA" <?= $user['jenjang'] === 'SMA' ? 'selected' : '' ?>>SMA</option>
+  </select>
+</div>
+<div class="mb-3">
+  <label>Kelas</label>
+ <select name="kelas" class="form-select" required>
+  <option value="">-- Pilih Kelas --</option>
+  <?php
+    if (!empty($user['jenjang'])) {
+      $jenjang = mysqli_real_escape_string($conn, $user['jenjang']);
+      $kelas = mysqli_query($conn, "SELECT id, nama_kelas FROM kelas WHERE jenjang = '$jenjang'");
+      while ($k = mysqli_fetch_assoc($kelas)) {
+        $selected = ($user['kelas_id'] == $k['id']) ? 'selected' : '';
+        echo "<option value='{$k['id']}' $selected>{$k['nama_kelas']}</option>";
+      }
+    }
+  ?>
+</select>
+
+</div>
+
+
             <?php else: ?>
               <div class="mb-3">
                 <label>Keahlian</label>
@@ -204,26 +221,6 @@ $success = $error = '';
 </div>
 
 <script>
-const kelasOptions = {
-  SD: ['Kelas 1', 'Kelas 2', 'Kelas 3', 'Kelas 4', 'Kelas 5', 'Kelas 6'],
-  SMP: ['Kelas 7', 'Kelas 8', 'Kelas 9'],
-  SMA: ['Kelas 10', 'Kelas 11', 'Kelas 12']
-};
-
-document.getElementById('jenjang')?.addEventListener('change', function () {
-  const jenjang = this.value;
-  const kelasSelect = document.getElementById('kelas');
-  kelasSelect.innerHTML = '<option value="">-- Pilih Kelas --</option>';
-  if (kelasOptions[jenjang]) {
-    kelasOptions[jenjang].forEach(function (kelas) {
-      const option = document.createElement('option');
-      option.value = kelas;
-      option.textContent = kelas;
-      kelasSelect.appendChild(option);
-    });
-  }
-});
-
 // Isi ulang saat reload (mode edit)
 window.addEventListener('DOMContentLoaded', () => {
   const currentJenjang = "<?= $user['jenjang'] ?? '' ?>";
