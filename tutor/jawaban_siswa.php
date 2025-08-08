@@ -9,22 +9,12 @@ if ($_SESSION['user']['role'] !== 'tutor') {
 }
 
 $tutor_id = $_SESSION['user']['id'];
-
-// WHERE Clause
 $where = "WHERE l.tutor_id = '$tutor_id'";
 
-// Tambahkan filter jika ada
+// Tambahkan filter
 if (!empty($_GET['kelas_id'])) {
     $kelas_id = mysqli_real_escape_string($conn, $_GET['kelas_id']);
     $where .= " AND u.kelas_id = '$kelas_id'";
-}
-if (!empty($_GET['latihan_id'])) {
-    $latihan_id = mysqli_real_escape_string($conn, $_GET['latihan_id']);
-    $where .= " AND l.id = '$latihan_id'";
-}
-if (isset($_GET['status']) && ($_GET['status'] === '0' || $_GET['status'] === '1')) {
-    $status = mysqli_real_escape_string($conn, $_GET['status']);
-    $where .= " AND js.benar = '$status'";
 }
 if (!empty($_GET['tanggal_awal']) && !empty($_GET['tanggal_akhir'])) {
     $awal = $_GET['tanggal_awal'] . " 00:00:00";
@@ -32,32 +22,32 @@ if (!empty($_GET['tanggal_awal']) && !empty($_GET['tanggal_akhir'])) {
     $where .= " AND js.tanggal BETWEEN '$awal' AND '$akhir'";
 }
 
-// Query
+// Ambil data ringkasan per siswa per latihan
 $query = mysqli_query($conn, "
     SELECT 
-        js.id,
+        js.user_id,
         u.nama AS nama_siswa,
-        s.pertanyaan,
-        js.jawaban,
-        js.benar,
-        js.tanggal,
-        l.judul AS judul_latihan
+        l.id AS latihan_id,
+        l.judul AS judul_latihan,
+        COUNT(js.id) AS total_soal,
+        SUM(js.benar) AS jumlah_benar
     FROM jawaban_siswa js
     JOIN users u ON js.user_id = u.id
     JOIN soal s ON js.soal_id = s.id
     JOIN latihan l ON s.latihan_id = l.id
     $where
-    ORDER BY js.tanggal DESC
+    GROUP BY js.user_id, l.id
+    ORDER BY l.judul ASC, u.nama ASC
 ");
 ?>
 
 <div class="content">
     <div class="card shadow-sm p-4 mb-4">
-        <h3 class="fw-bold text-primary mb-4">📄 Nilai Siswa</h3>
+        <h3 class="fw-bold text-primary mb-4">📄 Rekap Nilai Siswa</h3>
 
-        <!-- Filter Form -->
+        <!-- Filter (sama seperti sebelumnya, bisa pakai kode kamu tadi) -->
         <form method="GET" class="row g-3 mb-4">
-            <!-- Kelas -->
+            <!-- Filter kelas & tanggal -->
             <div class="col-md-3">
                 <label for="kelas" class="form-label">Kelas</label>
                 <select name="kelas_id" id="kelas" class="form-select">
@@ -71,61 +61,31 @@ $query = mysqli_query($conn, "
                     ?>
                 </select>
             </div>
-
-            <!-- Latihan -->
             <div class="col-md-3">
-                <label for="latihan" class="form-label">Latihan</label>
-                <select name="latihan_id" id="latihan" class="form-select">
-                    <option value="">Semua</option>
-                    <?php
-                    $latihan_query = mysqli_query($conn, "SELECT id, judul FROM latihan WHERE tutor_id = '$tutor_id'");
-                    while ($l = mysqli_fetch_assoc($latihan_query)) {
-                        $selected = ($_GET['latihan_id'] ?? '') == $l['id'] ? 'selected' : '';
-                        echo "<option value='{$l['id']}' $selected>{$l['judul']}</option>";
-                    }
-                    ?>
-                </select>
-            </div>
-
-            <!-- Status -->
-            <div class="col-md-2">
-                <label for="status" class="form-label">Status</label>
-                <select name="status" id="status" class="form-select">
-                    <option value="">Semua</option>
-                    <option value="1" <?= ($_GET['status'] ?? '') === '1' ? 'selected' : '' ?>>Benar</option>
-                    <option value="0" <?= ($_GET['status'] ?? '') === '0' ? 'selected' : '' ?>>Salah</option>
-                </select>
-            </div>
-
-            <!-- Tanggal -->
-            <div class="col-md-2">
-                <label class="form-label">Dari Tanggal</label>
+                <label>Dari Tanggal</label>
                 <input type="date" name="tanggal_awal" class="form-control" value="<?= $_GET['tanggal_awal'] ?? '' ?>">
             </div>
-            <div class="col-md-2">
-                <label class="form-label">Sampai Tanggal</label>
+            <div class="col-md-3">
+                <label>Sampai Tanggal</label>
                 <input type="date" name="tanggal_akhir" class="form-control" value="<?= $_GET['tanggal_akhir'] ?? '' ?>">
             </div>
-
-            <!-- Tombol -->
-            <div class="col-md-12 text-end">
-                <button type="submit" class="btn btn-primary"><i class="bi bi-filter-circle"></i> Filter</button>
-                <a href="?" class="btn btn-secondary"><i class="bi bi-x-circle"></i> Reset</a>
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary me-2">Filter</button>
+                <a href="?" class="btn btn-secondary">Reset</a>
             </div>
         </form>
 
-        <!-- Tabel -->
+        <!-- Tabel Ringkasan -->
         <div class="table-responsive">
-            <table class="table table-bordered table-hover text-center align-middle">
+            <table class="table table-bordered text-center align-middle">
                 <thead class="table-dark">
                     <tr>
                         <th>No</th>
                         <th>Nama Siswa</th>
                         <th>Latihan</th>
-                        <th>Pertanyaan</th>
-                        <th>Jawaban</th>
-                        <th>Status</th>
-                        <th>Tanggal</th>
+                        <th>Benar</th>
+                        <th>Total</th>
+                        <th>Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -135,27 +95,68 @@ $query = mysqli_query($conn, "
                                 <td><?= $no++ ?></td>
                                 <td><?= htmlspecialchars($row['nama_siswa']) ?></td>
                                 <td><?= htmlspecialchars($row['judul_latihan']) ?></td>
-                                <td><?= htmlspecialchars($row['pertanyaan']) ?></td>
-                                <td><?= htmlspecialchars($row['jawaban']) ?></td>
+                                <td><?= $row['jumlah_benar'] ?? 0 ?></td>
+                                <td><?= $row['total_soal'] ?></td>
                                 <td>
-                                    <?php if ($row['benar'] == 1): ?>
-                                        <span class="badge bg-success">Benar</span>
-                                    <?php else: ?>
-                                        <span class="badge bg-danger">Salah</span>
-                                    <?php endif; ?>
+                                    <button class="btn btn-sm btn-info" onclick="toggleDetail('detail-<?= $no ?>')">Lihat Detail</button>
                                 </td>
-                                <td><?= date('d M Y H:i', strtotime($row['tanggal'])) ?></td>
+                            </tr>
+
+                            <!-- Detail tersembunyi -->
+                            <tr id="detail-<?= $no ?>" style="display:none;">
+                                <td colspan="6">
+                                    <table class="table table-sm table-bordered">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>No</th>
+                                                <th>Pertanyaan</th>
+                                                <th>Jawaban Siswa</th>
+                                                <th>Kunci Jawaban</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php
+                                            $user_id = $row['user_id'];
+                                            $latihan_id = $row['latihan_id'];
+                                            $detail = mysqli_query($conn, "
+                                                SELECT js.jawaban, js.benar, s.pertanyaan, s.jawaban AS kunci
+                                                FROM jawaban_siswa js
+                                                JOIN soal s ON js.soal_id = s.id
+                                                WHERE js.user_id = '$user_id' AND s.latihan_id = '$latihan_id'
+                                            ");
+                                            $no_d = 1;
+                                            while ($d = mysqli_fetch_assoc($detail)):
+                                            ?>
+                                            <tr>
+                                                <td><?= $no_d++ ?></td>
+                                                <td><?= htmlspecialchars($d['pertanyaan']) ?></td>
+                                                <td><?= htmlspecialchars($d['jawaban']) ?></td>
+                                                <td><?= htmlspecialchars($d['kunci']) ?></td>
+                                                <td>
+                                                    <?= $d['benar'] ? '<span class="text-success fw-bold">Benar</span>' : '<span class="text-danger fw-bold">Salah</span>' ?>
+                                                </td>
+                                            </tr>
+                                            <?php endwhile; ?>
+                                        </tbody>
+                                    </table>
+                                </td>
                             </tr>
                         <?php endwhile; ?>
                     <?php else: ?>
-                        <tr>
-                            <td colspan="7">Belum ada jawaban siswa.</td>
-                        </tr>
+                        <tr><td colspan="6">Belum ada data jawaban siswa.</td></tr>
                     <?php endif; ?>
                 </tbody>
             </table>
         </div>
     </div>
 </div>
+
+<script>
+function toggleDetail(id) {
+    const el = document.getElementById(id);
+    el.style.display = (el.style.display === 'none') ? '' : 'none';
+}
+</script>
 
 <?php include '../includes/tutor_footer.php'; ?>

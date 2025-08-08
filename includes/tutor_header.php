@@ -90,17 +90,17 @@ $current_page = basename($_SERVER['SCRIPT_NAME']);
     <div class="collapse navbar-collapse" id="navbarContent">
       <!-- Menu utama (khusus tampilan kecil) -->
       <ul class="navbar-nav me-auto d-lg-none">
-        <li class="nav-item"><a class="nav-link <?= ($current_page === 'dashboard.php') ? 'active' : '' ?>" href="/BimbelAja/tutor/dashboard.php"><i class="bi bi-speedometer2 me-1"></i> Dashboard</a></li>
+        <li class="nav-item"><a class="nav-link <?= ($current_page === 'dashboard.php') ? 'active' : '' ?>" href="..tutor/dashboard.php"><i class="bi bi-speedometer2 me-1"></i> Dashboard</a></li>
         
-        <li class="nav-item"><a class="nav-link <?= ($current_page === 'unggah_materi.php') ? 'active' : '' ?>" href="/BimbelAja/tutor/unggah_materi.php"><i class="bi bi-upload me-1"></i> Unggah Materi</a></li>
+        <li class="nav-item"><a class="nav-link <?= ($current_page === 'unggah_materi.php') ? 'active' : '' ?>" href="..tutor/unggah_materi.php"><i class="bi bi-upload me-1"></i> Unggah Materi</a></li>
         
-        <li class="nav-item"><a class="nav-link <?= ($current_page === 'buat_soal.php') ? 'active' : '' ?>" href="/BimbelAja/tutor/buat_soal.php"><i class="bi bi-pencil-square me-1"></i> Buat Soal</a></li>
-        <li class="nav-item"><a class="nav-link <?= ($current_page === 'jawaban_siswa.php') ? 'active' : '' ?>" href="/BimbelAja/tutor/jawaban_siswa.php"><i class="bi bi-calendar-event me-1"></i> Jawaban Siswa</a></li>
-        <li class="nav-item"><a class="nav-link <?= ($current_page === 'jadwal_offline.php') ? 'active' : '' ?>" href="/BimbelAja/tutor/jadwal_offline.php"><i class="bi bi-calendar3 me-1"></i> Jadwal Offline</a></li>
-        <li class="nav-item"><a class="nav-link <?= ($current_page === 'absensi.php') ? 'active' : '' ?>" href="/BimbelAja/tutor/absensi.php"><i class="bi bi-list-check me-1"></i> Absensi</a></li>
-        <li class="nav-item"><a class="nav-link <?= ($current_page === 'rekap_absensi.php') ? 'active' : '' ?>" href="/BimbelAja/tutor/rekap_absensi.php"><i class="bi bi-clipboard-data me-1"></i> Rekap Absensi</a></li>
-        <li class="nav-item"><a class="nav-link <?= ($current_page === 'forum.php') ? 'active' : '' ?>" href="/BimbelAja/tutor/forum.php"><i class="bi bi-chat-dots me-1"></i> Forum</a></li>
-        <li class="nav-item"><a class="nav-link <?= ($current_page === 'data_siswa.php') ? 'active' : '' ?>" href="/BimbelAja/tutor/data_siswa.php"><i class="bi bi-people me-1"></i> Data Siswa</a></li>
+        <li class="nav-item"><a class="nav-link <?= ($current_page === 'buat_soal.php') ? 'active' : '' ?>" href="..tutor/buat_soal.php"><i class="bi bi-pencil-square me-1"></i> Buat Soal</a></li>
+        <li class="nav-item"><a class="nav-link <?= ($current_page === 'jawaban_siswa.php') ? 'active' : '' ?>" href="..tutor/jawaban_siswa.php"><i class="bi bi-calendar-event me-1"></i> Jawaban Siswa</a></li>
+        <li class="nav-item"><a class="nav-link <?= ($current_page === 'jadwal_offline.php') ? 'active' : '' ?>" href="..tutor/jadwal_offline.php"><i class="bi bi-calendar3 me-1"></i> Jadwal Offline</a></li>
+        <li class="nav-item"><a class="nav-link <?= ($current_page === 'absensi.php') ? 'active' : '' ?>" href="..tutor/absensi.php"><i class="bi bi-list-check me-1"></i> Absensi</a></li>
+        <li class="nav-item"><a class="nav-link <?= ($current_page === 'rekap_absensi.php') ? 'active' : '' ?>" href="..tutor/rekap_absensi.php"><i class="bi bi-clipboard-data me-1"></i> Rekap Absensi</a></li>
+        <li class="nav-item"><a class="nav-link <?= ($current_page === 'forum.php') ? 'active' : '' ?>" href="..tutor/forum.php"><i class="bi bi-chat-dots me-1"></i> Forum</a></li>
+        <li class="nav-item"><a class="nav-link <?= ($current_page === 'data_siswa.php') ? 'active' : '' ?>" href="../tutor/data_siswa.php"><i class="bi bi-people me-1"></i> Data Siswa</a></li>
       </ul>
 
       <!-- Menu profil -->
@@ -114,13 +114,13 @@ $current_page = basename($_SERVER['SCRIPT_NAME']);
 
 <!-- Sidebar untuk layar besar -->
 <div class="sidebar d-none d-lg-block">
-  <a class="<?= ($current_page === 'dashboard.php') ? 'active' : '' ?>" href="/BimbelAja/tutor/dashboard.php"><i class="bi bi-speedometer2 me-2"></i> Dashboard</a>
-  <a class="<?= ($current_page === 'unggah_materi.php') ? 'active' : '' ?>" href="/BimbelAja/tutor/unggah_materi.php"><i class="bi bi-upload me-2"></i> Unggah Materi</a>
-  <a class="<?= ($current_page === 'buat_soal.php') ? 'active' : '' ?>" href="/BimbelAja/tutor/buat_soal.php"><i class="bi bi-pencil-square me-2"></i> Buat Soal</a>
-  <a class="<?= ($current_page === 'jawaban_siswa.php') ? 'active' : '' ?>" href="/BimbelAja/tutor/jawaban_siswa.php"><i class="bi bi-calendar-event me-2"></i> Jawaban Siswa</a>
-  <a class="<?= ($current_page === 'jadwal_offline.php') ? 'active' : '' ?>" href="/BimbelAja/tutor/jadwal_offline.php"><i class="bi bi-calendar3 me-2"></i> Jadwal Offline</a>
-  <a class="<?= ($current_page === 'absensi_offline.php') ? 'active' : '' ?>" href="/BimbelAja/tutor/absensi_offline.php"><i class="bi bi-list-check me-2"></i> Absensi</a>
-  <a class="<?= ($current_page === 'rekap_absensi.php') ? 'active' : '' ?>" href="/BimbelAja/tutor/rekap_absensi.php"><i class="bi bi-clipboard-data me-2"></i> Rekap Absensi</a>
-  <a class="<?= ($current_page === 'forum.php') ? 'active' : '' ?>" href="/BimbelAja/tutor/forum.php"><i class="bi bi-chat-dots me-2"></i> Forum</a>
-  <a class="<?= ($current_page === 'data_siswa.php') ? 'active' : '' ?>" href="/BimbelAja/tutor/data_siswa.php"><i class="bi bi-people me-2"></i> Data Siswa</a>
+  <a class="<?= ($current_page === 'dashboard.php') ? 'active' : '' ?>" href="../tutor/dashboard.php"><i class="bi bi-speedometer2 me-2"></i> Dashboard</a>
+  <a class="<?= ($current_page === 'unggah_materi.php') ? 'active' : '' ?>" href="../tutor/unggah_materi.php"><i class="bi bi-upload me-2"></i> Unggah Materi</a>
+  <a class="<?= ($current_page === 'buat_soal.php') ? 'active' : '' ?>" href="../tutor/buat_soal.php"><i class="bi bi-pencil-square me-2"></i> Buat Soal</a>
+  <a class="<?= ($current_page === 'jawaban_siswa.php') ? 'active' : '' ?>" href="../tutor/jawaban_siswa.php"><i class="bi bi-calendar-event me-2"></i> Jawaban Siswa</a>
+  <a class="<?= ($current_page === 'jadwal_offline.php') ? 'active' : '' ?>" href="../tutor/jadwal_offline.php"><i class="bi bi-calendar3 me-2"></i> Jadwal Offline</a>
+  <a class="<?= ($current_page === 'absensi_offline.php') ? 'active' : '' ?>" href="../tutor/absensi_offline.php"><i class="bi bi-list-check me-2"></i> Absensi</a>
+  <a class="<?= ($current_page === 'rekap_absensi.php') ? 'active' : '' ?>" href="../tutor/rekap_absensi.php"><i class="bi bi-clipboard-data me-2"></i> Rekap Absensi</a>
+  <a class="<?= ($current_page === 'forum.php') ? 'active' : '' ?>" href="../tutor/forum.php"><i class="bi bi-chat-dots me-2"></i> Forum</a>
+  <a class="<?= ($current_page === 'data_siswa.php') ? 'active' : '' ?>" href="../tutor/data_siswa.php"><i class="bi bi-people me-2"></i> Data Siswa</a>
 </div>
