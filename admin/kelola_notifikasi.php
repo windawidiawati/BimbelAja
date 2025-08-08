@@ -106,4 +106,8 @@ $notif_result = $conn->query($notif_query);
   </div>
 </div>
 
+
 <?php include '../includes/admin_footer.php'; ?>
+=======
+<?php include '../includes/admin_footer.php'; ?>
+>>>>>>> c093bc66fee073282575d2ed979fa6e3bd10d5f8

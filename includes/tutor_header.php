@@ -100,13 +100,13 @@ $current_page = basename($_SERVER['SCRIPT_NAME']);
         <li class="nav-item"><a class="nav-link <?= ($current_page === 'absensi.php') ? 'active' : '' ?>" href="/BimbelAja/tutor/absensi.php"><i class="bi bi-list-check me-1"></i> Absensi</a></li>
         <li class="nav-item"><a class="nav-link <?= ($current_page === 'rekap_absensi.php') ? 'active' : '' ?>" href="/BimbelAja/tutor/rekap_absensi.php"><i class="bi bi-clipboard-data me-1"></i> Rekap Absensi</a></li>
         <li class="nav-item"><a class="nav-link <?= ($current_page === 'forum.php') ? 'active' : '' ?>" href="/BimbelAja/tutor/forum.php"><i class="bi bi-chat-dots me-1"></i> Forum</a></li>
-        <li class="nav-item"><a class="nav-link <?= ($current_page === 'data_siswa.php') ? 'active' : '' ?>" href="/BimbelAja/tutor/data_siswa.php"><i class="bi bi-people me-1"></i> Data Siswa</a></li>
+        <li class="nav-item"><a class="nav-link <?= ($current_page === 'data_siswa.php') ? 'active' : '' ?>" href="../tutor/data_siswa.php"><i class="bi bi-people me-1"></i> Data Siswa</a></li>
       </ul>
 
       <!-- Menu profil -->
       <ul class="navbar-nav ms-auto">
         <li class="nav-item"><a class="nav-link text-white <?= ($current_page === 'profil.php') ? 'active' : '' ?>" href="/BimbelAja/tutor/profil.php"><i class="bi bi-person-circle me-1"></i>Profil</a></li>
-        <li class="nav-item"><a class="nav-link text-white" href="/BimbelAja/auth/logout.php"><i class="bi bi-box-arrow-right me-1"></i>Logout</a></li>
+        <li class="nav-item"><a class="nav-link text-white" href="../auth/logout.php"><i class="bi bi-box-arrow-right me-1"></i>Logout</a></li>
       </ul>
     </div>
   </div>

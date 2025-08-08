@@ -1,5 +1,5 @@
 <?php
-ob_start(); // Mulai output buffering
+ob_start();
 session_start();
 include '../config/database.php';
 include '../includes/admin_header.php';
@@ -9,11 +9,24 @@ if ($_SESSION['user']['role'] !== 'admin') {
     exit;
 }
 
-// Ambil data pembayaran + user
+// Paginasi
+$limit = 10; // jumlah data per halaman
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+if ($page < 1) $page = 1;
+$offset = ($page - 1) * $limit;
+
+// Hitung total data
+$total_result = $conn->query("SELECT COUNT(*) AS total FROM pembayaran");
+$total_row = $total_result->fetch_assoc();
+$total_data = $total_row['total'];
+$total_pages = ceil($total_data / $limit);
+
+// Ambil data pembayaran + user dengan LIMIT
 $query = "SELECT p.*, u.username, u.nama 
           FROM pembayaran p 
           JOIN users u ON p.user_id = u.id 
-          ORDER BY p.tanggal DESC";
+          ORDER BY p.tanggal DESC
+          LIMIT $limit OFFSET $offset";
 $result = $conn->query($query);
 
 // Proses hapus pembayaran
@@ -43,12 +56,6 @@ if (isset($_POST['edit_status']) && isset($_POST['id'])) {
 }
 ?>
 
-<!-- Konten HTML di sini -->
-
-<?php
-ob_end_flush(); // Mengakhiri output buffering dan mengirim output
-?>
-
 <div class="content px-3 pt-3">
     <div class="card shadow">
         <div class="card-header bg-white">
@@ -71,40 +78,50 @@ ob_end_flush(); // Mengakhiri output buffering dan mengirim output
                     </thead>
                     <tbody>
                         <?php if ($result && $result->num_rows > 0): ?>
-        <?php $no = 1; while ($row = $result->fetch_assoc()): ?>
-            <tr>
-                <td><?= $no++ ?></td>
-                <td><?= htmlspecialchars($row['nama']) ?></td>          <!-- Nama -->
-                <td><?= htmlspecialchars($row['username']) ?></td>      <!-- Username -->
-                <td><?= htmlspecialchars($row['paket']) ?></td>         <!-- Paket -->
-                <td>Rp <?= number_format($row['harga'], 0, ',', '.') ?></td> <!-- Harga -->
-                <td class="status-<?= $row['status'] ?>"><?= strtoupper($row['status']) ?></td> <!-- Status -->
-                <td><?= date('d M Y H:i', strtotime($row['tanggal'])) ?></td> <!-- Tanggal -->
-                <td>
-                    <button class="btn btn-sm btn-primary btn-edit"
-                        data-id="<?= $row['id'] ?>"
-                        data-nama="<?= htmlspecialchars($row['nama']) ?>"
-                        data-username="<?= htmlspecialchars($row['username']) ?>"
-                        data-paket="<?= htmlspecialchars($row['paket']) ?>"
-                        data-harga="<?= number_format($row['harga'], 0, ',', '.') ?>"
-                        data-status="<?= $row['status'] ?>"
-                        data-bs-toggle="modal"
-                        data-bs-target="#editModal">
-                        Edit
-                    </button>
-                    <a href="?action=delete&id=<?= $row['id'] ?>"
-                       onclick="return confirm('Yakin ingin menghapus pembayaran ini?')"
-                       class="btn btn-sm btn-danger">Hapus</a>
-                </td>
-            </tr>
-        <?php endwhile; ?>
-    <?php else: ?>
-        <tr><td colspan="8" class="text-center">Tidak ada data pembayaran</td></tr>
-    <?php endif; ?>
-</tbody>
-
+                            <?php $no = $offset + 1; while ($row = $result->fetch_assoc()): ?>
+                                <tr>
+                                    <td><?= $no++ ?></td>
+                                    <td><?= htmlspecialchars($row['nama']) ?></td>
+                                    <td><?= htmlspecialchars($row['username']) ?></td>
+                                    <td><?= htmlspecialchars($row['paket']) ?></td>
+                                    <td>Rp <?= number_format($row['harga'], 0, ',', '.') ?></td>
+                                    <td class="status-<?= $row['status'] ?>"><?= strtoupper($row['status']) ?></td>
+                                    <td><?= date('d M Y H:i', strtotime($row['tanggal'])) ?></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-primary btn-edit"
+                                            data-id="<?= $row['id'] ?>"
+                                            data-nama="<?= htmlspecialchars($row['nama']) ?>"
+                                            data-username="<?= htmlspecialchars($row['username']) ?>"
+                                            data-paket="<?= htmlspecialchars($row['paket']) ?>"
+                                            data-harga="<?= number_format($row['harga'], 0, ',', '.') ?>"
+                                            data-status="<?= $row['status'] ?>"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#editModal">
+                                            Edit
+                                        </button>
+                                        <a href="?action=delete&id=<?= $row['id'] ?>"
+                                           onclick="return confirm('Yakin ingin menghapus pembayaran ini?')"
+                                           class="btn btn-sm btn-danger">Hapus</a>
+                                    </td>
+                                </tr>
+                            <?php endwhile; ?>
+                        <?php else: ?>
+                            <tr><td colspan="8" class="text-center">Tidak ada data pembayaran</td></tr>
+                        <?php endif; ?>
+                    </tbody>
                 </table>
             </div>
+
+            <!-- Paginasi -->
+            <nav>
+                <ul class="pagination justify-content-center">
+                    <?php for ($i = 1; $i <= $total_pages; $i++): ?>
+                        <li class="page-item <?= ($i == $page) ? 'active' : '' ?>">
+                            <a class="page-link" href="?page=<?= $i ?>"><?= $i ?></a>
+                        </li>
+                    <?php endfor; ?>
+                </ul>
+            </nav>
         </div>
     </div>
 </div>
