@@ -20,7 +20,6 @@ $today = date('Y-m-d');
 $sql = "SELECT * FROM latihan 
         WHERE kelas_id = ? 
         AND tanggal_publish <= NOW()
-        AND tenggat_waktu <= NOW()
         ORDER BY tanggal_publish DESC";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $kelas_id);

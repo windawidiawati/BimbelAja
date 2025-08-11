@@ -113,9 +113,11 @@ if (!$user || $user['role'] !== 'siswa') {
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link <?= ($current_page === 'logout.php') ? 'active' : '' ?>" href="../auth/logout.php">
-            <i class="bi bi-box-arrow-right me-1"></i>Logout
-      </ul>
+  <a class="nav-link <?= ($current_page === 'logout.php') ? 'active' : '' ?>" href="../auth/logout.php">
+    <i class="bi bi-box-arrow-right me-1"></i>Logout
+  </a>
+</li>
+</ul>
     </div>
   </div>
 </nav>

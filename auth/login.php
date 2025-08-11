@@ -41,11 +41,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   } elseif ($_SESSION['login_attempts'] >= 5) {
     $error = "Terlalu banyak percobaan login. Coba lagi nanti.";
   } else {
-    $stmt = mysqli_prepare($conn, "SELECT * FROM users WHERE username = ?");
-    mysqli_stmt_bind_param($stmt, 's', $usernameInput);
-    mysqli_stmt_execute($stmt);
-    $result = mysqli_stmt_get_result($stmt);
-    $user = mysqli_fetch_assoc($result);
+          $sql = "SELECT u.*, k.nama_kelas
+              FROM users u
+              LEFT JOIN kelas k ON u.kelas_id = k.id
+              WHERE u.username = ?";
+      $stmt = mysqli_prepare($conn, $sql);
+      mysqli_stmt_bind_param($stmt, 's', $usernameInput);
+      mysqli_stmt_execute($stmt);
+      $result = mysqli_stmt_get_result($stmt);
+      $user = mysqli_fetch_assoc($result);
+
 
     if ($user) {
       if (!in_array($user['role'], $allowedRoles)) {

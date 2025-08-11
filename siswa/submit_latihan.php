@@ -69,7 +69,7 @@ $nilai = $total_soal > 0 ? round(($benar / $total_soal) * 100, 2) : 0;
         <p>Nilai: <strong><?= $nilai ?></strong></p>
       </div>
       <div class="modal-footer">
-        <a href="soal.php" class="btn btn-primary">Kembali ke Soal</a>
+        <a href="soal.php" class="btn btn-primary">Kembali</a>
       </div>
     </div>
   </div>
