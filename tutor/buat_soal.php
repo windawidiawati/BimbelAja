@@ -189,6 +189,11 @@ include '../includes/tutor_header.php';
                 <button class="btn btn-primary w-100">Filter</button>
             </div>
         </form>
+
+        <!-- Notes -->
+<div class="alert alert-warning mb-3" role="alert">
+    <strong>Catatan:</strong> Latihan yang dibuat akan otomatis muncul di <em>Latihan Siswa</em> sesuai dengan tanggal publish yang sudah ditentukan.
+</div>
         <div class="table-responsive">
             <table class="table table-bordered table-hover">
                 <thead class="table-dark">

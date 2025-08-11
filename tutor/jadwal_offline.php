@@ -344,6 +344,10 @@ $result = mysqli_query($conn, $query);
         <!-- Tabel Jadwal Offline -->
         <div class="card shadow-sm p-4 mb-4">
             <h5 class="fw-bold mb-3">📋 Jadwal Offline</h5>
+              <!-- Notes -->
+            <div class="alert alert-warning mb-3" role="alert">
+                <strong>Catatan:</strong> Jadwal yang dibuat di sini akan otomatis muncul di menu <em>Absensi</em>.
+            </div>
             <div class="table-responsive">
                 <table class="table table-bordered table-hover text-center">
                     <thead class="table-primary">

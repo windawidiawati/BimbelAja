@@ -153,6 +153,10 @@ include '../includes/tutor_header.php';
 
         <!-- Pilih Jadwal -->
         <?php if ($kelas_id > 0 && !empty($jadwal_list)) { ?>
+              <!-- Notes -->
+    <div class="alert alert-info mb-3" role="alert">
+        <strong>Catatan:</strong> Jadwal yang sudah diabsen akan otomatis hilang dari daftar pilihan di sini.
+    </div>
             <form method="GET" class="mb-4">
     <input type="hidden" name="kelas_id" value="<?= $kelas_id; ?>">
     <input type="hidden" name="paket_id" value="<?= $paket_id; ?>">
