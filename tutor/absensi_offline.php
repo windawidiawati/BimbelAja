@@ -33,24 +33,25 @@ if ($kelas_id > 0) {
 $jadwal_list = [];
 $mapel_nama = '';
 if ($kelas_id > 0) {
-    $jadwal_res = mysqli_query($conn, "
-        SELECT jo.id, jo.tanggal, jo.jam_mulai, jo.jam_selesai, km.nama_kategori AS mapel
-        FROM jadwal_offline jo
-        LEFT JOIN kategori_materi km ON jo.kategori_id = km.id
-        WHERE jo.tutor_id = '$tutor_id' 
-        AND jo.kelas_id = '$kelas_id'
-        " . ($paket_id > 0 ? " AND jo.paket_id = '$paket_id'" : "") . "
+   $jadwal_res = mysqli_query($conn, "
+    SELECT jo.id, jo.tanggal, jo.jam_mulai, jo.jam_selesai, km.nama_kategori AS mapel
+    FROM jadwal_offline jo
+    LEFT JOIN kategori_materi km ON jo.kategori_id = km.id
+    WHERE jo.tutor_id = '$tutor_id' 
+    AND jo.kelas_id = '$kelas_id'
+    " . ($paket_id > 0 ? " AND jo.paket_id = '$paket_id'" : "") . "
 
-          AND NOT EXISTS (
-              SELECT 1
-              FROM absensi_offline ao
-              JOIN users u ON ao.siswa_id = u.id
-              WHERE ao.jadwal_id = jo.id
-                AND u.role = 'siswa'
-                AND u.kelas = '$kelas_nama'
-          )
-        ORDER BY jo.tanggal ASC, jo.jam_mulai ASC
-    ");
+    AND NOT EXISTS (
+        SELECT 1
+        FROM absensi_offline ao
+        JOIN users u ON ao.siswa_id = u.id
+        WHERE ao.jadwal_id = jo.id
+          AND u.role = 'siswa'
+          AND u.kelas_id = jo.kelas_id
+    )
+    ORDER BY jo.tanggal ASC, jo.jam_mulai ASC
+");
+
     while ($row = mysqli_fetch_assoc($jadwal_res)) {
         $jadwal_list[] = $row;
         if ($row['id'] == $jadwal_id) {
@@ -94,7 +95,7 @@ if ($kelas_id > 0 && $jadwal_id > 0 && $paket_id > 0) {
     LEFT JOIN absensi_offline ao ON ao.siswa_id = u.id AND ao.jadwal_id = '$jadwal_id'
     JOIN langganan l ON l.user_id = u.id AND l.paket_id = '$paket_id'
     WHERE u.role = 'siswa'
-      AND u.kelas = '$kelas_nama'
+      AND u.kelas_id = '$kelas_id'
     ORDER BY u.nama ASC
 ");
 
@@ -136,18 +137,18 @@ include '../includes/tutor_header.php';
             </form> -->
 
             <!-- Pilih Paket -->
-<form method="GET" class="mb-3">
-    <input type="hidden" name="kelas_id" value="<?= $kelas_id; ?>">
-    <label class="form-label">Pilih Paket:</label>
-    <select name="paket_id" class="form-select w-50" onchange="this.form.submit()">
-        <option value="">-- Pilih Paket --</option>
-        <?php mysqli_data_seek($paket_list, 0); while ($p = mysqli_fetch_assoc($paket_list)) { ?>
-            <option value="<?= $p['id']; ?>" <?= ($paket_id == $p['id']) ? 'selected' : ''; ?>>
-                <?= htmlspecialchars($p['nama']) ?>
-            </option>
-        <?php } ?>
-    </select>
-</form>
+        <form method="GET" class="mb-3">
+            <input type="hidden" name="kelas_id" value="<?= $kelas_id; ?>">
+            <label class="form-label">Pilih Paket:</label>
+            <select name="paket_id" class="form-select w-50" onchange="this.form.submit()">
+                <option value="">-- Pilih Paket --</option>
+                <?php mysqli_data_seek($paket_list, 0); while ($p = mysqli_fetch_assoc($paket_list)) { ?>
+                    <option value="<?= $p['id']; ?>" <?= ($paket_id == $p['id']) ? 'selected' : ''; ?>>
+                        <?= htmlspecialchars($p['nama']) ?>
+                    </option>
+                <?php } ?>
+            </select>
+        </form>
 
 
         <!-- Pilih Jadwal -->
