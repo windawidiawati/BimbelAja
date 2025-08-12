@@ -75,6 +75,7 @@ $sql = "SELECT p.id AS pembayaran_id, p.*,
                pk.jenjang AS jenjang_paket,
                pk.tipe AS tipe_paket,
                pk.harga AS harga_paket,
+               pk.deskripsi AS deskripsi_paket,
                l.tanggal_mulai,
                l.tanggal_berakhir,
                l.status AS status_langganan
@@ -91,6 +92,27 @@ if (!$result) {
 }
 ?>
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laporan Transaksi</title>
+    <style>
+        /* CSS untuk tombol aksi */
+        .btn-group .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+        }
+        .btn-group .btn {
+            margin-right: 5px;
+        }
+        .btn-group .btn:last-child {
+            margin-right: 0;
+        }
+    </style>
+</head>
+<body>
 <div class="content">
     <div class="container mt-4">
         <h4 class="mb-4">Laporan Transaksi</h4>
@@ -148,13 +170,13 @@ if (!$result) {
                 </select>
             </div>
             <div class="col-md-2">
-                                    <select name="status" class="form-control">
-                                            <option value="">Semua Status</option>
-                                            <option value="lunas" <?= $status == 'lunas' ? 'selected' : '' ?>>Lunas</option>
-                                            <option value="pending" <?= $status == 'pending' ? 'selected' : '' ?>>Pending</option>
-                                            <option value="ditolak" <?= $status == 'ditolak' ? 'selected' : '' ?>>Ditolak</option>
-                                            <option value="menunggu_kasir" <?= $status == 'menunggu_kasir' ? 'selected' : '' ?>>Menunggu Kasir</option>
-                                        </select>
+                <select name="status" class="form-control">
+                    <option value="">Semua Status</option>
+                    <option value="lunas" <?= $status == 'lunas' ? 'selected' : '' ?>>Lunas</option>
+                    <option value="pending" <?= $status == 'pending' ? 'selected' : '' ?>>Pending</option>
+                    <option value="ditolak" <?= $status == 'ditolak' ? 'selected' : '' ?>>Ditolak</option>
+                    <option value="menunggu_kasir" <?= $status == 'menunggu_kasir' ? 'selected' : '' ?>>Menunggu Kasir</option>
+                </select>
             </div>
             <div class="col-md-4">
                 <input type="text" name="search" class="form-control" placeholder="Cari nama / kode transaksi" value="<?= htmlspecialchars($search) ?>">
@@ -199,16 +221,23 @@ if (!$result) {
                                     </span>
                                 </td>
                                 <td>
-                                    <button type="button" 
-                                        class="btn btn-warning btn-sm edit-btn"
-                                        data-id="<?= $row['pembayaran_id'] ?>"
-                                        data-kode="<?= htmlspecialchars($row['kode_bayar'] ?? '') ?>"
-                                        data-tanggal="<?= !empty($row['tanggal']) ? date("Y-m-d", strtotime($row['tanggal'])) : '' ?>"
-                                        data-metode="<?= htmlspecialchars($row['metode'] ?? '') ?>"
-                                        data-status="<?= htmlspecialchars($row['status'] ?? '') ?>"
-                                        data-bs-toggle="modal" data-bs-target="#editModal">
-                                        Edit
-                                    </button>
+                                    <div class="btn-group">
+                                        <button type="button" 
+                                            class="btn btn-warning btn-sm edit-btn"
+                                            data-id="<?= $row['pembayaran_id'] ?>"
+                                            data-kode="<?= htmlspecialchars($row['kode_bayar'] ?? '') ?>"
+                                            data-tanggal="<?= !empty($row['tanggal']) ? date("Y-m-d", strtotime($row['tanggal'])) : '' ?>"
+                                            data-metode="<?= htmlspecialchars($row['metode'] ?? '') ?>"
+                                            data-status="<?= htmlspecialchars($row['status'] ?? '') ?>"
+                                            data-bs-toggle="modal" data-bs-target="#editModal">
+                                            Edit
+                                        </button>
+                                        <a href="cetak_transaksi.php?id=<?= $row['pembayaran_id'] ?>" 
+                                           class="btn btn-danger btn-sm" 
+                                           target="_blank">
+                                            Cetak
+                                        </a>
+                                    </div>
                                 </td>
                             </tr>
                         <?php endwhile; ?>

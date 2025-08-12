@@ -2,190 +2,341 @@
 include '../includes/admin_header.php';
 include '../config/database.php';
 
-// Handle Hapus Jadwal
+// --- HANDLE HAPUS JADWAL ---
 if (isset($_GET['delete'])) {
-    $id = $_GET['delete'];
+    $id = intval($_GET['delete']);
+    $q = $conn->query("SELECT materi_file FROM jadwal_offline WHERE id = $id");
+    if ($q && $q->num_rows) {
+        $r = $q->fetch_assoc();
+        if (!empty($r['materi_file']) && file_exists(__DIR__ . '/../uploads/' . $r['materi_file'])) {
+            @unlink(__DIR__ . '/../uploads/' . $r['materi_file']);
+        }
+    }
     $conn->query("DELETE FROM jadwal_offline WHERE id = $id");
     echo "<script>alert('Jadwal berhasil dihapus'); window.location.href='kelola_jadwal_offline.php';</script>";
+    exit;
 }
 
-// Handle Filter
+// --- HANDLE UPDATE JADWAL ---
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_jadwal'])) {
+    $id          = intval($_POST['id']);
+    $kelas_id    = intval($_POST['kelas_id']);
+    $kategori_id = intval($_POST['kategori_id']);
+    $paket_id    = intval($_POST['paket_id']);
+    $tutor_id    = intval($_POST['tutor_id']);
+    $tanggal     = mysqli_real_escape_string($conn, $_POST['tanggal']);
+    $jam_mulai   = mysqli_real_escape_string($conn, $_POST['jam_mulai']);
+    $jam_selesai = mysqli_real_escape_string($conn, $_POST['jam_selesai']);
+    $existing_file = $_POST['existing_materi_file'] ?? '';
+
+    $materi_file_to_save = $existing_file;
+    if (isset($_FILES['materi_file']) && !empty($_FILES['materi_file']['name'])) {
+        $upload_dir = __DIR__ . '/../uploads/';
+        if (!is_dir($upload_dir)) mkdir($upload_dir, 0755, true);
+        $filename = time() . "_" . preg_replace('/[^a-zA-Z0-9._-]/', '_', $_FILES['materi_file']['name']);
+        if (move_uploaded_file($_FILES['materi_file']['tmp_name'], $upload_dir . $filename)) {
+            if (!empty($existing_file) && file_exists($upload_dir . $existing_file)) {
+                @unlink($upload_dir . $existing_file);
+            }
+            $materi_file_to_save = $conn->real_escape_string($filename);
+        }
+    }
+
+    $set_sql = "kelas_id='$kelas_id',
+                kategori_id='$kategori_id',
+                paket_id='$paket_id',
+                tutor_id='$tutor_id',
+                tanggal='{$tanggal}',
+                jam_mulai='{$jam_mulai}',
+                jam_selesai='{$jam_selesai}'";
+    if ($materi_file_to_save !== $existing_file) {
+        $set_sql .= ", materi_file='{$materi_file_to_save}'";
+    }
+
+    if ($conn->query("UPDATE jadwal_offline SET $set_sql WHERE id = $id")) {
+        echo "<script>alert('Jadwal berhasil diupdate'); window.location.href='kelola_jadwal_offline.php';</script>";
+    }
+    exit;
+}
+
+// --- DATA DROPDOWN ---
+$kelas_list = $conn->query("SELECT * FROM kelas ORDER BY nama_kelas")->fetch_all(MYSQLI_ASSOC);
+$kategori_list = $conn->query("SELECT * FROM kategori_materi ORDER BY nama_kategori")->fetch_all(MYSQLI_ASSOC);
+$paket_list = $conn->query("SELECT * FROM paket ORDER BY nama")->fetch_all(MYSQLI_ASSOC);
+$tutor_list = $conn->query("SELECT * FROM users WHERE role = 'tutor' ORDER BY nama")->fetch_all(MYSQLI_ASSOC);
+
+// --- FILTER ---
 $kelas = $_GET['kelas'] ?? '';
 $tanggal = $_GET['tanggal'] ?? '';
 $kategori = $_GET['kategori'] ?? '';
 
-// Query Filter
-$query = "SELECT j.*, u.nama AS nama_tutor, k.nama_kategori, c.nama_kelas 
+// --- QUERY DATA ---
+$query = "SELECT j.*, u.nama AS nama_tutor, k.nama_kategori, c.nama_kelas, p.nama AS nama_paket
           FROM jadwal_offline j
           JOIN users u ON j.tutor_id = u.id
           JOIN kategori_materi k ON j.kategori_id = k.id
           JOIN kelas c ON j.kelas_id = c.id
+          JOIN paket p ON j.paket_id = p.id
           WHERE 1=1";
 if (!empty($kelas)) $query .= " AND j.kelas_id = '$kelas'";
-if (!empty($tanggal)) $query .= " AND j.tanggal = '$tanggal'";
+if (!empty($tanggal)) $query .= " AND j.tanggal = '" . $conn->real_escape_string($tanggal) . "'";
 if (!empty($kategori)) $query .= " AND j.kategori_id = '$kategori'";
-
 $result = $conn->query($query);
-
-// Data dropdown
-$kelas_result = $conn->query("SELECT * FROM kelas");
-$kategori_result = $conn->query("SELECT * FROM kategori_materi");
-$tutor_result = $conn->query("SELECT * FROM users WHERE role = 'tutor'");
 ?>
 
- <div class="content">
-  <div class="container-fluid pt-4 px-4" style="margin-top: 50px;">
-      <h2 class="mb-4">Kelola Jadwal Kelas Offline</h2>
+<div class="content">
+<div class="container-fluid pt-4 px-4" style="margin-top: 50px;">
+<h2 class="mb-4">Kelola Jadwal Kelas Offline</h2>
 
-      <!-- Filter -->
-      <form method="GET" class="mb-4">
-          <div class="row g-3 align-items-center">
-              <div class="col-md-3">
-                  <select name="kelas" class="form-control">
-                      <option value="">Pilih Kelas</option>
-                      <?php while($row = $kelas_result->fetch_assoc()): ?>
-                          <option value="<?= $row['id'] ?>" <?= ($kelas == $row['id']) ? 'selected' : '' ?>>
-                              <?= $row['nama_kelas'] ?>
-                          </option>
-                      <?php endwhile; ?>
-                  </select>
-              </div>
-              <div class="col-md-3">
-                  <input type="date" name="tanggal" value="<?= $tanggal ?>" class="form-control" />
-              </div>
-              <div class="col-md-3">
-                  <select name="kategori" class="form-control">
-                      <option value="">Pilih Mata Pelajaran</option>
-                      <?php while($row = $kategori_result->fetch_assoc()): ?>
-                          <option value="<?= $row['id'] ?>" <?= ($kategori == $row['id']) ? 'selected' : '' ?>>
-                              <?= $row['nama_kategori'] ?>
-                          </option>
-                      <?php endwhile; ?>
-                  </select>
-              </div>
-              <div class="col-md-3 d-flex gap-2">
-                  <button type="submit" class="btn btn-primary">Filter</button>
-                  <a href="kelola_jadwal_offline.php" class="btn btn-secondary">Reset</a>
-              </div>
-          </div>
-      </form>
+<!-- Filter -->
+<form method="GET" class="mb-4">
+<div class="row g-3 align-items-center">
+    <div class="col-md-3">
+        <select name="kelas" class="form-control">
+            <option value="">Pilih Kelas</option>
+            <?php foreach($kelas_list as $k): ?>
+                <option value="<?= $k['id'] ?>" <?= ($kelas == $k['id']) ? 'selected' : '' ?>>
+                    <?= htmlspecialchars($k['nama_kelas']) ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+    </div>
+    <div class="col-md-3">
+        <input type="date" name="tanggal" value="<?= htmlspecialchars($tanggal) ?>" class="form-control" />
+    </div>
+    <div class="col-md-3">
+        <select name="kategori" class="form-control">
+            <option value="">Pilih Mata Pelajaran</option>
+            <?php foreach($kategori_list as $kat): ?>
+                <option value="<?= $kat['id'] ?>" <?= ($kategori == $kat['id']) ? 'selected' : '' ?>>
+                    <?= htmlspecialchars($kat['nama_kategori']) ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+    </div>
+    <div class="col-md-3 d-flex gap-2">
+        <button type="submit" class="btn btn-primary">Filter</button>
+        <a href="kelola_jadwal_offline.php" class="btn btn-secondary">Reset</a>
+    </div>
+</div>
+</form>
 
-      <!-- Tombol Tambah -->
-      <div class="mb-3">
-          <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalTambah">+ Tambah Jadwal</button>
-      </div>
-
-      <!-- Tabel Responsive -->
-      <div class="table-responsive mb-5">
-          <table class="table table-bordered bg-white shadow-sm">
-        <thead class="table-primary">
-                  <tr>
-                      <th>No</th>
-                      <th>Tutor</th>
-                      <th>Kelas</th>
-                      <th>Mata Pelajaran</th>
-                      <th>Tanggal</th>
-                      <th>Jam</th>
-                      <th>Keterangan</th>
-                      <th>File Materi</th>
-                      <th>Aksi</th>
-                  </tr>
-              </thead>
-              <tbody>
-                  <?php $no = 1; while ($row = $result->fetch_assoc()): ?>
-                      <tr>
-                          <td><?= $no++ ?></td>
-                          <td><?= $row['nama_tutor'] ?></td>
-                          <td><?= $row['nama_kelas'] ?></td>
-                          <td><?= $row['nama_kategori'] ?></td>
-                          <td><?= $row['tanggal'] ?></td>
-                          <td><?= substr($row['jam_mulai'], 0, 5) ?> - <?= substr($row['jam_selesai'], 0, 5) ?></td>
-                          <td><?= $row['keterangan'] ?></td>
-                          <td>
-                              <?= $row['materi_file'] ? "<a href='../uploads/{$row['materi_file']}' target='_blank'>Lihat</a>" : "-" ?>
-                          </td>
-                          <td class="text-center">
-                              <a href="edit_jadwal_offline.php?id=<?= $row['id'] ?>" class="btn btn-warning btn-sm">Edit</a>
-                              <a href="?delete=<?= $row['id'] ?>" onclick="return confirm('Hapus jadwal ini?')" class="btn btn-danger btn-sm">Hapus</a>
-                          </td>
-                      </tr>
-                  <?php endwhile; ?>
-              </tbody>
-          </table>
-      </div>
-  </div>
+<!-- Tombol Tambah -->
+<div class="mb-3">
+    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalTambah">+ Tambah Jadwal</button>
 </div>
 
+<!-- Tabel -->
+<div class="table-responsive mb-5">
+<table class="table table-bordered bg-white shadow-sm">
+<thead class="table-primary">
+<tr>
+    <th>No</th>
+    <th>Tutor</th>
+    <th>Kelas</th>
+    <th>Mata Pelajaran</th>
+    <th>Paket</th>
+    <th>Tanggal</th>
+    <th>Jam</th>
+    <th>File Materi</th>
+    <th>Aksi</th>
+</tr>
+</thead>
+<tbody>
+<?php $no = 1; if ($result && $result->num_rows>0): while ($row = $result->fetch_assoc()): ?>
+<tr>
+    <td><?= $no++ ?></td>
+    <td><?= htmlspecialchars($row['nama_tutor']) ?></td>
+    <td><?= htmlspecialchars($row['nama_kelas']) ?></td>
+    <td><?= htmlspecialchars($row['nama_kategori']) ?></td>
+    <td><?= htmlspecialchars($row['nama_paket']) ?></td>
+    <td><?= htmlspecialchars($row['tanggal']) ?></td>
+    <td><?= substr($row['jam_mulai'], 0, 5) ?> - <?= substr($row['jam_selesai'], 0, 5) ?></td>
+    <td><?= $row['materi_file'] ? "<a href='../uploads/".htmlspecialchars($row['materi_file'])."' target='_blank'>Lihat</a>" : "-" ?></td>
+    <td>
+        <button 
+            class="btn btn-warning btn-sm btnEdit"
+            data-id="<?= $row['id'] ?>"
+            data-kelas="<?= $row['kelas_id'] ?>"
+            data-kategori="<?= $row['kategori_id'] ?>"
+            data-paket="<?= $row['paket_id'] ?>"
+            data-tutor="<?= $row['tutor_id'] ?>"
+            data-tanggal="<?= $row['tanggal'] ?>"
+            data-jammulai="<?= $row['jam_mulai'] ?>"
+            data-jamselesai="<?= $row['jam_selesai'] ?>"
+            data-materifile="<?= htmlspecialchars($row['materi_file']) ?>"
+        >Edit</button>
+        <a href="?delete=<?= $row['id'] ?>" onclick="return confirm('Hapus jadwal ini?')" class="btn btn-danger btn-sm">Hapus</a>
+    </td>
+</tr>
+<?php endwhile; else: ?>
+<tr><td colspan="9" class="text-center">Tidak ada data</td></tr>
+<?php endif; ?>
+</tbody>
+</table>
+</div>
+</div>
+</div>
 
-<!-- Modal Tambah Jadwal -->
+<!-- Modal Tambah -->
 <div class="modal fade" id="modalTambah" tabindex="-1">
-  <div class="modal-dialog">
-    <form method="POST" action="tambah_jadwal_offline.php" enctype="multipart/form-data" class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Tambah Jadwal Offline</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <div class="mb-2">
-            <label>Kelas</label>
-            <select name="kelas_id" class="form-control" required>
-                <?php
-                $kelas_result = $conn->query("SELECT * FROM kelas");
-                while($row = $kelas_result->fetch_assoc()):
-                ?>
-                    <option value="<?= $row['id'] ?>"><?= $row['nama_kelas'] ?></option>
-                <?php endwhile; ?>
-            </select>
-        </div>
-        <div class="mb-2">
-            <label>Mata Pelajaran</label>
-            <select name="kategori_id" class="form-control" required>
-                <?php
-                $kategori_result = $conn->query("SELECT * FROM kategori_materi");
-                while($row = $kategori_result->fetch_assoc()):
-                ?>
-                    <option value="<?= $row['id'] ?>"><?= $row['nama_kategori'] ?></option>
-                <?php endwhile; ?>
-            </select>
-        </div>
-        <div class="mb-2">
-            <label>Tutor</label>
-            <select name="tutor_id" class="form-control" required>
-                <?php
-                $tutor_result = $conn->query("SELECT * FROM users WHERE role = 'tutor'");
-                while($row = $tutor_result->fetch_assoc()):
-                ?>
-                    <option value="<?= $row['id'] ?>"><?= $row['nama'] ?></option>
-                <?php endwhile; ?>
-            </select>
-        </div>
-        <div class="mb-2">
-            <label>Tanggal</label>
-            <input type="date" name="tanggal" class="form-control" required>
-        </div>
-        <div class="mb-2">
-            <label>Jam Mulai</label>
-            <input type="time" name="jam_mulai" class="form-control" required>
-        </div>
-        <div class="mb-2">
-            <label>Jam Selesai</label>
-            <input type="time" name="jam_selesai" class="form-control" required>
-        </div>
-        <div class="mb-2">
-            <label>Keterangan</label>
-            <input type="text" name="keterangan" class="form-control">
-        </div>
-        <div class="mb-2">
-            <label>File Materi (opsional)</label>
-            <input type="file" name="materi_file" class="form-control">
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-primary" type="submit">Simpan</button>
-        <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">Batal</button>
-      </div>
-    </form>
-  </div>
+<div class="modal-dialog">
+<form method="POST" action="tambah_jadwal_offline.php" enctype="multipart/form-data" class="modal-content">
+<div class="modal-header"><h5 class="modal-title">Tambah Jadwal Offline</h5>
+<button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+<div class="modal-body">
+    <div class="mb-2">
+        <label>Kelas</label>
+        <select name="kelas_id" class="form-control" required>
+            <option value="">-- Pilih Kelas --</option>
+            <?php foreach($kelas_list as $k): ?>
+                <option value="<?= $k['id'] ?>"><?= htmlspecialchars($k['nama_kelas']) ?></option>
+            <?php endforeach; ?>
+        </select>
+    </div>
+    <div class="mb-2">
+        <label>Mata Pelajaran</label>
+        <select name="kategori_id" class="form-control" required>
+            <option value="">-- Pilih Mata Pelajaran --</option>
+            <?php foreach($kategori_list as $kat): ?>
+                <option value="<?= $kat['id'] ?>"><?= htmlspecialchars($kat['nama_kategori']) ?></option>
+            <?php endforeach; ?>
+        </select>
+    </div>
+    <div class="mb-2">
+        <label>Paket</label>
+        <select name="paket_id" class="form-control" required>
+            <option value="">-- Pilih Paket --</option>
+            <?php foreach($paket_list as $p): ?>
+                <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['nama']) ?></option>
+            <?php endforeach; ?>
+        </select>
+    </div>
+    <div class="mb-2">
+        <label>Tutor</label>
+        <select name="tutor_id" class="form-control" required>
+            <option value="">-- Pilih Tutor --</option>
+            <?php foreach($tutor_list as $t): ?>
+                <option value="<?= $t['id'] ?>"><?= htmlspecialchars($t['nama']) ?></option>
+            <?php endforeach; ?>
+        </select>
+    </div>
+    <div class="mb-2">
+        <label>Tanggal</label>
+        <input type="date" name="tanggal" class="form-control" required>
+    </div>
+    <div class="mb-2">
+        <label>Jam Mulai</label>
+        <input type="time" name="jam_mulai" class="form-control" required>
+    </div>
+    <div class="mb-2">
+        <label>Jam Selesai</label>
+        <input type="time" name="jam_selesai" class="form-control" required>
+    </div>
+    <div class="mb-2">
+        <label>File Materi (opsional)</label>
+        <input type="file" name="materi_file" class="form-control">
+    </div>
 </div>
+<div class="modal-footer">
+    <button class="btn btn-primary" type="submit">Simpan</button>
+    <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">Batal</button>
+</div>
+</form>
+</div>
+</div>
+
+<!-- Modal Edit -->
+<div class="modal fade" id="modalEdit" tabindex="-1">
+<div class="modal-dialog">
+<form method="POST" enctype="multipart/form-data" class="modal-content">
+<input type="hidden" name="update_jadwal" value="1">
+<input type="hidden" name="id" id="edit_id">
+<input type="hidden" name="existing_materi_file" id="edit_existing_file">
+<div class="modal-header"><h5 class="modal-title">Edit Jadwal Offline</h5>
+<button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+<div class="modal-body">
+    <div class="mb-2">
+        <label>Kelas</label>
+        <select name="kelas_id" id="edit_kelas" class="form-control" required>
+            <?php foreach($kelas_list as $k): ?>
+                <option value="<?= $k['id'] ?>"><?= htmlspecialchars($k['nama_kelas']) ?></option>
+            <?php endforeach; ?>
+        </select>
+    </div>
+    <div class="mb-2">
+        <label>Mata Pelajaran</label>
+        <select name="kategori_id" id="edit_kategori" class="form-control" required>
+            <?php foreach($kategori_list as $kat): ?>
+                <option value="<?= $kat['id'] ?>"><?= htmlspecialchars($kat['nama_kategori']) ?></option>
+            <?php endforeach; ?>
+        </select>
+    </div>
+    <div class="mb-2">
+        <label>Paket</label>
+        <select name="paket_id" id="edit_paket" class="form-control" required>
+            <?php foreach($paket_list as $p): ?>
+                <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['nama']) ?></option>
+            <?php endforeach; ?>
+        </select>
+    </div>
+    <div class="mb-2">
+        <label>Tutor</label>
+        <select name="tutor_id" id="edit_tutor" class="form-control" required>
+            <?php foreach($tutor_list as $t): ?>
+                <option value="<?= $t['id'] ?>"><?= htmlspecialchars($t['nama']) ?></option>
+            <?php endforeach; ?>
+        </select>
+    </div>
+    <div class="mb-2">
+        <label>Tanggal</label>
+        <input type="date" name="tanggal" id="edit_tanggal" class="form-control" required>
+    </div>
+    <div class="mb-2">
+        <label>Jam Mulai</label>
+        <input type="time" name="jam_mulai" id="edit_jam_mulai" class="form-control" required>
+    </div>
+    <div class="mb-2">
+        <label>Jam Selesai</label>
+        <input type="time" name="jam_selesai" id="edit_jam_selesai" class="form-control" required>
+    </div>
+    <div class="mb-2">
+        <label>File Materi (opsional)</label>
+        <div id="currentFile" class="mb-1"></div>
+        <input type="file" name="materi_file" class="form-control">
+    </div>
+</div>
+<div class="modal-footer">
+    <button class="btn btn-primary" type="submit">Update</button>
+    <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">Batal</button>
+</div>
+</form>
+</div>
+</div>
+
+<script>
+document.querySelectorAll('.btnEdit').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.getElementById('edit_id').value = this.dataset.id;
+        document.getElementById('edit_kelas').value = this.dataset.kelas;
+        document.getElementById('edit_kategori').value = this.dataset.kategori;
+        document.getElementById('edit_paket').value = this.dataset.paket;
+        document.getElementById('edit_tutor').value = this.dataset.tutor;
+        document.getElementById('edit_tanggal').value = this.dataset.tanggal;
+        document.getElementById('edit_jam_mulai').value = this.dataset.jammulai.substring(0,5);
+        document.getElementById('edit_jam_selesai').value = this.dataset.jamselesai.substring(0,5);
+        document.getElementById('edit_existing_file').value = this.dataset.materifile;
+
+        const currentFileDiv = document.getElementById('currentFile');
+        if (this.dataset.materifile) {
+            currentFileDiv.innerHTML = 'File sekarang: <a href="../uploads/' + encodeURIComponent(this.dataset.materifile) + '" target="_blank">' + this.dataset.materifile + '</a>';
+        } else {
+            currentFileDiv.innerHTML = '<em>Tidak ada file</em>';
+        }
+
+        new bootstrap.Modal(document.getElementById('modalEdit')).show();
+    });
+});
+</script>
 
 <?php include '../includes/admin_footer.php'; ?>
