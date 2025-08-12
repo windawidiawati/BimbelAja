@@ -26,9 +26,9 @@ $result = mysqli_query($conn, $query);
     <h4 class="fw-bold mb-4"><i class="bi bi-people-fill me-2"></i>Data Siswa (Perpanjang Paket)</h4>
 
     <!-- Tombol Perpanjang -->
-    <button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#perpanjangModal">
+    <!-- <button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#perpanjangModal">
         <i class="bi bi-arrow-repeat me-1"></i> Perpanjang Paket
-    </button>
+    </button> -->
 
     <div class="table-responsive">
         <table class="table table-bordered align-middle">

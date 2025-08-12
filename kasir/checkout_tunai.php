@@ -67,6 +67,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         $pesan = '<div class="alert alert-danger">Gagal menyimpan data siswa.</div>';
     }
+    if ($insert_bayar && $insert_langganan) {
+    // Redirect ke halaman nota cetak PDF
+    header("Location: nota.php?user_id=$user_id");
+    exit;
+} else {
+    $pesan = '<div class="alert alert-danger">Gagal menyimpan pembayaran atau langganan.</div>';
+}
+
 }
 ?>
 
@@ -133,5 +141,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </form>
 </div>
+
 
 <?php include '../includes/kasir_footer.php'; ?>
