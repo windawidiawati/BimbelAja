@@ -292,8 +292,9 @@ if (!$result) {
                         <label>Status</label>
                         <select name="status" id="edit_status" class="form-control" required>
                             <option value="pending">Pending</option>
-                            <option value="sukses">Sukses</option>
-                            <option value="gagal">Gagal</option>
+                            <option value="sukses">Lunas</option>
+                            <option value="gagal">Di tolak</option>
+                            <option value="gagal">Menunggu transfer</option>
                         </select>
                     </div>
                 </div>
