@@ -44,6 +44,19 @@ while ($row = $result->fetch_assoc()) {
         $benar++;
     }
 }
+// Hitung nilai
+$nilai = $total_soal > 0 ? round(($benar / $total_soal) * 100, 2) : 0;
+
+// UPDATE latihan_siswa jadi selesai + simpan nilai
+$sql_update = "UPDATE latihan_siswa 
+               SET status = 'selesai', 
+                   waktu_selesai = NOW(), 
+                   nilai = ? 
+               WHERE siswa_id = ? AND latihan_id = ?";
+$stmt_update = $conn->prepare($sql_update);
+$stmt_update->bind_param("dii", $nilai, $siswa_id, $latihan_id);
+$stmt_update->execute();
+
 
 // Hitung nilai
 $nilai = $total_soal > 0 ? round(($benar / $total_soal) * 100, 2) : 0;

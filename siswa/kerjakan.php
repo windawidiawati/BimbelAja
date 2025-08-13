@@ -54,6 +54,22 @@ $soal = $stmt->get_result();
 $durasi_detik = intval($latihan['durasi_menit'] ?? 0) * 60;
 $end_time = time() + $durasi_detik;
 
+// Cek apakah siswa sudah punya record latihan_siswa untuk latihan ini
+$sql_check = "SELECT * FROM latihan_siswa WHERE siswa_id = ? AND latihan_id = ?";
+$stmt_check = $conn->prepare($sql_check);
+$stmt_check->bind_param("ii", $siswa_id, $latihan_id);
+$stmt_check->execute();
+$res_check = $stmt_check->get_result();
+
+if ($res_check->num_rows === 0) {
+    // Belum ada -> buat record dengan waktu mulai
+    $sql_insert = "INSERT INTO latihan_siswa (siswa_id, latihan_id, waktu_mulai, status) 
+                   VALUES (?, ?, NOW(), 'selesai')";
+    $stmt_insert = $conn->prepare($sql_insert);
+    $stmt_insert->bind_param("ii", $siswa_id, $latihan_id);
+    $stmt_insert->execute();
+}
+
 ?>
 
 <!DOCTYPE html>
@@ -93,7 +109,6 @@ $end_time = time() + $durasi_detik;
     box-shadow: 0px 2px 6px rgba(0,0,0,0.1);
     z-index: 1000; /* biar di atas elemen lain */
 }
-
     .soal-box {
         padding: 15px;
         border-radius: 8px;

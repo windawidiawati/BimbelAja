@@ -1,80 +1,163 @@
 <?php
-include '../includes/auth.php';
-include '../includes/admin_header.php';
+session_start();
 include '../config/database.php';
+include '../includes/siswa_header_langganan.php';
 
-if ($_SESSION['user']['role'] !== 'admin') {
+// Pastikan user adalah siswa
+if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'siswa') {
     header("Location: ../index.php");
     exit;
 }
 
-// Ambil data absensi bergabung dengan data siswa dan jadwal
-$sql = "SELECT a.*, 
-               s.nama AS nama_siswa,
-               j.tanggal,
-               j.jam_mulai,
-               j.jam_selesai,
-               j.kategori_id,
-               j.kelas_id,
-               k.nama_kategori,
-               kl.nama_kelas
-        FROM absensi a
-        JOIN siswa s ON a.siswa_id = s.id
-        JOIN jadwal_kelas j ON a.jadwal_id = j.id
-        JOIN kategori_materi k ON j.kategori_id = k.id
-        JOIN kelas kl ON j.kelas_id = kl.id
-        ORDER BY j.tanggal DESC, s.nama ASC";
+$siswa_id = $_SESSION['user']['id'];
 
-$result = mysqli_query($conn, $sql);
+// Ambil data jadwal + absensi
+$sql = "
+    SELECT 
+        j.id AS jadwal_id,
+        j.kategori_id,
+        j.kelas_id,
+        j.tanggal,
+        j.jam_mulai,
+        j.jam_selesai,
+        a.status,
+        a.created_at AS tanggal_absen
+    FROM jadwal_offline j
+    LEFT JOIN absensi_offline a 
+        ON j.id = a.jadwal_id 
+        AND a.siswa_id = ?
+    ORDER BY j.tanggal DESC, j.jam_mulai DESC
+";
+
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("i", $siswa_id);
+$stmt->execute();
+$result = $stmt->get_result();
+
+// Variabel rekap
+$total = 0;
+$hadir = 0;
+$sakit = 0;
+$alpha = 0;
+
+// Ambil data dulu ke array
+$data = [];
+while ($row = $result->fetch_assoc()) {
+    $data[] = $row;
+    $total++;
+
+    if ($row['status'] === 'hadir') {
+        $hadir++;
+    } elseif ($row['status'] === 'sakit') {
+        $sakit++;
+    } else {
+        $alpha++;
+    }
+}
 ?>
 
+<style>
+    .stat-card {
+        background: #fff;
+        border-radius: 10px;
+        padding: 15px;
+        text-align: center;
+        box-shadow: 0px 2px 6px rgba(0,0,0,0.1);
+    }
+    .stat-title {
+        font-size: 14px;
+        font-weight: bold;
+        color: white;
+    }
+    .stat-value {
+        font-size: 20px;
+        font-weight: bold;
+    }
+    .bg-total { background-color: #17a2b8; color: #fff; }
+    .bg-hadir { background-color: #28a745; color: #fff; }
+    .bg-sakit { background-color: #ffc107; color: #fff; }
+    .bg-alpha { background-color: #dc3545; color: #fff; }
+</style>
+
+
 <div class="container mt-4">
-    <h2 class="mb-4">Rekap Absensi Siswa</h2>
+    <h3>Rekap Absensi</h3>
+
+    <!-- Statistik Kehadiran -->
+    <div class="row text-center mb-4">
+        <div class="col-md-3 mb-2">
+            <div class="stat-card bg-total">
+                <div class="stat-title">Total Pertemuan</div>
+                <div class="stat-value"><?= $total; ?></div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-2">
+            <div class="stat-card bg-hadir">
+                <div class="stat-title">Hadir</div>
+                <div class="stat-value"><?= $hadir; ?></div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-2">
+            <div class="stat-card bg-sakit">
+                <div class="stat-title">Sakit</div>
+                <div class="stat-value"><?= $sakit; ?></div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-2">
+            <div class="stat-card bg-alpha">
+                <div class="stat-title">Alpha</div>
+                <div class="stat-value"><?= $alpha; ?></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabel Absensi -->
     <div class="table-responsive">
         <table class="table table-bordered table-striped">
-            <thead class="table-dark">
+            <thead>
                 <tr>
-                    <th>#</th>
-                    <th>Nama Siswa</th>
+                    <th>No</th>
                     <th>Tanggal</th>
-                    <th>Jam</th>
-                    <th>Kategori</th>
-                    <th>Kelas</th>
+                    <th>Jam Mulai</th>
+                    <th>Jam Selesai</th>
                     <th>Status</th>
-                    <th>Catatan</th>
-                    <th>Waktu Input</th>
+                    <th>Tanggal Absen</th>
                 </tr>
             </thead>
             <tbody>
-                <?php if (mysqli_num_rows($result) > 0): ?>
-                    <?php $no = 1; while ($row = mysqli_fetch_assoc($result)): ?>
-                        <tr>
-                            <td><?= $no++ ?></td>
-                            <td><?= htmlspecialchars($row['nama_siswa']) ?></td>
-                            <td><?= htmlspecialchars($row['tanggal']) ?></td>
-                            <td><?= htmlspecialchars($row['jam_mulai'] . ' - ' . $row['jam_selesai']) ?></td>
-                            <td><?= htmlspecialchars($row['nama_kategori']) ?></td>
-                            <td><?= htmlspecialchars($row['nama_kelas']) ?></td>
-                            <td>
-                                <?php
-                                    $status = $row['status'];
-                                    $badge = 'secondary';
-                                    if ($status == 'hadir') $badge = 'success';
-                                    elseif ($status == 'izin') $badge = 'warning';
-                                    elseif ($status == 'alpa') $badge = 'danger';
-                                ?>
-                                <span class="badge bg-<?= $badge ?>"><?= ucfirst($status) ?></span>
-                            </td>
-                            <td><?= htmlspecialchars($row['catatan']) ?: '-' ?></td>
-                            <td><?= htmlspecialchars($row['created_at']) ?></td>
-                        </tr>
-                    <?php endwhile; ?>
-                <?php else: ?>
-                    <tr><td colspan="9" class="text-center">Belum ada data absensi.</td></tr>
-                <?php endif; ?>
+                <?php 
+                if (!empty($data)) {
+                    $no = 1;
+                    foreach ($data as $row) {
+                        $statusBadge = '<span class="badge bg-secondary">Belum Absen</span>';
+                        if ($row['status'] === 'hadir') {
+                            $statusBadge = '<span class="badge bg-success">Hadir</span>';
+                        } elseif ($row['status'] === 'sakit') {
+                            $statusBadge = '<span class="badge bg-warning text-dark">Sakit</span>';
+                        } elseif ($row['status'] === 'alpha') {
+                            $statusBadge = '<span class="badge bg-danger">Alpha</span>';
+                        }
+
+                        echo "<tr>
+                                <td>{$no}</td>
+                                <td>{$row['tanggal']}</td>
+                                <td>{$row['jam_mulai']}</td>
+                                <td>{$row['jam_selesai']}</td>
+                                <td>{$statusBadge}</td>
+                                <td>".($row['tanggal_absen'] ?? '-')."</td>
+                              </tr>";
+                        $no++;
+                    }
+                } else {
+                    echo "<tr><td colspan='6' class='text-center'>Belum ada jadwal</td></tr>";
+                }
+                ?>
             </tbody>
         </table>
     </div>
 </div>
 
-<?php include '../includes/admin_footer.php'; ?>
+<?php
+include '../includes/footer.php';
+?>
+

@@ -240,19 +240,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       background-color: rgba(220, 53, 69, 0.1);
     }
 
-    .forgot-password {
-      display: block;
-      text-align: center;
-      color: var(--gray);
-      margin: 1.5rem 0;
-      text-decoration: none;
-      transition: color 0.3s;
-    }
-
-    .forgot-password:hover {
-      color: var(--primary);
-    }
-
     .login-footer {
       text-align: center;
       color: var(--gray);
@@ -326,10 +313,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <button type="submit" class="btn btn-primary btn-login">
               <i class="bi bi-box-arrow-in-right me-2"></i>Login
             </button>
-          </div>
-          
-          <div class="text-center">
-            <a href="forgot_password.php" class="text-decoration-none">Lupa password?</a>
           </div>
         </form>
         

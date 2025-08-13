@@ -89,22 +89,6 @@ if (!$user || $user['role'] !== 'siswa') {
             <i class="bi bi-clock-history me-1"></i> Riwayat
           </a>
         </li>
-
-        <!-- Notifikasi -->
-        <li class="nav-item dropdown">
-          <a class="nav-link position-relative" href="#" role="button" data-bs-toggle="dropdown">
-            <i class="bi bi-bell-fill"></i>
-            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">3</span>
-          </a>
-          <ul class="dropdown-menu dropdown-menu-end">
-            <li><h6 class="dropdown-header">Notifikasi</h6></li>
-            <li><a class="dropdown-item" href="#">✅ Materi baru ditambahkan</a></li>
-            <li><a class="dropdown-item" href="#">⏰ Langganan kamu hampir habis</a></li>
-            <li><a class="dropdown-item" href="#">🎉 Promo langganan tersedia</a></li>
-            <li><hr class="dropdown-divider"></li>
-            <li><a class="dropdown-item text-center text-primary" href="#">Lihat Semua</a></li>
-          </ul>
-        </li>
         
         <!-- Profile -->
         <li class="nav-item">
