@@ -4,6 +4,7 @@ include '../config/database.php';
 $kelas_id = isset($_GET['kelas_id']) ? intval($_GET['kelas_id']) : 0;
 $jadwal_id = isset($_GET['jadwal_id']) ? intval($_GET['jadwal_id']) : 0;
 
+
 // Ambil nama kelas
 $kelas_nama = '-';
 $kelas_query = mysqli_query($conn, "SELECT nama_kelas FROM kelas WHERE id = '$kelas_id'");

@@ -99,14 +99,14 @@ $current_page = basename($_SERVER['SCRIPT_NAME']);
         <li class="nav-item"><a class="nav-link <?= ($current_page === 'jadwal_offline.php') ? 'active' : '' ?>" href="..tutor/jadwal_offline.php"><i class="bi bi-calendar3 me-1"></i> Jadwal Offline</a></li>
         <li class="nav-item"><a class="nav-link <?= ($current_page === 'absensi.php') ? 'active' : '' ?>" href="..tutor/absensi.php"><i class="bi bi-list-check me-1"></i> Absensi</a></li>
         <li class="nav-item"><a class="nav-link <?= ($current_page === 'rekap_absensi.php') ? 'active' : '' ?>" href="..tutor/rekap_absensi.php"><i class="bi bi-clipboard-data me-1"></i> Rekap Absensi</a></li>
-        <li class="nav-item"><a class="nav-link <?= ($current_page === 'forum.php') ? 'active' : '' ?>" href="..tutor/forum.php"><i class="bi bi-chat-dots me-1"></i> Forum</a></li>
+        <!-- <li class="nav-item"><a class="nav-link <?= ($current_page === 'forum.php') ? 'active' : '' ?>" href="..tutor/forum.php"><i class="bi bi-chat-dots me-1"></i> Forum</a></li> -->
         <li class="nav-item"><a class="nav-link <?= ($current_page === 'data_siswa.php') ? 'active' : '' ?>" href="../tutor/data_siswa.php"><i class="bi bi-people me-1"></i> Data Siswa</a></li>
       </ul>
 
       <!-- Menu profil -->
       <ul class="navbar-nav ms-auto">
-        <li class="nav-item"><a class="nav-link text-white <?= ($current_page === 'profil.php') ? 'active' : '' ?>" href="/BimbelAja/tutor/profil.php"><i class="bi bi-person-circle me-1"></i>Profil</a></li>
-        <li class="nav-item"><a class="nav-link text-white" href="/BimbelAja/auth/logout.php"><i class="bi bi-box-arrow-right me-1"></i>Logout</a></li>
+        <li class="nav-item"><a class="nav-link text-white <?= ($current_page === 'profil.php') ? 'active' : '' ?>" href="../tutor/profil.php"><i class="bi bi-person-circle me-1"></i>Profil</a></li>
+        <li class="nav-item"><a class="nav-link text-white" href="../auth/logout.php"><i class="bi bi-box-arrow-right me-1"></i>Logout</a></li>
       </ul>
     </div>
   </div>
@@ -121,6 +121,6 @@ $current_page = basename($_SERVER['SCRIPT_NAME']);
   <a class="<?= ($current_page === 'jadwal_offline.php') ? 'active' : '' ?>" href="../tutor/jadwal_offline.php"><i class="bi bi-calendar3 me-2"></i> Jadwal Offline</a>
   <a class="<?= ($current_page === 'absensi_offline.php') ? 'active' : '' ?>" href="../tutor/absensi_offline.php"><i class="bi bi-list-check me-2"></i> Absensi</a>
   <a class="<?= ($current_page === 'rekap_absensi.php') ? 'active' : '' ?>" href="../tutor/rekap_absensi.php"><i class="bi bi-clipboard-data me-2"></i> Rekap Absensi</a>
-  <a class="<?= ($current_page === 'forum.php') ? 'active' : '' ?>" href="../tutor/forum.php"><i class="bi bi-chat-dots me-2"></i> Forum</a>
+  <!-- <a class="<?= ($current_page === 'forum.php') ? 'active' : '' ?>" href="../tutor/forum.php"><i class="bi bi-chat-dots me-2"></i> Forum</a> -->
   <a class="<?= ($current_page === 'data_siswa.php') ? 'active' : '' ?>" href="../tutor/data_siswa.php"><i class="bi bi-people me-2"></i> Data Siswa</a>
 </div>
