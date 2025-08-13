@@ -62,6 +62,7 @@ if ($edit_id) {
           <th>Deskripsi</th>
           <th>Kategori</th>
           <th>Kelas</th>
+          <th>Paket</th>
           <th>File</th>
           <th>Tipe</th>
           <th>Status</th>
@@ -71,10 +72,11 @@ if ($edit_id) {
       <tbody>
         <?php
         $query = "
-          SELECT m.*, k.nama_kategori, kl.nama_kelas
+          SELECT m.*, k.nama_kategori, kl.nama_kelas, p.nama AS nama_paket
           FROM materi m
           LEFT JOIN kategori_materi k ON m.kategori_id = k.id
           LEFT JOIN kelas kl ON m.kelas_id = kl.id
+          LEFT JOIN paket p ON m.paket_id = p.id
           ORDER BY m.created_at DESC";
         $result = mysqli_query($conn, $query);
         if (mysqli_num_rows($result) > 0):
@@ -85,6 +87,7 @@ if ($edit_id) {
           <td><?= substr(htmlspecialchars($row['deskripsi']), 0, 50) ?>...</td>
           <td><?= $row['nama_kategori'] ?: '-' ?></td>
           <td><?= $row['nama_kelas'] ?: '-' ?></td>
+          <td><?= $row['nama_paket'] ?: '-' ?></td>
           <td>
             <a href="../assets/uploads/<?= $row['file'] ?>" target="_blank" class="text-primary">
               <?= $row['tipe_file'] == 'video' ? 'Tonton Video' : 'Lihat PDF' ?>
@@ -98,23 +101,26 @@ if ($edit_id) {
             </span>
           </td>
           <td>
-            <a href="?edit=<?= $row['id'] ?>" class="btn btn-warning btn-sm">✏</a>
-            <form action="proses_materi.php" method="POST" class="d-inline">
-              <input type="hidden" name="id" value="<?= $row['id'] ?>">
-              <button name="setujui" class="btn btn-success btn-sm" onclick="return confirm('Setujui materi ini?')">✔</button>
-            </form>
-            <form action="proses_materi.php" method="POST" class="d-inline">
-              <input type="hidden" name="id" value="<?= $row['id'] ?>">
-              <button name="tolak" class="btn btn-danger btn-sm" onclick="return confirm('Tolak materi ini?')">✖</button>
-            </form>
-            <form action="proses_materi.php" method="POST" class="d-inline">
-              <input type="hidden" name="id" value="<?= $row['id'] ?>">
-              <button name="hapus" class="btn btn-secondary btn-sm" onclick="return confirm('Hapus materi ini?')">🗑</button>
-            </form>
-          </td>
+  <div class="btn-group" role="group" aria-label="Aksi">
+    <a href="?edit=<?= $row['id'] ?>" class="btn btn-warning btn-sm" title="Edit">✏</a>
+    <form action="proses_materi.php" method="POST" class="d-inline">
+      <input type="hidden" name="id" value="<?= $row['id'] ?>">
+      <button name="setujui" class="btn btn-success btn-sm" title="Setujui" onclick="return confirm('Setujui materi ini?')">✔</button>
+    </form>
+    <form action="proses_materi.php" method="POST" class="d-inline">
+      <input type="hidden" name="id" value="<?= $row['id'] ?>">
+      <button name="tolak" class="btn btn-danger btn-sm" title="Tolak" onclick="return confirm('Tolak materi ini?')">✖</button>
+    </form>
+    <form action="proses_materi.php" method="POST" class="d-inline">
+      <input type="hidden" name="id" value="<?= $row['id'] ?>">
+      <button name="hapus" class="btn btn-secondary btn-sm" title="Hapus" onclick="return confirm('Hapus materi ini?')">🗑</button>
+    </form>
+  </div>
+</td>
+
         </tr>
         <?php endwhile; else: ?>
-        <tr><td colspan="8" class="text-center">Belum ada materi.</td></tr>
+        <tr><td colspan="9" class="text-center">Belum ada materi.</td></tr>
         <?php endif; ?>
       </tbody>
     </table>
@@ -168,6 +174,19 @@ if ($edit_id) {
           </select>
         </div>
         <div class="mb-3">
+          <label>Paket</label>
+          <select name="paket_id" class="form-select" required>
+            <option value="">-- Pilih Paket --</option>
+            <?php
+            $paket = mysqli_query($conn, "SELECT * FROM paket");
+            while ($p = mysqli_fetch_assoc($paket)):
+              $selected = ($edit_data['paket_id'] ?? '') == $p['id'] ? 'selected' : '';
+            ?>
+              <option value="<?= $p['id'] ?>" <?= $selected ?>><?= htmlspecialchars($p['nama']) ?></option>
+            <?php endwhile; ?>
+          </select>
+        </div>
+        <div class="mb-3">
           <label>File Materi <?= $edit_id ? '(Kosongkan jika tidak diubah)' : '' ?></label>
           <input type="file" name="file" class="form-control" accept=".pdf,.mp4,.mkv,.avi,.mov" <?= $edit_id ? '' : 'required' ?>>
           <small class="text-muted">Format file: PDF/MP4/MKV/AVI/MOV. Maksimal 10MB.</small>
@@ -192,7 +211,5 @@ if ($edit_id) {
 </script>
 <?php endif; ?>
 
-<!-- Pastikan ini ada sebelum penutup </body> -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
 <?php include '../includes/admin_footer.php'; ?>

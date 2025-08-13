@@ -172,5 +172,8 @@ $role = $_SESSION['user']['role'] ?? null;
   <a class="<?= ($current_page === 'laporan_transaksi.php') ? 'active' : '' ?>" href="/BimbelAja/admin/laporan_transaksi.php">
     <i class="bi bi-bar-chart me-2"></i> Laporan Transaksi
   </a>
+  <a class="<?= ($current_page === 'laporan_absensi.php') ? 'active' : '' ?>" href="/BimbelAja/admin/laporan_absensi.php">
+    <i class="bi bi-bar-chart me-2"></i> Laporan Absensi
+  </a>
   
 </div>

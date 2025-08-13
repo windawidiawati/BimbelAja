@@ -98,7 +98,7 @@ $html = '
         <table class="table">
             <thead>
                 <tr>
-                    <th>Nama Pake</th>
+                    <th>Nama Paket</th>
                     <th>Durasi</th>
                     <th>Harga</th>
                 </tr>
