@@ -10,54 +10,47 @@ if ($_SESSION['user']['role'] !== 'tutor') {
 
 $tutor_id = $_SESSION['user']['id'];
 
-// WHERE Clause
+// Karena tabel latihan_siswa tidak ada tutor_id, maka kita join ke tabel latihan yang punya tutor_id
 $where = "WHERE l.tutor_id = '$tutor_id'";
 
-// Tambahkan filter jika ada
+// Filter kelas
 if (!empty($_GET['kelas_id'])) {
     $kelas_id = mysqli_real_escape_string($conn, $_GET['kelas_id']);
     $where .= " AND u.kelas_id = '$kelas_id'";
 }
-if (!empty($_GET['latihan_id'])) {
-    $latihan_id = mysqli_real_escape_string($conn, $_GET['latihan_id']);
-    $where .= " AND l.id = '$latihan_id'";
-}
-if (isset($_GET['status']) && ($_GET['status'] === '0' || $_GET['status'] === '1')) {
-    $status = mysqli_real_escape_string($conn, $_GET['status']);
-    $where .= " AND js.benar = '$status'";
-}
+
+// Filter tanggal (tanggal mulai latihan)
 if (!empty($_GET['tanggal_awal']) && !empty($_GET['tanggal_akhir'])) {
     $awal = $_GET['tanggal_awal'] . " 00:00:00";
     $akhir = $_GET['tanggal_akhir'] . " 23:59:59";
-    $where .= " AND js.tanggal BETWEEN '$awal' AND '$akhir'";
+    $where .= " AND ls.waktu_mulai BETWEEN '$awal' AND '$akhir'";
 }
 
-// Query
+// Ambil data rekap dari latihan_siswa
 $query = mysqli_query($conn, "
     SELECT 
-        js.id,
+        ls.siswa_id AS user_id,
         u.nama AS nama_siswa,
-        s.pertanyaan,
-        js.jawaban,
-        js.benar,
-        js.tanggal,
-        l.judul AS judul_latihan
-    FROM jawaban_siswa js
-    JOIN users u ON js.user_id = u.id
-    JOIN soal s ON js.soal_id = s.id
-    JOIN latihan l ON s.latihan_id = l.id
+        l.id AS latihan_id,
+        l.judul AS judul_latihan,
+        ls.nilai,
+        ls.waktu_mulai,
+        ls.waktu_selesai,
+        ls.status
+    FROM latihan_siswa ls
+    JOIN users u ON ls.siswa_id = u.id
+    JOIN latihan l ON ls.latihan_id = l.id
     $where
-    ORDER BY js.tanggal DESC
+    ORDER BY l.judul ASC, u.nama ASC
 ");
+
 ?>
 
 <div class="content">
     <div class="card shadow-sm p-4 mb-4">
-        <h3 class="fw-bold text-primary mb-4">📄 Nilai Siswa</h3>
+        <h3 class="fw-bold text-primary mb-4">📄 Rekap Nilai Siswa</h3>
 
-        <!-- Filter Form -->
         <form method="GET" class="row g-3 mb-4">
-            <!-- Kelas -->
             <div class="col-md-3">
                 <label for="kelas" class="form-label">Kelas</label>
                 <select name="kelas_id" id="kelas" class="form-select">
@@ -66,96 +59,116 @@ $query = mysqli_query($conn, "
                     $kelas_query = mysqli_query($conn, "SELECT id, nama_kelas FROM kelas");
                     while ($k = mysqli_fetch_assoc($kelas_query)) {
                         $selected = ($_GET['kelas_id'] ?? '') == $k['id'] ? 'selected' : '';
-                        echo "<option value='{$k['id']}' $selected>{$k['nama_kelas']}</option>";
+                        echo "<option value='{$k['id']}' $selected>" . htmlspecialchars($k['nama_kelas'] ?? '', ENT_QUOTES, 'UTF-8') . "</option>";
                     }
                     ?>
                 </select>
             </div>
-
-            <!-- Latihan -->
             <div class="col-md-3">
-                <label for="latihan" class="form-label">Latihan</label>
-                <select name="latihan_id" id="latihan" class="form-select">
-                    <option value="">Semua</option>
-                    <?php
-                    $latihan_query = mysqli_query($conn, "SELECT id, judul FROM latihan WHERE tutor_id = '$tutor_id'");
-                    while ($l = mysqli_fetch_assoc($latihan_query)) {
-                        $selected = ($_GET['latihan_id'] ?? '') == $l['id'] ? 'selected' : '';
-                        echo "<option value='{$l['id']}' $selected>{$l['judul']}</option>";
-                    }
-                    ?>
-                </select>
+                <label>Dari Tanggal</label>
+                <input type="date" name="tanggal_awal" class="form-control" value="<?= htmlspecialchars($_GET['tanggal_awal'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
             </div>
-
-            <!-- Status -->
-            <div class="col-md-2">
-                <label for="status" class="form-label">Status</label>
-                <select name="status" id="status" class="form-select">
-                    <option value="">Semua</option>
-                    <option value="1" <?= ($_GET['status'] ?? '') === '1' ? 'selected' : '' ?>>Benar</option>
-                    <option value="0" <?= ($_GET['status'] ?? '') === '0' ? 'selected' : '' ?>>Salah</option>
-                </select>
+            <div class="col-md-3">
+                <label>Sampai Tanggal</label>
+                <input type="date" name="tanggal_akhir" class="form-control" value="<?= htmlspecialchars($_GET['tanggal_akhir'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
             </div>
-
-            <!-- Tanggal -->
-            <div class="col-md-2">
-                <label class="form-label">Dari Tanggal</label>
-                <input type="date" name="tanggal_awal" class="form-control" value="<?= $_GET['tanggal_awal'] ?? '' ?>">
-            </div>
-            <div class="col-md-2">
-                <label class="form-label">Sampai Tanggal</label>
-                <input type="date" name="tanggal_akhir" class="form-control" value="<?= $_GET['tanggal_akhir'] ?? '' ?>">
-            </div>
-
-            <!-- Tombol -->
-            <div class="col-md-12 text-end">
-                <button type="submit" class="btn btn-primary"><i class="bi bi-filter-circle"></i> Filter</button>
-                <a href="?" class="btn btn-secondary"><i class="bi bi-x-circle"></i> Reset</a>
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary me-2">Filter</button>
+                <a href="?" class="btn btn-secondary">Reset</a>
             </div>
         </form>
 
-        <!-- Tabel -->
         <div class="table-responsive">
-            <table class="table table-bordered table-hover text-center align-middle">
+            <table class="table table-bordered text-center align-middle">
                 <thead class="table-dark">
                     <tr>
                         <th>No</th>
                         <th>Nama Siswa</th>
                         <th>Latihan</th>
-                        <th>Pertanyaan</th>
-                        <th>Jawaban</th>
+                        <th>Nilai</th>
                         <th>Status</th>
-                        <th>Tanggal</th>
+                        <th>Waktu Mulai</th>
+                        <th>Waktu Selesai</th>
+                        <th>Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php if (mysqli_num_rows($query) > 0): ?>
                         <?php $no = 1; while ($row = mysqli_fetch_assoc($query)): ?>
                             <tr>
-                                <td><?= $no++ ?></td>
-                                <td><?= htmlspecialchars($row['nama_siswa']) ?></td>
-                                <td><?= htmlspecialchars($row['judul_latihan']) ?></td>
-                                <td><?= htmlspecialchars($row['pertanyaan']) ?></td>
-                                <td><?= htmlspecialchars($row['jawaban']) ?></td>
+                                <td><?= $no ?></td>
+                                <td><?= htmlspecialchars($row['nama_siswa'] ?? '', ENT_QUOTES, 'UTF-8') ?></td>
+                                <td><?= htmlspecialchars($row['judul_latihan'] ?? '', ENT_QUOTES, 'UTF-8') ?></td>
+                                <td><?= htmlspecialchars((string)($row['nilai'] ?? ''), ENT_QUOTES, 'UTF-8') ?></td>
+                                <td><?= htmlspecialchars($row['status'] ?? '', ENT_QUOTES, 'UTF-8') ?></td>
+                                <td><?= htmlspecialchars($row['waktu_mulai'] ?? '', ENT_QUOTES, 'UTF-8') ?></td>
+                                <td><?= htmlspecialchars($row['waktu_selesai'] ?? '', ENT_QUOTES, 'UTF-8') ?></td>
                                 <td>
-                                    <?php if ($row['benar'] == 1): ?>
-                                        <span class="badge bg-success">Benar</span>
-                                    <?php else: ?>
-                                        <span class="badge bg-danger">Salah</span>
-                                    <?php endif; ?>
+                                    <button class="btn btn-sm btn-info" onclick="toggleDetail('detail-<?= $no ?>')">Lihat Detail</button>
                                 </td>
-                                <td><?= date('d M Y H:i', strtotime($row['tanggal'])) ?></td>
                             </tr>
-                        <?php endwhile; ?>
+
+                            <tr id="detail-<?= $no ?>" style="display:none;">
+                                <td colspan="8">
+                                    <table class="table table-sm table-bordered">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>No</th>
+                                                <th>Pertanyaan</th>
+                                                <th>Jawaban Siswa</th>
+                                                <th>Kunci Jawaban</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php
+                                            $user_id = $row['user_id'];
+                                            $latihan_id = $row['latihan_id'];
+
+                                            // Detail jawaban per soal dari jawaban_siswa
+                                            $detail = mysqli_query($conn, "
+                                                SELECT js.jawaban, js.benar, s.pertanyaan, s.jawaban AS kunci
+                                                FROM jawaban_siswa js
+                                                JOIN soal s ON js.soal_id = s.id
+                                                WHERE js.user_id = '$user_id' AND s.latihan_id = '$latihan_id'
+                                            ");
+
+                                            $no_d = 1;
+                                            while ($d = mysqli_fetch_assoc($detail)):
+                                            ?>
+                                            <tr>
+                                                <td><?= $no_d ?></td>
+                                                <td><?= htmlspecialchars($d['pertanyaan'] ?? '', ENT_QUOTES, 'UTF-8') ?></td>
+                                                <td><?= htmlspecialchars($d['jawaban'] ?? '', ENT_QUOTES, 'UTF-8') ?></td>
+                                                <td><?= htmlspecialchars($d['kunci'] ?? '', ENT_QUOTES, 'UTF-8') ?></td>
+                                                <td>
+                                                    <?= $d['benar'] ? '<span class="text-success fw-bold">Benar</span>' : '<span class="text-danger fw-bold">Salah</span>' ?>
+                                                </td>
+                                            </tr>
+                                            <?php 
+                                            $no_d++;
+                                            endwhile; ?>
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>
+                        <?php 
+                        $no++;
+                        endwhile; ?>
                     <?php else: ?>
-                        <tr>
-                            <td colspan="7">Belum ada jawaban siswa.</td>
-                        </tr>
+                        <tr><td colspan="8">Belum ada data latihan siswa.</td></tr>
                     <?php endif; ?>
                 </tbody>
             </table>
         </div>
     </div>
 </div>
+
+<script>
+function toggleDetail(id) {
+    const el = document.getElementById(id);
+    el.style.display = (el.style.display === 'none') ? '' : 'none';
+}
+</script>
 
 <?php include '../includes/tutor_footer.php'; ?>

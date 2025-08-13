@@ -91,6 +91,23 @@ if (mysqli_num_rows($cek) > 0) {
     exit;
 }
     
+// Cek apakah siswa (kelas) sudah punya jadwal di waktu yang sama
+$cek_siswa_bentrok = mysqli_query($conn, "
+    SELECT * FROM jadwal_offline 
+    WHERE kelas_id = '$kelas_id'
+    AND tanggal = '$tanggal'
+    AND (
+        ('$jam_mulai' BETWEEN jam_mulai AND jam_selesai)
+        OR ('$jam_selesai' BETWEEN jam_mulai AND jam_selesai)
+        OR (jam_mulai BETWEEN '$jam_mulai' AND '$jam_selesai')
+    )
+");
+
+if (mysqli_num_rows($cek_siswa_bentrok) > 0) {
+    echo "<script>alert('Siswa sudah memiliki jadwal di waktu tersebut! Silakan pilih waktu lain.');history.back();</script>";
+    exit;
+}
+
 
     // Upload materi
     if (!empty($_FILES['materi_file']['name'])) {
@@ -327,6 +344,10 @@ $result = mysqli_query($conn, $query);
         <!-- Tabel Jadwal Offline -->
         <div class="card shadow-sm p-4 mb-4">
             <h5 class="fw-bold mb-3">📋 Jadwal Offline</h5>
+              <!-- Notes -->
+            <div class="alert alert-warning mb-3" role="alert">
+                <strong>Catatan:</strong> Jadwal yang dibuat di sini akan otomatis muncul di menu <em>Absensi</em>.
+            </div>
             <div class="table-responsive">
                 <table class="table table-bordered table-hover text-center">
                     <thead class="table-primary">

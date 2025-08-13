@@ -168,5 +168,8 @@ $role = $_SESSION['user']['role'] ?? null;
   </a>
   <a class="<?= ($current_page === 'statistik.php') ? 'active' : '' ?>" href="../admin/statistik.php">
     <i class="bi bi-bar-chart me-2"></i> Statistik
+  </a></div>
+  <a class="<?= ($current_page === 'laporan_transaksi.php') ? 'active' : '' ?>" href="../admin/laporan_transaksi.php">
+    <i class="bi bi-bar-chart me-2"></i> Laporan Transaksi 
   </a>
 </div>

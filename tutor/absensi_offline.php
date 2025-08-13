@@ -153,6 +153,10 @@ include '../includes/tutor_header.php';
 
         <!-- Pilih Jadwal -->
         <?php if ($kelas_id > 0 && !empty($jadwal_list)) { ?>
+              <!-- Notes -->
+    <div class="alert alert-info mb-3" role="alert">
+        <strong>Catatan:</strong> Jadwal yang sudah diabsen akan otomatis hilang dari daftar pilihan di sini.
+    </div>
             <form method="GET" class="mb-4">
     <input type="hidden" name="kelas_id" value="<?= $kelas_id; ?>">
     <input type="hidden" name="paket_id" value="<?= $paket_id; ?>">
@@ -177,10 +181,10 @@ include '../includes/tutor_header.php';
                 <div class="alert alert-warning">Belum ada siswa di kelas ini.</div>
             <?php } else { ?>
                 <form method="POST" onsubmit="return confirm('Yakin simpan absensi?');">
-                    <a href="export_absensi_excel.php?kelas_id=<?= $kelas_id; ?>&jadwal_id=<?= $jadwal_id; ?>" 
+                    <!-- <a href="export_absensi_excel.php?kelas_id=<?= $kelas_id; ?>&jadwal_id=<?= $jadwal_id; ?>" 
                        class="btn btn-outline-success w-100 mb-3">
                        <i class="bi bi-file-earmark-excel"></i> Export ke Excel
-                    </a>
+                    </a> -->
                     <table class="table table-bordered text-center">
                         <thead class="table-primary">
                             <tr>

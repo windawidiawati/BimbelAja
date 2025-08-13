@@ -33,6 +33,12 @@ if ($res_paket && mysqli_num_rows($res_paket) > 0) {
     $paket_nama = $paket_row['nama'];
 }
 
+// Tentukan filter bulan
+$filter_bulan = "";
+if (!empty($bulan) && $bulan !== 0 && $bulan !== "all") {
+    $filter_bulan = "AND MONTH(ao.created_at) = '$bulan' AND YEAR(ao.created_at) = '$tahun'";
+}
+
 // Ambil data siswa dan rekap absensi
 $siswa_query = mysqli_query($conn, "
     SELECT u.nama, u.jenjang,
@@ -43,8 +49,7 @@ $siswa_query = mysqli_query($conn, "
     JOIN langganan l ON l.user_id = u.id AND l.paket_id = '$paket_id'
     LEFT JOIN absensi_offline ao 
         ON ao.siswa_id = u.id 
-        AND MONTH(ao.created_at) = '$bulan'
-        AND YEAR(ao.created_at) = '$tahun'
+        $filter_bulan
     LEFT JOIN jadwal_offline jo 
         ON ao.jadwal_id = jo.id 
         AND jo.tutor_id = '$tutor_id'
