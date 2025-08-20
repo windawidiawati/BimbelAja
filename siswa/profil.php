@@ -7,6 +7,17 @@ if (!isset($_SESSION['user']) || !in_array($_SESSION['user']['role'], ['siswa', 
   header("Location: ../login.php");
   exit;
 }
+$id = $_SESSION['user']['id'];
+
+$sql = "SELECT u.*, k.nama_kelas 
+        FROM users u
+        LEFT JOIN kelas k ON u.kelas_id = k.id
+        WHERE u.id = ?";
+$stmt = mysqli_prepare($conn, $sql);
+mysqli_stmt_bind_param($stmt, 'i', $id);
+mysqli_stmt_execute($stmt);
+$result = mysqli_stmt_get_result($stmt);
+$user = mysqli_fetch_assoc($result);
 
 $user = $_SESSION['user'];
 $mode = $_GET['mode'] ?? 'lihat';
@@ -27,7 +38,7 @@ $success = $error = '';
             <tr><th>Role</th><td><?= ucfirst($user['role']) ?></td></tr>
             <?php if ($user['role'] === 'siswa'): ?>
               <tr><th>Jenjang</th><td><?= htmlspecialchars($user['jenjang']) ?></td></tr>
-              <tr><th>Kelas</th><td><?= htmlspecialchars($user['kelas_id']) ?></td></tr>
+              <tr><th>Kelas</th><td><?= htmlspecialchars($_SESSION['user']['nama_kelas'] ?? '-') ?></td></tr>
             <?php else: ?>
               <tr><th>Keahlian</th><td><?= htmlspecialchars($user['keahlian']) ?></td></tr>
             <?php endif; ?>

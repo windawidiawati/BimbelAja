@@ -95,10 +95,13 @@ if ($edit_id) {
           </td>
           <td><?= ucfirst($row['tipe_file']) ?></td>
           <td>
-            <span class="badge 
-              <?= $row['status'] == 'disetujui' ? 'bg-success' : ($row['status'] == 'ditolak' ? 'bg-danger' : 'bg-warning text-dark') ?>">
-              <?= $row['status'] ? ucfirst($row['status']) : 'Menunggu' ?>
-            </span>
+           <span class="badge
+  <?= $row['status'] == 'diterima' ? 'bg-success' 
+      : ($row['status'] == 'ditolak' ? 'bg-danger' 
+      : 'bg-warning text-dark') ?>">
+  <?= $row['status'] ? ucfirst($row['status']) : 'Diproses' ?>
+</span>
+
           </td>
           <td>
   <div class="btn-group" role="group" aria-label="Aksi">
@@ -106,6 +109,7 @@ if ($edit_id) {
     <form action="proses_materi.php" method="POST" class="d-inline">
       <input type="hidden" name="id" value="<?= $row['id'] ?>">
       <button name="setujui" class="btn btn-success btn-sm" title="Setujui" onclick="return confirm('Setujui materi ini?')">✔</button>
+      <input type="hidden" name="status" value="diterima">
     </form>
     <form action="proses_materi.php" method="POST" class="d-inline">
       <input type="hidden" name="id" value="<?= $row['id'] ?>">
@@ -151,6 +155,7 @@ if ($edit_id) {
           <label>Kategori</label>
           <select name="kategori_id" class="form-select" required>
             <option value="">-- Pilih Kategori --</option>
+            
             <?php
             $kategori = mysqli_query($conn, "SELECT * FROM kategori_materi");
             while ($k = mysqli_fetch_assoc($kategori)):
@@ -159,6 +164,25 @@ if ($edit_id) {
               <option value="<?= $k['id'] ?>" <?= $selected ?>><?= htmlspecialchars($k['nama_kategori']) ?></option>
             <?php endwhile; ?>
           </select>
+          <?php if ($edit_id): ?>
+<div class="mb-3">
+    <label>Status</label>
+    <select name="status" class="form-select" required>
+        <?php
+        $allowedStatus = ['menunggu', 'diproses', 'disetujui', 'ditolak'];
+        foreach ($allowedStatus as $s) {
+            $selected = ($edit_data['status'] ?? '') == $s ? 'selected' : '';
+            echo "<option value='$s' $selected>" . ucfirst($s) . "</option>";
+        }
+        ?>
+    </select>
+</div>
+
+
+</div>
+<?php endif; ?>
+
+
         </div>
         <div class="mb-3">
           <label>Kelas</label>
@@ -174,18 +198,24 @@ if ($edit_id) {
           </select>
         </div>
         <div class="mb-3">
-          <label>Paket</label>
-          <select name="paket_id" class="form-select" required>
-            <option value="">-- Pilih Paket --</option>
-            <?php
-            $paket = mysqli_query($conn, "SELECT * FROM paket");
-            while ($p = mysqli_fetch_assoc($paket)):
-              $selected = ($edit_data['paket_id'] ?? '') == $p['id'] ? 'selected' : '';
-            ?>
-              <option value="<?= $p['id'] ?>" <?= $selected ?>><?= htmlspecialchars($p['nama']) ?></option>
-            <?php endwhile; ?>
-          </select>
-        </div>
+  <label>Paket</label>
+  <select name="paket_id" class="form-select">
+    <option value="">-- Pilih Paket --</option>
+    <?php
+    $paket = mysqli_query($conn, "SELECT * FROM paket");
+    while ($p = mysqli_fetch_assoc($paket)):
+      $selected = ($edit_data['paket_id'] ?? '') == $p['id'] ? 'selected' : '';
+    ?>
+      <option value="<?= $p['id'] ?>" <?= $selected ?>><?= htmlspecialchars($p['nama']) ?></option>
+    <?php endwhile; ?>
+    <option value="0">-- Tambah Paket Baru --</option>
+  </select>
+</div>
+
+<div class="mb-3" id="paketBaruField" style="display:none;">
+  <label>Nama Paket Baru</label>
+  <input type="text" name="paket_baru" class="form-control" placeholder="Masukkan nama paket baru">
+</div>
         <div class="mb-3">
           <label>File Materi <?= $edit_id ? '(Kosongkan jika tidak diubah)' : '' ?></label>
           <input type="file" name="file" class="form-control" accept=".pdf,.mp4,.mkv,.avi,.mov" <?= $edit_id ? '' : 'required' ?>>

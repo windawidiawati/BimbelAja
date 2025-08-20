@@ -42,6 +42,8 @@ if (!$result || $result->num_rows == 0) {
 
 $transaksi = $result->fetch_assoc();
 
+
+
 // Create PDF
 $options = new Options();
 $options->set('isRemoteEnabled', true);
@@ -49,6 +51,7 @@ $options->set('defaultFont', 'Helvetica');
 
 $dompdf = new Dompdf($options);
 
+// HTML content for PDF
 // HTML content for PDF
 $html = '
 <!DOCTYPE html>
@@ -58,23 +61,38 @@ $html = '
     <title>Invoice #' . $transaksi['kode_bayar'] . '</title>
     <style>
         body { font-family: Helvetica, Arial, sans-serif; }
-        .header { text-align: center; margin-bottom: 20px; }
-        .invoice-title { font-size: 24px; font-weight: bold; }
-        .invoice-info { margin-bottom: 30px; }
+        .header { margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; }
+        .logo { float: left; width: 120px; }
+        .company { float: right; text-align: right; font-size: 12px; }
+        .invoice-title { font-size: 20px; font-weight: bold; text-align: center; clear: both; margin-top: 30px; }
+        .invoice-info { margin-bottom: 30px; font-size: 12px; }
         .details { margin-bottom: 20px; }
         .table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
         .table th, .table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
         .table th { background-color: #f2f2f2; }
-        .total { text-align: right; font-weight: bold; font-size: 18px; }
+        .total { text-align: right; font-weight: bold; font-size: 16px; }
         .footer { margin-top: 50px; text-align: center; font-size: 12px; color: #666; }
+        .ttd { margin-top: 60px; text-align: right; font-size: 12px; }
     </style>
 </head>
 <body>
+    <!-- HEADER -->
     <div class="header">
-        <div class="invoice-title">INVOICE PEMBAYARAN</div>
-        <div>Bimbingan Belajar Online</div>
+        <div class="logo">
+            <img src="../assets/images/logo.png" width="100">
+        </div>
+        <div class="company">
+            <strong>BimbelAja</strong><br>
+            Jl. Pendidikan No. 123, Jakarta<br>
+            Telp: (021) 1234567<br>
+            Email: admin@bimbelaja.com
+        </div>
     </div>
 
+    <div class="invoice-title">INVOICE PEMBAYARAN</div>
+    <div style="text-align:center; margin-bottom:20px;">Bimbingan Belajar Online</div>
+
+    <!-- INFO -->
     <div class="invoice-info">
         <table width="100%">
             <tr>
@@ -94,6 +112,7 @@ $html = '
         </table>
     </div>
 
+    <!-- DETAIL -->
     <div class="details">
         <table class="table">
             <thead>
@@ -116,8 +135,15 @@ $html = '
         </table>
     </div>
 
+    <!-- TOTAL -->
     <div class="total">
         Total: Rp ' . number_format($transaksi['harga'], 0, ',', '.') . '
+    </div>
+
+    <!-- TTD -->
+    <div class="ttd">
+        Hormat Kami,<br><br><br><br>
+        <strong>BimbelAja</strong>
     </div>
 
     <div class="footer">
@@ -126,6 +152,7 @@ $html = '
     </div>
 </body>
 </html>';
+
 
 $dompdf->loadHtml($html);
 $dompdf->setPaper('A4', 'portrait');

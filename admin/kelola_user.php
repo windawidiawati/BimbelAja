@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_user'])) {
   $password = $_POST['password'] ?? '';
   $role = mysqli_real_escape_string($conn, $_POST['role'] ?? '');
   $jenjang = mysqli_real_escape_string($conn, $_POST['jenjang'] ?? '');
-  $kelas = mysqli_real_escape_string($conn, $_POST['kelas'] ?? '');
+  $kelas = mysqli_real_escape_string($conn, $_POST['kelas'] ?? ''); 
   $keahlian = mysqli_real_escape_string($conn, $_POST['keahlian'] ?? '');
 
   if ($nama && $username && $password && $role) {
@@ -101,6 +101,7 @@ $filter_jenjang = $_GET['jenjang'] ?? '';
 $filter_kelas = $_GET['kelas'] ?? '';
 $filter_keahlian = $_GET['keahlian'] ?? '';
 
+
 // Detail user
 $detail_user = null;
 if (isset($_GET['detail'])) {
@@ -114,7 +115,20 @@ if (isset($_GET['detail'])) {
      WHERE u.id = $id"));
 }
 
-// Query users dengan join untuk mendapatkan data paket
+$limit = 10; // Number of users per page
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$offset = ($page - 1) * $limit;
+
+// Count total users for pagination
+$total_users_query = "SELECT COUNT(*) as total FROM users WHERE 1=1";
+if ($filter_role) {
+  $total_users_query .= " AND role = '$filter_role'";
+}
+$total_users_result = mysqli_query($conn, $total_users_query);
+$total_users = mysqli_fetch_assoc($total_users_result)['total'];
+$total_pages = ceil($total_users / $limit);
+
+// Query users with pagination
 $sql = "SELECT u.*, k.nama_kelas, p.nama as nama_paket 
         FROM users u 
         LEFT JOIN kelas k ON u.kelas_id = k.id 
@@ -140,6 +154,7 @@ $result = mysqli_query($conn, $sql);
 // Ambil data kelas untuk dropdown
 $kelas_result = mysqli_query($conn, "SELECT * FROM kelas");
 ?>
+
 
 <div class="content">
   <!-- Tampilkan pesan sukses/error -->

@@ -21,7 +21,10 @@ $cek = mysqli_query($conn, "SELECT * FROM jawaban_siswa WHERE user_id=$user_id A
 if (mysqli_num_rows($cek) > 0) {
     die("Latihan ini sudah pernah kamu kerjakan.");
 }
+$selesai = date('Y-m-d H:i:s');
+mysqli_query($conn, "UPDATE latihan_siswa SET waktu_selesai = NOW() WHERE siswa_id = $user_id AND latihan_id = $latihan_id");
 
+// Simpan jawaban siswa
 foreach ($soal_ids as $soal_id) {
     $soal_id = (int)$soal_id;
     $jawaban = $jawaban_array[$soal_id] ?? null;

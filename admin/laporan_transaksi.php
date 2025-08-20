@@ -216,7 +216,12 @@ if (!$result) {
                                 <td><?= htmlspecialchars($row['kode_bayar'] ?? '-') ?></td>
                                 <td><?= htmlspecialchars($row['metode'] ?? '-') ?></td>
                                 <td>
-                                    <span class="badge bg-<?= ($row['status'] ?? '')=='sukses' ? 'success' : (($row['status'] ?? '')=='pending' ? 'warning text-dark' : 'danger') ?>">
+                                    <span class="badge bg-<?= 
+                                        ($row['status'] ?? '')=='lunas' ? 'success' : 
+                                        (($row['status'] ?? '')=='ditolak' ? 'danger' : 
+                                        (($row['status'] ?? '')=='pending' ? 'warning text-dark' : 
+                                        (($row['status'] ?? '')=='sukses' ? 'success' : 'secondary'))) 
+                                    ?>">
                                         <?= ucfirst($row['status'] ?? '-') ?>
                                     </span>
                                 </td>
@@ -293,7 +298,7 @@ if (!$result) {
                         <select name="status" id="edit_status" class="form-control" required>
                             <option value="pending">Pending</option>
                             <option value="sukses">Lunas</option>
-                            <option value="gagal">Di tolak</option>
+                            <option value="ditolak">Ditolak</option>
                             <option value="gagal">Menunggu transfer</option>
                         </select>
                     </div>

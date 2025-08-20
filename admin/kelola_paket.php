@@ -5,12 +5,13 @@ include '../includes/admin_header.php';
 include '../config/database.php';
 
 if ($_SESSION['user']['role'] !== 'admin') {
-  header('Location: ../index.php'); 
+  header('Location: ../index.php');
   exit;
 }
 
 // Handle form submission
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+  if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $id = $_POST['id'] ?? '';
   $nama = $_POST['nama'];
   $kategori = $_POST['kategori'];
@@ -23,20 +24,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $status = $_POST['status'];
 
   if ($id) {
-    // Update existing package
+    // Update paket
     $stmt = $conn->prepare("UPDATE paket SET nama=?, kategori=?, jenjang=?, kelas=?, harga=?, durasi=?, satuan_durasi=?, deskripsi=?, status=?, updated_at=NOW() WHERE id=?");
     $stmt->bind_param("ssssissssi", $nama, $kategori, $jenjang, $kelas, $harga, $durasi, $satuan_durasi, $deskripsi, $status, $id);
   } else {
-    // Create new package
-    $stmt = $conn->prepare("INSERT INTO paket (nama, kategori, jenjang, kelas, harga, durasi, satuan_durasi, deskripsi, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
-    $stmt->bind_param("ssssissss", $nama, $kategori, $jenjang, $kelas, $harga, $durasi, $satuan_durasi, $deskripsi, $status);
+    // Ambil ID terakhir +1 supaya tidak 0
+    $res = mysqli_query($conn, "SELECT IFNULL(MAX(id), 0) + 1 AS new_id FROM paket");
+    $new_id = mysqli_fetch_assoc($res)['new_id'];
+
+    // Insert paket baru
+    $stmt = $conn->prepare("INSERT INTO paket (id, nama, kategori, jenjang, kelas, harga, durasi, satuan_durasi, deskripsi, status, created_at, updated_at) 
+                             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
+    $stmt->bind_param("issssissss", $new_id, $nama, $kategori, $jenjang, $kelas, $harga, $durasi, $satuan_durasi, $deskripsi, $status);
   }
-  
+
   if ($stmt->execute()) {
     header("Location: kelola_paket.php");
     exit;
   } else {
-    $error = "Gagal menyimpan data paket";
+    $error = "Gagal menyimpan data paket. Error: " . $stmt->error;
   }
 }
 
@@ -72,7 +78,6 @@ $paket = mysqli_query($conn, "SELECT * FROM paket ORDER BY harga ASC");
     <div class="alert alert-danger"><?= $error ?></div>
   <?php endif; ?>
 
-  <!-- Package Table -->
   <div class="table-responsive">
     <table class="table table-bordered table-hover">
       <thead class="table-light">
@@ -102,14 +107,14 @@ $paket = mysqli_query($conn, "SELECT * FROM paket ORDER BY harga ASC");
             </span>
           </td>
           <td>
-            <button class="btn btn-sm btn-warning" 
-                    data-bs-toggle="modal" 
+            <button class="btn btn-sm btn-warning"
+                    data-bs-toggle="modal"
                     data-bs-target="#paketModal"
                     onclick="editPackage(<?= htmlspecialchars(json_encode($row)) ?>)">
               Edit
             </button>
             <a href="detail_paket.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-info">Detail</a>
-            <a href="?hapus=<?= $row['id'] ?>" class="btn btn-sm btn-danger" 
+            <a href="?hapus=<?= $row['id'] ?>" class="btn btn-sm btn-danger"
                onclick="return confirm('Hapus paket ini?')">Hapus</a>
           </td>
         </tr>
@@ -119,7 +124,6 @@ $paket = mysqli_query($conn, "SELECT * FROM paket ORDER BY harga ASC");
   </div>
 </div>
 
-<!-- Package Modal Form -->
 <div class="modal fade" id="paketModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">

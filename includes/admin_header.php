@@ -91,32 +91,32 @@ $role = $_SESSION['user']['role'] ?? null;
       <!-- Menu utama (khusus tampilan kecil) -->
       <ul class="navbar-nav me-auto d-lg-none">
         <li class="nav-item">
-          <a class="nav-link <?= ($current_page === 'dashboard.php') ? 'active' : '' ?>" href="/BimbelAja/admin/dashboard.php">
+          <a class="nav-link <?= ($current_page === 'dashboard.php') ? 'active' : '' ?>" href="../admin/dashboard.php">
             <i class="bi bi-speedometer2 me-1"></i> Dashboard
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link <?= ($current_page === 'kelola_materi.php') ? 'active' : '' ?>" href="/BimbelAja/admin/kelola_materi.php">
+          <a class="nav-link <?= ($current_page === 'kelola_materi.php') ? 'active' : '' ?>" href="../admin/kelola_materi.php">
             <i class="bi bi-file-earmark-text me-1"></i> Kelola Materi
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link <?= ($current_page === 'kelola_user.php') ? 'active' : '' ?>" href="/BimbelAja/admin/kelola_user.php">
+          <a class="nav-link <?= ($current_page === 'kelola_user.php') ? 'active' : '' ?>" href="../admin/kelola_user.php">
             <i class="bi bi-person me-1"></i> Kelola User
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link <?= ($current_page === 'kelola_paket.php') ? 'active' : '' ?>" href="/BimbelAja/admin/kelola_paket.php">
+          <a class="nav-link <?= ($current_page === 'kelola_paket.php') ? 'active' : '' ?>" href="../admin/kelola_paket.php">
             <i class="bi bi-boxes me-1"></i> Kelola Paket
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link <?= ($current_page === 'verifikasi_pembayaran.php') ? 'active' : '' ?>" href="/BimbelAja/admin/verifikasi_pembayaran.php">
+          <a class="nav-link <?= ($current_page === 'verifikasi_pembayaran.php') ? 'active' : '' ?>" href="../admin/verifikasi_pembayaran.php">
             <i class="bi bi-credit-card me-1"></i> Verifikasi Pembayaran
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link <?= ($current_page === 'statistik.php') ? 'active' : '' ?>" href="/BimbelAja/admin/statistik.php">
+          <a class="nav-link <?= ($current_page === 'statistik.php') ? 'active' : '' ?>" href="../admin/statistik.php">
             <i class="bi bi-bar-chart me-1"></i> Statistik
           </a>
         </li>
@@ -125,12 +125,12 @@ $role = $_SESSION['user']['role'] ?? null;
       <!-- Menu profil -->
       <ul class="navbar-nav ms-auto">
         <li class="nav-item">
-          <a class="nav-link text-white <?= ($current_page === 'profil.php') ? 'active' : '' ?>" href="/BimbelAja/admin/profil.php">
+          <a class="nav-link text-white <?= ($current_page === 'profil.php') ? 'active' : '' ?>" href="../admin/profil.php">
             <i class="bi bi-person-circle me-1"></i>Profil
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link text-white" href="/BimbelAja/auth/logout.php">
+          <a class="nav-link text-white" href="../auth/logout.php">
             <i class="bi bi-box-arrow-right me-1"></i>Logout
           </a>
         </li>
@@ -141,32 +141,76 @@ $role = $_SESSION['user']['role'] ?? null;
 
 <!-- Sidebar untuk layar besar -->
 <div class="sidebar d-none d-lg-block">
-  <a class="<?= ($current_page === 'dashboard.php') ? 'active' : '' ?>" href="/BimbelAja/admin/dashboard.php">
+  <a class="<?= ($current_page === 'dashboard.php') ? 'active' : '' ?>" href="../admin/dashboard.php">
     <i class="bi bi-speedometer2 me-2"></i> Dashboard
   </a>
-  <a class="<?= ($current_page === 'kelola_materi.php') ? 'active' : '' ?>" href="/BimbelAja/admin/kelola_materi.php">
+  <a class="<?= ($current_page === 'kelola_materi.php') ? 'active' : '' ?>" href="../admin/kelola_materi.php">
     <i class="bi bi-file-earmark-text me-2"></i> Kelola Materi
   </a>
-  <a class="<?= ($current_page === 'kelola_user.php') ? 'active' : '' ?>" href="/BimbelAja/admin/kelola_user.php">
+  <a class="<?= ($current_page === 'kelola_user.php') ? 'active' : '' ?>" href="../admin/kelola_user.php">
     <i class="bi bi-person me-2"></i> Kelola User
   </a>
-  <a class="<?= ($current_page === 'kelola_paket.php') ? 'active' : '' ?>" href="/BimbelAja/admin/kelola_paket.php">
+  <a class="<?= ($current_page === 'kelola_paket.php') ? 'active' : '' ?>" href="../admin/kelola_paket.php">
     <i class="bi bi-boxes me-2"></i> Kelola Paket
   </a>
-  <a class="<?= ($current_page === 'verifikasi_pembayaran.php') ? 'active' : '' ?>" href="/BimbelAja/admin/verifikasi_pembayaran.php">
+  <a class="<?= ($current_page === 'verifikasi_pembayaran.php') ? 'active' : '' ?>" href="../admin/verifikasi_pembayaran.php">
     <i class="bi bi-credit-card me-2"></i> Verifikasi Pembayaran
-  <a class="<?= ($current_page === 'kelola_soal.php') ? 'active' : '' ?>" href="/BimbelAja/admin/kelola_soal.php">
-    <i class="bi bi-journal-text"></i> Kelola Soal
-  <a class="<?= ($current_page === 'kelola_notifikasi.php') ? 'active' : '' ?>" href="/BimbelAja/admin/kelola_notifikasi.php">
-     <i class="bi bi-journal-text"></i> Kelola notifikasi
-  <a class="<?= ($current_page === 'kelola_latihan.php') ? 'active' : '' ?>" href="/BimbelAja/admin/kelola_latihan.php">
-    <i class="bi bi-bell "></i> Kelola Latihan
-  <a class="<?= ($current_page === 'kelola_jadwal_offline.php') ? 'active' : '' ?>" href="/BimbelAja/admin/kelola_jadwal_offline.php">
-    <i class="bi bi-calendar-event"></i> Kelola Jadwal Offline
-    <a class="<?= ($current_page === 'kelola_absensi.php') ? 'active' : '' ?>" href="/BimbelAja/admin/kelola_absensi.php">
-    <i class="bi bi-calendar-event"></i> Kelola Absensi
+    
+  <!-- Data Kelola Dropdown -->
+<li class="nav-item">
+  <a class="nav-link d-flex justify-content-between align-items-center" 
+     data-bs-toggle="collapse" 
+     href="#kelolaMenu" 
+     role="button" 
+     aria-expanded="false" 
+     aria-controls="kelolaMenu">
+    <span><i class="bi bi-folder"></i> Data Kelola</span>
+    <i class="bi bi-caret-down-fill"></i>
   </a>
-  <a class="<?= ($current_page === 'statistik.php') ? 'active' : '' ?>" href="/BimbelAja/admin/statistik.php">
+  <div class="collapse <?= in_array($current_page, [
+        'kelola_soal.php', 
+        'kelola_notifikasi.php', 
+        'kelola_latihan.php', 
+        'kelola_jadwal_offline.php', 
+        'kelola_absensi.php',
+        'kelola_jawaban_siswa.php'
+      ]) ? 'show' : ''; ?>" id="kelolaMenu">
+    <ul class="nav flex-column ms-3">
+      <li>
+        <a class="nav-link <?= ($current_page === 'kelola_soal.php') ? 'active' : '' ?>" href="../admin/kelola_soal.php">
+          <i class="bi bi-journal-text"></i> Kelola Soal
+        </a>
+      </li>
+      <li>
+        <a class="nav-link <?= ($current_page === 'kelola_notifikasi.php') ? 'active' : '' ?>" href="../admin/kelola_notifikasi.php">
+          <i class="bi bi-bell"></i> Kelola Notifikasi
+        </a>
+      </li>
+      <li>
+        <a class="nav-link <?= ($current_page === 'kelola_latihan.php') ? 'active' : '' ?>" href="../admin/kelola_latihan.php">
+          <i class="bi bi-pencil-square"></i> Kelola Latihan
+        </a>
+      </li>
+      <li>
+        <a class="nav-link <?= ($current_page === 'kelola_jadwal_offline.php') ? 'active' : '' ?>" href="../admin/kelola_jadwal_offline.php">
+          <i class="bi bi-calendar-event"></i> Kelola Jadwal Offline
+        </a>
+      </li>
+      <li>
+        <a class="nav-link <?= ($current_page === 'kelola_absensi.php') ? 'active' : '' ?>" href="../admin/kelola_absensi.php">
+          <i class="bi bi-clipboard-check"></i> Kelola Absensi
+        </a>
+      </li>
+      <li>
+        <a class="nav-link <?= ($current_page === 'kelola_jawaban_siswa.php') ? 'active' : '' ?>" href="../admin/kelola_jawaban_siswa.php">
+          <i class="bi bi-clipboard-check"></i> Kelola jawaban siswa
+        </a>
+      </li>
+    </ul>
+  </div>
+</li>
+
+  <a class="<?= ($current_page === 'statistik.php') ? 'active' : '' ?>" href="../admin/statistik.php">
     <i class="bi bi-bar-chart me-2"></i> Statistik
   </a>
   <a class="<?= ($current_page === 'laporan_transaksi.php') ? 'active' : '' ?>" href="/BimbelAja/admin/laporan_transaksi.php">

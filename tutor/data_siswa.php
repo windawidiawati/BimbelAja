@@ -8,87 +8,100 @@ if ($_SESSION['user']['role'] !== 'tutor' && $_SESSION['user']['role'] !== 'admi
     exit;
 }
 
-// Daftar kelas
-$daftar_kelas = [
-    'Kelas 1 SD', 'Kelas 2 SD', 'Kelas 3 SD', 'Kelas 4 SD', 'Kelas 5 SD', 'Kelas 6 SD',
-    'Kelas 7 SMP', 'Kelas 8 SMP', 'Kelas 9 SMP',
-    'Kelas 10 SMA IPA', 'Kelas 11 SMA IPA', 'Kelas 12 SMA IPA',
-    'Kelas 10 SMA IPS', 'Kelas 11 SMA IPS', 'Kelas 12 SMA IPS'
-];
+// Ambil semua kelas untuk dropdown filter
+$kelas_result = mysqli_query($conn, "SELECT id, nama_kelas, jenjang FROM kelas ORDER BY jenjang, nama_kelas");
+$daftar_kelas = [];
+while ($k = mysqli_fetch_assoc($kelas_result)) {
+    $daftar_kelas[] = $k;
+}
+
+// Ambil semua paket untuk dropdown filter
+$paket_result = mysqli_query($conn, "SELECT id, nama FROM paket");
+$daftar_paket = [];
+while ($p = mysqli_fetch_assoc($paket_result)) {
+    $daftar_paket[] = $p;
+}
 
 // Filter dari URL
-$filter_kelas = isset($_GET['kelas']) ? $_GET['kelas'] : '';
-$filter_kategori = isset($_GET['kategori_id']) ? $_GET['kategori_id'] : '';
+$filter_kelas = isset($_GET['kelas_id']) ? trim($_GET['kelas_id']) : '';
+$filter_paket = isset($_GET['paket_id']) ? trim($_GET['paket_id']) : '';
+
+// Bangun query utama
+$query = "
+    SELECT 
+        u.id AS user_id,
+        u.nama,
+        k.nama_kelas,
+        k.jenjang,
+        p.nama AS nama_paket
+    FROM users u
+    LEFT JOIN (
+        SELECT l1.*
+        FROM langganan l1
+        INNER JOIN (
+            SELECT user_id, MAX(tanggal_berakhir) AS max_tanggal
+            FROM langganan
+            WHERE status = 'Aktif' AND tanggal_berakhir >= CURDATE()
+            GROUP BY user_id
+        ) l2 ON l1.user_id = l2.user_id AND l1.tanggal_berakhir = l2.max_tanggal
+    ) l ON l.user_id = u.id
+    LEFT JOIN kelas k ON u.kelas_id = k.id
+    LEFT JOIN paket p ON l.paket_id = p.id
+    WHERE u.role = 'siswa'
+";
+
+if ($filter_kelas !== '') {
+    $escaped_kelas = mysqli_real_escape_string($conn, $filter_kelas);
+    $query .= " AND u.kelas_id = '{$escaped_kelas}'";
+}
+
+if ($filter_paket !== '') {
+    $escaped_paket = mysqli_real_escape_string($conn, $filter_paket);
+    $query .= " AND p.id = '{$escaped_paket}'";
+}
+
+$query .= " ORDER BY u.nama ASC";
+$result = mysqli_query($conn, $query);
 ?>
 
 <div class="content">
     <div class="card shadow-sm p-4 mb-5">
-        <h3 class="mb-4 fw-bold text-primary">📊 Data Siswa & Nilai Per Mata Pelajaran</h3>
+        <h3 class="mb-4 fw-bold text-primary">📋 Data Siswa</h3>
 
         <!-- Filter -->
         <form method="GET" class="row g-3 mb-4 align-items-end">
-            <div class="col-md-3">
+            <div class="col-md-4">
                 <label class="form-label">Filter Kelas:</label>
-                <select name="kelas" class="form-select">
+                <select name="kelas_id" class="form-select">
                     <option value="">Semua Kelas</option>
-                    <?php foreach ($daftar_kelas as $kelas_option) { ?>
-                        <option value="<?= $kelas_option; ?>" <?= ($filter_kelas == $kelas_option) ? 'selected' : ''; ?>>
-                            <?= $kelas_option; ?>
+                    <?php foreach ($daftar_kelas as $kelas) { ?>
+                        <option value="<?= htmlspecialchars($kelas['id']); ?>" <?= ($filter_kelas === $kelas['id']) ? 'selected' : ''; ?>>
+                            <?= htmlspecialchars($kelas['nama_kelas'] . ' - ' . $kelas['jenjang']); ?>
                         </option>
                     <?php } ?>
                 </select>
             </div>
 
-            <div class="col-md-3">
-                <label class="form-label">Filter Mata Pelajaran:</label>
-                <select name="kategori_id" class="form-select">
-                    <option value="">Semua Mapel</option>
-                    <?php
-                    $kategori_result = mysqli_query($conn, "SELECT * FROM kategori_materi");
-                    while ($row = mysqli_fetch_assoc($kategori_result)) { ?>
-                        <option value="<?= $row['id']; ?>" <?= ($filter_kategori == $row['id']) ? 'selected' : ''; ?>>
-                            <?= $row['nama_kategori']; ?>
+            <div class="col-md-4">
+                <label class="form-label">Filter Paket:</label>
+                <select name="paket_id" class="form-select">
+                    <option value="">Semua Paket</option>
+                    <?php foreach ($daftar_paket as $paket) { ?>
+                        <option value="<?= htmlspecialchars($paket['id']); ?>" <?= ($filter_paket === $paket['id']) ? 'selected' : ''; ?>>
+                            <?= htmlspecialchars($paket['nama']); ?>
                         </option>
                     <?php } ?>
                 </select>
             </div>
 
-            <div class="col-md-3">
+            <div class="col-md-4">
                 <button type="submit" class="btn btn-primary w-100">
                     <i class="bi bi-funnel-fill"></i> Terapkan Filter
                 </button>
             </div>
         </form>
 
-        <?php
-        // Query utama nilai siswa
-        $query = "
-            SELECT 
-                u.id AS user_id,
-                u.nama,
-                u.kelas,
-                u.jenjang,
-                km.nama_kategori,
-                COUNT(js.id) AS total_dikerjakan,
-                SUM(js.benar) AS total_benar
-            FROM users u
-            LEFT JOIN jawaban_siswa js ON u.id = js.user_id
-            LEFT JOIN soal s ON js.soal_id = s.id
-            LEFT JOIN kategori_materi km ON s.kategori_id = km.id
-            WHERE u.role = 'siswa'
-        ";
-
-        if ($filter_kelas !== '') {
-            $query .= " AND u.kelas = '" . mysqli_real_escape_string($conn, $filter_kelas) . "'";
-        }
-        if ($filter_kategori !== '') {
-            $query .= " AND s.kategori_id = '" . mysqli_real_escape_string($conn, $filter_kategori) . "'";
-        }
-
-        $query .= " GROUP BY u.id, s.kategori_id ORDER BY u.nama ASC";
-        $result = mysqli_query($conn, $query);
-        ?>
-
+        <!-- Tabel Data -->
         <div class="table-responsive">
             <table class="table table-bordered table-hover text-center">
                 <thead class="table-primary">
@@ -97,32 +110,28 @@ $filter_kategori = isset($_GET['kategori_id']) ? $_GET['kategori_id'] : '';
                         <th>Nama Siswa</th>
                         <th>Kelas</th>
                         <th>Jenjang</th>
-                        <th>Mata Pelajaran</th>
-                        <th>Nilai</th>
+                        <th>Paket</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php
                     $no = 1;
-                    while ($row = mysqli_fetch_assoc($result)) {
-                        $nama_kategori = $row['nama_kategori'] ?? '-';
-                        $nilai = ($row['total_dikerjakan'] > 0)
-                            ? round(($row['total_benar'] / $row['total_dikerjakan']) * 100, 2)
-                            : 'Belum Ada';
-
-                        echo "<tr>
-                                <td>{$no}</td>
-                                <td>{$row['nama']}</td>
-                                <td>{$row['kelas']}</td>
-                                <td>{$row['jenjang']}</td>
-                                <td>{$nama_kategori}</td>
-                                <td>{$nilai}</td>
-                              </tr>";
-                        $no++;
-                    }
-
-                    if ($no === 1) {
-                        echo "<tr><td colspan='6'>Tidak ada data untuk filter ini.</td></tr>";
+                    if ($result && mysqli_num_rows($result) > 0) {
+                        while ($row = mysqli_fetch_assoc($result)) {
+                            $nama_paket = $row['nama_paket'] ?? '-';
+                            $nama_kelas = $row['nama_kelas'] ?? '-';
+                            $jenjang = $row['jenjang'] ?? '-';
+                            echo "<tr>
+                                    <td>{$no}</td>
+                                    <td>" . htmlspecialchars($row['nama']) . "</td>
+                                    <td>" . htmlspecialchars($nama_kelas) . "</td>
+                                    <td>" . htmlspecialchars($jenjang) . "</td>
+                                    <td>" . htmlspecialchars($nama_paket) . "</td>
+                                  </tr>";
+                            $no++;
+                        }
+                    } else {
+                        echo "<tr><td colspan='5'>Tidak ada data untuk filter ini.</td></tr>";
                     }
                     ?>
                 </tbody>

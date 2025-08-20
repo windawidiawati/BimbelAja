@@ -72,7 +72,7 @@ $kelas_id = $_POST['kelas_id'];
 $tanggal = $_POST['tanggal'];
 $jam_mulai = $_POST['jam_mulai'];
 $jam_selesai = $_POST['jam_selesai'];
-$keterangan = $_POST['keterangan'];
+// $keterangan = $_POST['keterangan'];
 
 // Cek apakah ada jadwal bentrok
 $cek = mysqli_query($conn, "
