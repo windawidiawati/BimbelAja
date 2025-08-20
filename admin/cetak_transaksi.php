@@ -35,14 +35,11 @@ $sql = "SELECT p.id AS pembayaran_id, p.*,
         WHERE p.id = $id";
 $result = mysqli_query($conn, $sql);
 
-
 if (!$result || $result->num_rows == 0) {
     die('Transaction not found');
 }
 
 $transaksi = $result->fetch_assoc();
-
-
 
 // Create PDF
 $options = new Options();
@@ -52,7 +49,6 @@ $options->set('defaultFont', 'Helvetica');
 $dompdf = new Dompdf($options);
 
 // HTML content for PDF
-// HTML content for PDF
 $html = '
 <!DOCTYPE html>
 <html>
@@ -60,73 +56,186 @@ $html = '
     <meta charset="UTF-8">
     <title>Invoice #' . $transaksi['kode_bayar'] . '</title>
     <style>
-        body { font-family: Helvetica, Arial, sans-serif; }
-        .header { margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; }
-        .logo { float: left; width: 120px; }
-        .company { float: right; text-align: right; font-size: 12px; }
-        .invoice-title { font-size: 20px; font-weight: bold; text-align: center; clear: both; margin-top: 30px; }
-        .invoice-info { margin-bottom: 30px; font-size: 12px; }
-        .details { margin-bottom: 20px; }
-        .table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
-        .table th, .table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        .table th { background-color: #f2f2f2; }
-        .total { text-align: right; font-weight: bold; font-size: 16px; }
-        .footer { margin-top: 50px; text-align: center; font-size: 12px; color: #666; }
-        .ttd { margin-top: 60px; text-align: right; font-size: 12px; }
+        body { 
+            font-family: Helvetica, Arial, sans-serif; 
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 25px;
+    border-bottom: 3px solid #0d6efd;
+    padding-bottom: 15px;
+}
+.brand {
+    float: left; 
+    text-align: left;
+}
+        .brand-name {
+            font-size: 28px;
+            font-weight: bold;
+            color: #0d6efd;
+            margin: 0;
+            padding: 0;
+        }
+        .brand-tagline {
+            font-size: 12px;
+            color: #666;
+            margin: 0;
+            padding: 0;
+        }
+        .company {
+    text-align: right;
+    font-size: 12px;
+    color: #666;
+    margin-top: 5px;
+}
+        .invoice-title { 
+            font-size: 24px; 
+            font-weight: bold; 
+            text-align: center; 
+            clear: both; 
+            margin: 30px 0 10px 0;
+            color: #0d6efd;
+        }
+        .invoice-subtitle {
+            font-size: 14px;
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .invoice-info { 
+            margin-bottom: 30px; 
+            font-size: 12px; 
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .details { 
+            margin-bottom: 25px; 
+        }
+        .table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-bottom: 30px; 
+            font-size: 12px;
+        }
+        .table th, .table td { 
+            border: 1px solid #dee2e6; 
+            padding: 12px; 
+            text-align: left; 
+        }
+        .table th { 
+            background-color: #0d6efd; 
+            color: white; 
+            font-weight: bold;
+        }
+        .table tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        .total { 
+            text-align: right; 
+            font-weight: bold; 
+            font-size: 18px; 
+            color: #0d6efd;
+            margin-bottom: 30px;
+        }
+        .footer { 
+            margin-top: 50px; 
+            text-align: center; 
+            font-size: 12px; 
+            color: #666; 
+            border-top: 1px solid #ddd;
+            padding-top: 15px;
+        }
+        .ttd { 
+            margin-top: 60px; 
+            text-align: right; 
+            font-size: 12px; 
+        }
+        .info-box {
+            background-color: #e7f3ff;
+            border-left: 4px solid #0d6efd;
+            padding: 10px 15px;
+            margin: 15px 0;
+            border-radius: 3px;
+        }
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 11px;
+        }
+        .status-verified {
+            background-color: #28a745;
+            color: white;
+        }
+        .status-pending {
+            background-color: #ffc107;
+            color: black;
+        }
     </style>
 </head>
 <body>
     <!-- HEADER -->
     <div class="header">
-        <div class="logo">
-            <img src="../assets/images/logo.png" width="100">
+        <div class="brand">
+            <div class="brand-name">BimbelAja</div>
+            <div class="brand-tagline">Bimbingan Belajar Online Terpercaya</div>
         </div>
         <div class="company">
-            <strong>BimbelAja</strong><br>
+            <strong>BimbelAja Education Center</strong><br>
             Jl. Pendidikan No. 123, Jakarta<br>
-            Telp: (021) 1234567<br>
+            Telp: (021) 1234-5678<br>
             Email: admin@bimbelaja.com
         </div>
     </div>
 
     <div class="invoice-title">INVOICE PEMBAYARAN</div>
-    <div style="text-align:center; margin-bottom:20px;">Bimbingan Belajar Online</div>
+    <div class="invoice-subtitle">Bimbingan Belajar Online Berkualitas</div>
 
     <!-- INFO -->
     <div class="invoice-info">
         <table width="100%">
             <tr>
-                <td width="50%">
+                <td width="50%" style="vertical-align: top;">
                     <strong>Kepada:</strong><br>
                     ' . htmlspecialchars($transaksi['nama_siswa']) . '<br>
                     ' . htmlspecialchars($transaksi['email_siswa']) . '<br>
                     ' . htmlspecialchars($transaksi['nohp_siswa']) . '<br>
                     Jenjang: ' . htmlspecialchars($transaksi['jenjang_siswa']) . '
                 </td>
-                <td width="50%" style="text-align:right">
+                <td width="50%" style="text-align: right; vertical-align: top;">
                     <strong>No. Invoice:</strong> ' . htmlspecialchars($transaksi['kode_bayar']) . '<br>
-                    <strong>Tanggal:</strong> ' . date('d F Y', strtotime($transaksi['tanggal'])) . '<br>
-                    <strong>Status:</strong> ' . ucfirst($transaksi['status']) . '
+                    <strong>Tanggal Transaksi:</strong> ' . date('d F Y', strtotime($transaksi['tanggal'])) . '<br>
+                    <strong>Status:</strong> 
+                    <span class="status-badge ' . ($transaksi['status'] == 'verified' ? 'status-verified' : 'status-pending') . '">
+                        ' . ucfirst($transaksi['status']) . '
+                    </span>
                 </td>
             </tr>
         </table>
     </div>
 
-    <!-- DETAIL -->
+    <!-- DETAIL PAKET -->
     <div class="details">
+        <h3 style="color: #0d6efd; margin-bottom: 15px;">Detail Paket Belajar</h3>
         <table class="table">
             <thead>
                 <tr>
-                    <th>Nama Paket</th>
-                    <th>Durasi</th>
-                    <th>Harga</th>
+                    <th width="50%">Nama Paket</th>
+                    <th width="20%">Durasi</th>
+                    <th width="30%">Harga</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
                     <td>
-                        <strong>' . htmlspecialchars($transaksi['nama_paket']) . '</strong><br>
-                        <small>' . htmlspecialchars($transaksi['deskripsi_paket']) . '</small>
+                        <strong style="color: #0d6efd;">' . htmlspecialchars($transaksi['nama_paket']) . '</strong><br>
+                        <small style="color: #666;">' . htmlspecialchars($transaksi['deskripsi_paket']) . '</small>
                     </td>
                     <td>' . $transaksi['durasi'] . ' ' . $transaksi['satuan_durasi'] . '</td>
                     <td>Rp ' . number_format($transaksi['harga'], 0, ',', '.') . '</td>
@@ -135,24 +244,35 @@ $html = '
         </table>
     </div>
 
+    <!-- INFO LANGANAN -->
+    ' . (isset($transaksi['tanggal_mulai']) ? '
+    <div class="info-box">
+        <strong>Info Langganan:</strong><br>
+        Periode: ' . date('d M Y', strtotime($transaksi['tanggal_mulai'])) . ' - ' . date('d M Y', strtotime($transaksi['tanggal_berakhir'])) . '<br>
+        Status Langganan: ' . ucfirst($transaksi['status_langganan']) . '
+    </div>
+    ' : '') . '
+
     <!-- TOTAL -->
     <div class="total">
-        Total: Rp ' . number_format($transaksi['harga'], 0, ',', '.') . '
+        Total Pembayaran: Rp ' . number_format($transaksi['harga'], 0, ',', '.') . '
     </div>
 
     <!-- TTD -->
     <div class="ttd">
+        Jakarta, ' . date('d F Y') . '<br>
         Hormat Kami,<br><br><br><br>
-        <strong>BimbelAja</strong>
+        <strong>BimbelAja</strong><br>
+        <em>Admin System</em>
     </div>
 
     <div class="footer">
-        Terima kasih telah menggunakan layanan kami.<br>
-        Invoice ini sah dan diproses oleh sistem.
+        Terima kasih telah mempercayai BimbelAja untuk pendidikan yang lebih baik.<br>
+        Invoice ini sah dan diproses secara elektronik oleh sistem BimbelAja.<br>
+        © ' . date('Y') . ' BimbelAja - All Rights Reserved
     </div>
 </body>
 </html>';
-
 
 $dompdf->loadHtml($html);
 $dompdf->setPaper('A4', 'portrait');
