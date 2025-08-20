@@ -5,19 +5,11 @@ include '../includes/admin_header.php';
 include '../config/database.php';
 
 if ($_SESSION['user']['role'] !== 'admin') {
-  header('Location: ../index.php'); exit;
+  header('Location: ../index.php'); 
+  exit;
 }
 
-// Tambah / Edit
-$edit_mode = isset($_GET['edit']);
-$edit_data = null;
-if ($edit_mode) {
-  $id = $_GET['edit'];
-  $query = mysqli_query($conn, "SELECT * FROM paket WHERE id = $id");
-  $edit_data = mysqli_fetch_assoc($query);
-}
-
-// Simpan data
+// Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $id = $_POST['id'] ?? '';
   $nama = $_POST['nama'];
@@ -31,37 +23,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $status = $_POST['status'];
 
   if ($id) {
+    // Update existing package
     $stmt = $conn->prepare("UPDATE paket SET nama=?, kategori=?, jenjang=?, kelas=?, harga=?, durasi=?, satuan_durasi=?, deskripsi=?, status=?, updated_at=NOW() WHERE id=?");
     $stmt->bind_param("ssssissssi", $nama, $kategori, $jenjang, $kelas, $harga, $durasi, $satuan_durasi, $deskripsi, $status, $id);
-    $stmt->execute();
   } else {
+    // Create new package
     $stmt = $conn->prepare("INSERT INTO paket (nama, kategori, jenjang, kelas, harga, durasi, satuan_durasi, deskripsi, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
     $stmt->bind_param("ssssissss", $nama, $kategori, $jenjang, $kelas, $harga, $durasi, $satuan_durasi, $deskripsi, $status);
-    $stmt->execute();
   }
-  header("Location: kelola_paket.php");
-  exit;
+  
+  if ($stmt->execute()) {
+    header("Location: kelola_paket.php");
+    exit;
+  } else {
+    $error = "Gagal menyimpan data paket";
+  }
 }
 
-// Hapus
+// Handle delete
 if (isset($_GET['hapus'])) {
-  $id = $_GET['hapus'];
+  $id = (int)$_GET['hapus'];
   mysqli_query($conn, "DELETE FROM paket WHERE id = $id");
   header("Location: kelola_paket.php");
   exit;
 }
 
-// Data
+// Get package data for editing
+$edit_data = null;
+if (isset($_GET['edit'])) {
+  $id = (int)$_GET['edit'];
+  $query = mysqli_query($conn, "SELECT * FROM paket WHERE id = $id");
+  $edit_data = mysqli_fetch_assoc($query);
+}
+
+// Get all packages
 $paket = mysqli_query($conn, "SELECT * FROM paket ORDER BY harga ASC");
 ?>
 
 <div class="content">
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h3>Kelola Paket Langganan</h3>
-    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#paketModal">+ Tambah Paket</button>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#paketModal" onclick="resetForm()">
+      + Tambah Paket
+    </button>
   </div>
 
-  <!-- Tabel -->
+  <?php if (isset($error)): ?>
+    <div class="alert alert-danger"><?= $error ?></div>
+  <?php endif; ?>
+
+  <!-- Package Table -->
   <div class="table-responsive">
     <table class="table table-bordered table-hover">
       <thead class="table-light">
@@ -72,9 +83,8 @@ $paket = mysqli_query($conn, "SELECT * FROM paket ORDER BY harga ASC");
           <th>Kelas</th>
           <th>Harga</th>
           <th>Durasi</th>
-          <th>Deskripsi</th>
           <th>Status</th>
-          <th width="160px">Aksi</th>
+          <th width="180px">Aksi</th>
         </tr>
       </thead>
       <tbody>
@@ -86,12 +96,21 @@ $paket = mysqli_query($conn, "SELECT * FROM paket ORDER BY harga ASC");
           <td><?= $row['kelas'] ?></td>
           <td>Rp <?= number_format($row['harga'], 0, ',', '.') ?></td>
           <td><?= $row['durasi'].' '.$row['satuan_durasi'] ?></td>
-          <td><?= htmlspecialchars($row['deskripsi']) ?></td>
-          <td><?= $row['status'] ?></td>
           <td>
-            <a href="?edit=<?= $row['id'] ?>" class="btn btn-sm btn-warning">Edit</a>
-            <a href="detail_paket.php?id=<?= $row['id'] ?>" class="btn btn-info">Detail</a>
-            <a href="?hapus=<?= $row['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Hapus paket ini?')">Hapus</a>
+            <span class="badge bg-<?= $row['status'] === 'aktif' ? 'success' : 'danger' ?>">
+              <?= ucfirst($row['status']) ?>
+            </span>
+          </td>
+          <td>
+            <button class="btn btn-sm btn-warning" 
+                    data-bs-toggle="modal" 
+                    data-bs-target="#paketModal"
+                    onclick="editPackage(<?= htmlspecialchars(json_encode($row)) ?>)">
+              Edit
+            </button>
+            <a href="detail_paket.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-info">Detail</a>
+            <a href="?hapus=<?= $row['id'] ?>" class="btn btn-sm btn-danger" 
+               onclick="return confirm('Hapus paket ini?')">Hapus</a>
           </td>
         </tr>
         <?php endwhile; ?>
@@ -100,78 +119,86 @@ $paket = mysqli_query($conn, "SELECT * FROM paket ORDER BY harga ASC");
   </div>
 </div>
 
-<!-- Modal -->
-<div class="modal fade" id="paketModal" tabindex="-1" aria-labelledby="paketModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+<!-- Package Modal Form -->
+<div class="modal fade" id="paketModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <form method="POST">
-        <input type="hidden" name="id" value="<?= $edit_data['id'] ?? '' ?>">
+        <input type="hidden" name="id" id="packageId">
         <div class="modal-header bg-primary text-white">
-          <h5 class="modal-title"><?= $edit_mode ? 'Edit Paket' : 'Tambah Paket' ?></h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          <h5 class="modal-title" id="modalTitle">Tambah Paket Baru</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <div class="mb-2">
-            <label>Nama Paket</label>
-            <input type="text" name="nama" class="form-control" required value="<?= $edit_data['nama'] ?? '' ?>">
+          <div class="mb-3">
+            <label class="form-label">Nama Paket</label>
+            <input type="text" name="nama" class="form-control" required>
           </div>
-          <div class="mb-2">
-            <label>Kategori</label>
-            <select name="kategori" class="form-select" required>
-              <option value="">-- Pilih --</option>
-              <?php foreach (['Basic', 'Premium'] as $k): ?>
-              <option value="<?= $k ?>" <?= ($edit_data['kategori'] ?? '') == $k ? 'selected' : '' ?>><?= $k ?></option>
-              <?php endforeach; ?>
-            </select>
-          </div>
-          <div class="mb-2">
-            <label>Jenjang</label>
-            <select name="jenjang" id="jenjang" class="form-select" onchange="updateKelasOptions()" required>
-              <option value="">-- Pilih --</option>
-              <?php foreach (['SD','SMP','SMA'] as $j): ?>
-              <option value="<?= $j ?>" <?= ($edit_data['jenjang'] ?? '') == $j ? 'selected' : '' ?>><?= $j ?></option>
-              <?php endforeach; ?>
-            </select>
-          </div>
-          <div class="mb-2">
-            <label>Kelas</label>
-            <select name="kelas" id="kelas" class="form-select" required>
-              <?php if (!empty($edit_data['kelas'])): ?>
-              <option value="<?= $edit_data['kelas'] ?>" selected>Kelas <?= $edit_data['kelas'] ?></option>
-              <?php else: ?>
-              <option value="">-- Pilih --</option>
-              <?php endif; ?>
-            </select>
-          </div>
-          <div class="mb-2">
-            <label>Harga (Rp)</label>
-            <input type="number" name="harga" class="form-control" required value="<?= $edit_data['harga'] ?? '' ?>">
-          </div>
-          <div class="mb-2">
-            <label>Durasi</label>
-            <div class="input-group">
-              <input type="number" name="durasi" class="form-control" required value="<?= $edit_data['durasi'] ?? '' ?>">
-              <select name="satuan_durasi" class="form-select" required>
-                <option value="bulan" <?= ($edit_data['satuan_durasi'] ?? '') === 'bulan' ? 'selected' : '' ?>>Bulan</option>
-                <option value="tahun" <?= ($edit_data['satuan_durasi'] ?? '') === 'tahun' ? 'selected' : '' ?>>Tahun</option>
+          
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Kategori</label>
+              <select name="kategori" class="form-select" required>
+                <option value="">-- Pilih Kategori --</option>
+                <option value="Basic">Basic</option>
+                <option value="Premium">Premium</option>
+              </select>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Jenjang</label>
+              <select name="jenjang" id="jenjang" class="form-select" required onchange="updateKelasOptions()">
+                <option value="">-- Pilih Jenjang --</option>
+                <option value="SD">SD</option>
+                <option value="SMP">SMP</option>
+                <option value="SMA">SMA</option>
               </select>
             </div>
           </div>
-          <div class="mb-2">
-            <label>Deskripsi</label>
-            <textarea name="deskripsi" class="form-control" required><?= $edit_data['deskripsi'] ?? '' ?></textarea>
+          
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Kelas</label>
+              <select name="kelas" id="kelas" class="form-select" required>
+                <option value="">-- Pilih Kelas --</option>
+              </select>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Harga (Rp)</label>
+              <input type="number" name="harga" class="form-control" required>
+            </div>
           </div>
-          <div class="mb-2">
-            <label>Status</label>
-            <select name="status" class="form-select" required>
-              <option value="aktif" <?= ($edit_data['status'] ?? '') === 'aktif' ? 'selected' : '' ?>>Aktif</option>
-              <option value="nonaktif" <?= ($edit_data['status'] ?? '') === 'nonaktif' ? 'selected' : '' ?>>Nonaktif</option>
-            </select>
+          
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Durasi</label>
+              <div class="input-group">
+                <input type="number" name="durasi" class="form-control" required>
+                <select name="satuan_durasi" class="form-select" required>
+                  <option value="bulan">Bulan</option>
+                  <option value="tahun">Tahun</option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Status</label>
+              <select name="status" class="form-select" required>
+                <option value="aktif">Aktif</option>
+                <option value="nonaktif">Nonaktif</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label">Deskripsi</label>
+            <textarea name="deskripsi" class="form-control" rows="3" required></textarea>
           </div>
         </div>
         <div class="modal-footer">
-          <button type="submit" class="btn btn-primary"><?= $edit_mode ? 'Update' : 'Tambah' ?></button>
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+          <button type="submit" class="btn btn-primary">Simpan</button>
         </div>
       </form>
     </div>
@@ -179,24 +206,61 @@ $paket = mysqli_query($conn, "SELECT * FROM paket ORDER BY harga ASC");
 </div>
 
 <script>
+// Update class options based on selected education level
 function updateKelasOptions() {
   const jenjang = document.getElementById('jenjang').value;
   const kelasSelect = document.getElementById('kelas');
-  let options = [];
-
-  if (jenjang === 'SD') options = ['1','2','3','4','5','6'];
-  if (jenjang === 'SMP') options = ['7','8','9'];
-  if (jenjang === 'SMA') options = ['10','11','12'];
-
-  kelasSelect.innerHTML = '<option value="">-- Pilih --</option>';
-  options.forEach(k => {
-    const opt = document.createElement('option');
-    opt.value = k;
-    opt.textContent = 'Kelas ' + k;
-    kelasSelect.appendChild(opt);
+  
+  kelasSelect.innerHTML = '<option value="">-- Pilih Kelas --</option>';
+  
+  if (!jenjang) return;
+  
+  let classes = [];
+  if (jenjang === 'SD') classes = ['1', '2', '3', '4', '5', '6'];
+  else if (jenjang === 'SMP') classes = ['7', '8', '9'];
+  else if (jenjang === 'SMA') classes = ['10', '11', '12'];
+  
+  classes.forEach(grade => {
+    const option = document.createElement('option');
+    option.value = grade;
+    option.textContent = 'Kelas ' + grade;
+    kelasSelect.appendChild(option);
   });
+}
+
+// Edit package - fill form with existing data
+function editPackage(pkg) {
+  document.getElementById('modalTitle').textContent = 'Edit Paket';
+  document.getElementById('packageId').value = pkg.id;
+  
+  const form = document.forms[0];
+  form.nama.value = pkg.nama;
+  form.kategori.value = pkg.kategori;
+  form.jenjang.value = pkg.jenjang;
+  
+  // Update class options first
+  updateKelasOptions();
+  // Then set the selected class
+  setTimeout(() => {
+    form.kelas.value = pkg.kelas;
+  }, 100);
+  
+  form.harga.value = pkg.harga;
+  form.durasi.value = pkg.durasi;
+  form.satuan_durasi.value = pkg.satuan_durasi;
+  form.status.value = pkg.status;
+  form.deskripsi.value = pkg.deskripsi;
+}
+
+// Reset form for new package
+function resetForm() {
+  document.getElementById('modalTitle').textContent = 'Tambah Paket Baru';
+  document.getElementById('packageId').value = '';
+  document.forms[0].reset();
+  document.getElementById('kelas').innerHTML = '<option value="">-- Pilih Kelas --</option>';
 }
 </script>
 
-<?php include '../includes/admin_footer.php'; ?>
-<? ob_end_flush();
+<?php include '../includes/admin_footer.php'; 
+ob_end_flush();
+?>

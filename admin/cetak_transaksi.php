@@ -2,17 +2,23 @@
 ob_start(); // Cegah output sebelum PDF
 
 require '../vendor/autoload.php';
+require '../vendor/autoload.php'; // Require Composer's autoload if using Composer
 include '../config/database.php';
 
 use Dompdf\Dompdf;
 use Dompdf\Options;
 
 $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+// Get transaction ID from URL
+$id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+
+ 
 if ($id <= 0) {
     die('Invalid transaction ID');
 }
 
 // Query transaksi
+// Query to get transaction details
 $sql = "SELECT p.id AS pembayaran_id, p.*, 
                u.nama AS nama_siswa, 
                u.email AS email_siswa, 
@@ -33,31 +39,35 @@ $sql = "SELECT p.id AS pembayaran_id, p.*,
         LEFT JOIN paket pk ON p.paket_id = pk.id
         LEFT JOIN langganan l ON p.user_id = l.user_id AND p.paket_id = l.paket_id
         WHERE p.id = $id";
-
 $result = mysqli_query($conn, $sql);
+
+
 if (!$result || $result->num_rows == 0) {
     die('Transaction not found');
 }
+
 $transaksi = $result->fetch_assoc();
 
-// Setup Dompdf
+// Create PDF
 $options = new Options();
 $options->set('isRemoteEnabled', true);
 $options->set('defaultFont', 'Helvetica');
-$dompdf = new Dompdf($options);
 
-// HTML invoice
+$dompdf = new Dompdf($options);
+?>
+// HTML content for PDF
 $html = '
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Invoice #' . htmlspecialchars($transaksi['kode_bayar']) . '</title>
+    <title>Invoice #' . $transaksi['kode_bayar'] . '</title>
     <style>
-        body { font-family: Helvetica, Arial, sans-serif; font-size: 14px; }
+        body { font-family: Helvetica, Arial, sans-serif; }
         .header { text-align: center; margin-bottom: 20px; }
         .invoice-title { font-size: 24px; font-weight: bold; }
         .invoice-info { margin-bottom: 30px; }
+        .details { margin-bottom: 20px; }
         .table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
         .table th, .table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
         .table th { background-color: #f2f2f2; }
@@ -90,25 +100,27 @@ $html = '
         </table>
     </div>
 
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Paket</th>
-                <th>Durasi</th>
-                <th>Harga</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>
-                    <strong>' . htmlspecialchars($transaksi['nama_paket']) . '</strong><br>
-                    <small>' . htmlspecialchars($transaksi['deskripsi_paket']) . '</small>
-                </td>
-                <td>' . htmlspecialchars($transaksi['durasi']) . ' ' . htmlspecialchars($transaksi['satuan_durasi']) . '</td>
-                <td>Rp ' . number_format($transaksi['harga'], 0, ',', '.') . '</td>
-            </tr>
-        </tbody>
-    </table>
+    <div class="details">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Nama Paket</th>
+                    <th>Durasi</th>
+                    <th>Harga</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        <strong>' . htmlspecialchars($transaksi['nama_paket']) . '</strong><br>
+                        <small>' . htmlspecialchars($transaksi['deskripsi_paket']) . '</small>
+                    </td>
+                    <td>' . $transaksi['durasi'] . ' ' . $transaksi['satuan_durasi'] . '</td>
+                    <td>Rp ' . number_format($transaksi['harga'], 0, ',', '.') . '</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 
     <div class="total">
         Total: Rp ' . number_format($transaksi['harga'], 0, ',', '.') . '
@@ -119,14 +131,20 @@ $html = '
         Invoice ini sah dan diproses oleh sistem.
     </div>
 </body>
-</html>';
+</html>
+<?php
 
 // Render PDF
 $dompdf->loadHtml($html);
 $dompdf->setPaper('A4', 'portrait');
 $dompdf->render();
 
+
 ob_end_clean(); // Buang output yang nyasar
 header('Content-Type: application/pdf');
 $dompdf->stream('invoice_' . $transaksi['kode_bayar'] . '.pdf', ['Attachment' => false]);
 exit;
+
+// Output the generated PDF
+$dompdf->stream('invoice_' . $transaksi['kode_bayar'] . '.pdf', ['Attachment' => true]);
+?>

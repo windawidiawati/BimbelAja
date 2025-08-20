@@ -1,5 +1,6 @@
 <?php
 include '../includes/auth.php';
+$title = "Dashboard Siswa";
 include '../includes/siswa_header_langganan.php';
 include '../config/database.php';
 
@@ -39,80 +40,91 @@ $result = mysqli_query($conn, $query);
 $row = mysqli_fetch_assoc($result);
 $paket = $row['paket'] ?? 'none';
 ?>
-
-<div class="container mt-5">
-  <div class="text-center mb-4">
-    <h2 class="fw-bold">Dashboard Siswa</h2>
-    <p>Halo, <strong><?= htmlspecialchars($username); ?></strong>. Selamat belajar dan semangat terus!</p>
-    <p class="badge bg-info text-dark">Paket Langganan: <strong><?= ucfirst($paket); ?></strong></p>
-  </div>
-
-  <div class="row g-4 justify-content-start">
-    <?php
-    $fitur = [
-  [
-    "judul" => "Materi",
-    "deskripsi" => "Lihat materi lengkap dari tutor profesional.",
-    "icon" => "bi-journal-text",
-    "warna" => "primary",
-    "file" => "materi.php",
-    "akses" => "semua"
-  ],
-  [
-    "judul" => "Latihan Soal",
-    "deskripsi" => "Uji kemampuanmu dengan latihan soal interaktif.",
-    "icon" => "bi-pencil-square",
-    "warna" => "success",
-    "file" => "soal.php",
-    "akses" => "semua"
-  ],
-  [
-    "judul" => "Jadwal Kelas",
-    "deskripsi" => "Lihat jadwal kelas online yang telah kamu ikuti.",
-    "icon" => "bi-calendar-event-fill",
-    "warna" => "secondary",
-    "file" => "jadwal_kelas.php",
-    "akses" => "semua"
-  ],
-  [
-    "judul" => "Rekap Absensi",
-    "deskripsi" => "Pantau kehadiranmu selama mengikuti kelas.",
-    "icon" => "bi-clipboard-check-fill",
-    "warna" => "dark",
-    "file" => "rekap_absensi.php",
-    "akses" => "semua"
-  ],
-  [
-    "judul" => "Progress Belajar",
-    "deskripsi" => "Lihat perkembangan belajarmu secara berkala.",
-    "icon" => "bi-bar-chart-line-fill",
-    "warna" => "info",
-    "file" => "progres.php",
-    "akses" => "semua"
-  ]
-];
-
-    foreach ($fitur as $f) :
-      $bisa_akses = true; // Semua yang sudah langganan aktif bisa akses semua fitur
-      //$bisa_akses = ($f['akses'] === 'semua') || ($paket === 'premium');
-      $link = $bisa_akses ? $f['file'] : '#';
-      $style = $bisa_akses ? 'text-dark' : 'text-muted';
-      $cardStyle = $bisa_akses ? '' : 'opacity-50';
-      $alert = !$bisa_akses ? "onclick=\"alert('Fitur ini hanya tersedia untuk paket Premium.')\"" : '';
-    ?>
-    <div class="col-12 col-sm-6 col-lg-4">
-      <a href="<?= $link ?>" class="text-decoration-none <?= $style ?>" <?= $alert ?>>
-        <div class="card shadow-sm h-100 text-center <?= $cardStyle ?>">
-          <div class="card-body">
-            <i class="bi <?= $f['icon'] ?> fs-1 text-<?= $f['warna'] ?>"></i>
-            <h5 class="card-title mt-2"><?= $f['judul'] ?></h5>
-            <p class="card-text"><?= $f['deskripsi'] ?></p>
-          </div>
-        </div>
-      </a>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard BimbelAja</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  </head>
+  <body>
+    <div class="container mt-5">
+    <div class="text-center mb-4">
+      <h2 class="fw-bold">Dashboard Siswa</h2>
+      <p>Halo, <strong><?= htmlspecialchars($username); ?></strong>. Selamat belajar dan semangat terus!</p>
+      <p class="badge bg-info text-dark">Paket Langganan: <strong><?= ucfirst($paket); ?></strong></p>
     </div>
-    <?php endforeach; ?>
-  </div>
-</div>
 
-<?php include '../includes/footer.php'; ?>
+    <div class="row g-4 justify-content-start">
+      <?php
+      $fitur = [
+    [
+      "judul" => "Materi",
+      "deskripsi" => "Lihat materi lengkap dari tutor profesional.",
+      "icon" => "bi-journal-text",
+      "warna" => "primary",
+      "file" => "materi.php",
+      "akses" => "semua"
+    ],
+    [
+      "judul" => "Latihan Soal",
+      "deskripsi" => "Uji kemampuanmu dengan latihan soal interaktif.",
+      "icon" => "bi-pencil-square",
+      "warna" => "success",
+      "file" => "soal.php",
+      "akses" => "semua"
+    ],
+    [
+      "judul" => "Jadwal Kelas",
+      "deskripsi" => "Lihat jadwal kelas online yang telah kamu ikuti.",
+      "icon" => "bi-calendar-event-fill",
+      "warna" => "secondary",
+      "file" => "jadwal_kelas.php",
+      "akses" => "semua"
+    ],
+    [
+      "judul" => "Rekap Absensi",
+      "deskripsi" => "Pantau kehadiranmu selama mengikuti kelas.",
+      "icon" => "bi-clipboard-check-fill",
+      "warna" => "dark",
+      "file" => "rekap_absensi.php",
+      "akses" => "semua"
+    ],
+    [
+      "judul" => "Progress Belajar",
+      "deskripsi" => "Lihat perkembangan belajarmu secara berkala.",
+      "icon" => "bi-bar-chart-line-fill",
+      "warna" => "info",
+      "file" => "progres.php",
+      "akses" => "semua"
+    ]
+  ];
+
+      foreach ($fitur as $f) :
+        $bisa_akses = true; // Semua yang sudah langganan aktif bisa akses semua fitur
+        //$bisa_akses = ($f['akses'] === 'semua') || ($paket === 'premium');
+        $link = $bisa_akses ? $f['file'] : '#';
+        $style = $bisa_akses ? 'text-dark' : 'text-muted';
+        $cardStyle = $bisa_akses ? '' : 'opacity-50';
+        $alert = !$bisa_akses ? "onclick=\"alert('Fitur ini hanya tersedia untuk paket Premium.')\"" : '';
+      ?>
+      <div class="col-12 col-sm-6 col-lg-4">
+        <a href="<?= $link ?>" class="text-decoration-none <?= $style ?>" <?= $alert ?>>
+          <div class="card shadow-sm h-100 text-center <?= $cardStyle ?>">
+            <div class="card-body">
+              <i class="bi <?= $f['icon'] ?> fs-1 text-<?= $f['warna'] ?>"></i>
+              <h5 class="card-title mt-2"><?= $f['judul'] ?></h5>
+              <p class="card-text"><?= $f['deskripsi'] ?></p>
+            </div>
+          </div>
+        </a>
+      </div>
+      <?php endforeach; ?>
+    </div>
+  </div>
+
+  <?php include '../includes/footer.php'; ?>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

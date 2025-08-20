@@ -2,6 +2,7 @@
 date_default_timezone_set('Asia/Jakarta');
 session_start();
 include '../config/database.php';
+$title = "Jadwal Kelas";
 include '../includes/siswa_header_langganan.php';
 
 // Cek login dan role siswa

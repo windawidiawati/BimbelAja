@@ -120,6 +120,16 @@ $role = $_SESSION['user']['role'] ?? null;
             <i class="bi bi-bar-chart me-1"></i> Statistik
           </a>
         </li>
+        <li class="nav-item">
+          <a class="nav-link <?= ($current_page === 'laporan_transaksi.php') ? 'active' : '' ?>" href="../admin/laporan_transaksi.php">
+            <i class="bi bi-cash-stack me-2"></i> Laporan Transaksi
+          </a>
+        </li>
+        <li class="nav-item"></li>
+          <a class="nav-link <?= ($current_page === 'laporan_absensi.php') ? 'active' : '' ?>" href="../admin/laporan_absensi.php">
+            <i class="bi bi-calendar-check me-2"></i> Laporan Absensi
+          </a>
+        </li>
       </ul>
 
       <!-- Menu profil -->
@@ -157,19 +167,20 @@ $role = $_SESSION['user']['role'] ?? null;
     <i class="bi bi-credit-card me-2"></i> Verifikasi Pembayaran
   <a class="<?= ($current_page === 'kelola_soal.php') ? 'active' : '' ?>" href="../admin/kelola_soal.php">
     <i class="bi bi-journal-text"></i> Kelola Soal
-  <a class="<?= ($current_page === 'kelola_notifikasi.php') ? 'active' : '' ?>" href="../admin/kelola_notifikasi.php">
-     <i class="bi bi-journal-text"></i> Kelola notifikasi
   <a class="<?= ($current_page === 'kelola_latihan.php') ? 'active' : '' ?>" href="../admin/kelola_latihan.php">
     <i class="bi bi-bell "></i> Kelola Latihan
   <a class="<?= ($current_page === 'kelola_jadwal_offline.php') ? 'active' : '' ?>" href="../admin/kelola_jadwal_offline.php">
     <i class="bi bi-calendar-event"></i> Kelola Jadwal Offline
     <a class="<?= ($current_page === 'kelola_absensi.php') ? 'active' : '' ?>" href="../admin/kelola_absensi.php">
-    <i class="bi bi-calendar-event"></i> Kelola Absensi
+    <i class="bi bi-check2-square"></i> Kelola Absensi
   </a>
   <a class="<?= ($current_page === 'statistik.php') ? 'active' : '' ?>" href="../admin/statistik.php">
     <i class="bi bi-bar-chart me-2"></i> Statistik
-  </a></div>
-  <a class="<?= ($current_page === 'laporan_transaksi.php') ? 'active' : '' ?>" href="../admin/laporan_transaksi.php">
-    <i class="bi bi-bar-chart me-2"></i> Laporan Transaksi 
   </a>
+  <a class="<?= ($current_page === 'laporan_transaksi.php') ? 'active' : '' ?>" href="../admin/laporan_transaksi.php">
+    <i class="bi bi-cash-stack me-2"></i> Laporan Transaksi
+</a>
+<a class="<?= ($current_page === 'laporan_absensi.php') ? 'active' : '' ?>" href="../admin/laporan_absensi.php">
+    <i class="bi bi-calendar-check me-2"></i> Laporan Absensi
+</a>
 </div>

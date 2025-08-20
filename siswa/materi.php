@@ -2,8 +2,8 @@
 include '../includes/auth.php';
 if ($_SESSION['user']['role'] !== 'siswa') {
   header('Location: ../index.php'); exit;
-
 }
+$title = "Materi Siswa";
 include '../includes/siswa_header_langganan.php';
 include '../config/database.php';
 
@@ -35,6 +35,33 @@ if (count($kelasIdList) === 0) {
 
 $idListStr = implode(',', array_map('intval', $kelasIdList));
 
+// Ambil semua kategori untuk dropdown
+$kategoriList = $conn->query("SELECT * FROM kategori_materi ORDER BY nama_kategori ASC");
+
+// Filter kategori kalau ada
+$kategoriFilter = "";
+if (isset($_GET['kategori_id']) && is_numeric($_GET['kategori_id'])) {
+    $kategori_id = intval($_GET['kategori_id']);
+    $kategoriFilter = " AND m.kategori_id = $kategori_id ";
+}
+
+// --- PAGINATION ---
+$limit = 6; // jumlah data per halaman
+$page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int) $_GET['page'] : 1;
+$offset = ($page - 1) * $limit;
+
+// Hitung total data
+$sqlCount = "
+  SELECT COUNT(*) as total 
+  FROM materi m
+  WHERE m.kelas_id IN ($idListStr)
+  AND m.status = 'diterima'
+  $kategoriFilter
+";
+$resCount = $conn->query($sqlCount);
+$totalData = $resCount->fetch_assoc()['total'];
+$totalPages = ceil($totalData / $limit);
+
 $sqlMateri = "
   SELECT m.*, k.nama_kelas, kat.nama_kategori 
   FROM materi m
@@ -42,6 +69,7 @@ $sqlMateri = "
   LEFT JOIN kategori_materi kat ON m.kategori_id = kat.id
   WHERE m.kelas_id IN ($idListStr)
   AND m.status = 'diterima'
+  $kategoriFilter
   ORDER BY m.id DESC
 ";
 
@@ -163,6 +191,22 @@ if (isset($_GET['view']) && isset($_GET['type'])) {
   <h3>Materi Paket <span class="badge bg-info"><?= htmlspecialchars(ucfirst($paket_siswa)) ?></span> - Jenjang <?= htmlspecialchars($jenjang) ?></h3>
   <p>Materi berikut tersedia sesuai dengan paket langganan kamu:</p>
 
+  <!-- Dropdown Filter -->
+  <form method="GET" class="mb-4">
+    <div class="row">
+      <div class="col-md-4">
+        <select name="kategori_id" class="form-control" onchange="this.form.submit()">
+          <option value="">-- Semua Kategori --</option>
+          <?php while($kat = $kategoriList->fetch_assoc()): ?>
+            <option value="<?= $kat['id'] ?>" <?= (isset($kategori_id) && $kategori_id == $kat['id']) ? 'selected' : '' ?>>
+              <?= htmlspecialchars($kat['nama_kategori']) ?>
+            </option>
+          <?php endwhile; ?>
+        </select>
+      </div>
+    </div>
+  </form>
+
   <?php if ($resMateri->num_rows > 0): ?>
     <div class="row">
       <?php while ($row = $resMateri->fetch_assoc()): ?>
@@ -179,9 +223,9 @@ if (isset($_GET['view']) && isset($_GET['type'])) {
             <div class="card-footer d-flex justify-content-between">
              <?php if ($row['tipe_file'] === 'video'): ?>
                <a href="materi.php?view=<?= urlencode($row['file']) ?>&type=video" class="btn btn-primary btn-sm" target="_blank">Tonton</a>
-               <?php else: ?>
+             <?php else: ?>
                 <a href="materi.php?view=<?= urlencode($row['file']) ?>&type=pdf" class="btn btn-warning btn-sm" target="_blank">Lihat</a>
-                <?php endif; ?>
+             <?php endif; ?>
             </div>
           </div>
         </div>
@@ -191,22 +235,5 @@ if (isset($_GET['view']) && isset($_GET['type'])) {
     <div class="alert alert-info">Belum ada materi untuk paket <b><?= htmlspecialchars($paket_siswa) ?></b> dan jenjang <b><?= htmlspecialchars($jenjang) ?></b>.</div>
   <?php endif; ?>
 </div>
-
-<script>
-  function openViewer(type, file) {
-    const modalContent = document.getElementById('modalContent');
-    const filePath = '/BimbelAja/assets/uploads/' + file;
-
-    let content = '';
-    if (type === 'video') {
-      content = `<video width="100%" height="auto" controls><source src="${filePath}" type="video/mp4">Browser kamu tidak mendukung video.</video>`;
-    } else {
-      content = `<iframe src="${filePath}" width="100%" height="500px" frameborder="0"></iframe>`;
-    }
-    modalContent.innerHTML = content;
-    var myModal = new bootstrap.Modal(document.getElementById('materiModal'));
-    myModal.show();
-  }
-</script>
 
 <?php include '../includes/footer.php'; ?>
