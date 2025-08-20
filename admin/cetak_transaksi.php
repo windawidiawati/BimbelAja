@@ -12,6 +12,11 @@ if ($id <= 0) {
     die('Invalid transaction ID');
 }
 
+// Query to get company settings from pengaturan table
+$settingsQuery = "SELECT * FROM pengaturan WHERE id = 1";
+$settingsResult = mysqli_query($conn, $settingsQuery);
+$settings = $settingsResult->fetch_assoc();
+
 // Query to get transaction details
 $sql = "SELECT p.id AS pembayaran_id, p.*, 
                u.nama AS nama_siswa, 
@@ -63,17 +68,26 @@ $html = '
             color: #333;
         }
         .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 25px;
-    border-bottom: 3px solid #0d6efd;
-    padding-bottom: 15px;
-}
-.brand {
-    float: left; 
-    text-align: left;
-}
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 25px;
+            border-bottom: 3px solid #0d6efd;
+            padding-bottom: 15px;
+        }
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .brand-logo {
+            max-height: 60px;
+            max-width: 120px;
+        }
+        .brand-info {
+            display: flex;
+            flex-direction: column;
+        }
         .brand-name {
             font-size: 28px;
             font-weight: bold;
@@ -88,16 +102,15 @@ $html = '
             padding: 0;
         }
         .company {
-    text-align: right;
-    font-size: 12px;
-    color: #666;
-    margin-top: 5px;
-}
+            text-align: right;
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
         .invoice-title { 
             font-size: 24px; 
             font-weight: bold; 
             text-align: center; 
-            clear: both; 
             margin: 30px 0 10px 0;
             color: #0d6efd;
         }
@@ -183,14 +196,17 @@ $html = '
     <!-- HEADER -->
     <div class="header">
         <div class="brand">
-            <div class="brand-name">BimbelAja</div>
-            <div class="brand-tagline">Bimbingan Belajar Online Terpercaya</div>
+            ' . ($settings['logo_path'] ? '<img src="' . htmlspecialchars($settings['logo_path']) . '" class="brand-logo" alt="Logo BimbelAja">' : '') . '
+            <div class="brand-info">
+                <div class="brand-name">' . htmlspecialchars($settings['nama']) . '</div>
+                <div class="brand-tagline">Bimbingan Belajar Online Terpercaya</div>
+            </div>
         </div>
         <div class="company">
-            <strong>BimbelAja Education Center</strong><br>
-            Jl. Pendidikan No. 123, Jakarta<br>
-            Telp: (021) 1234-5678<br>
-            Email: admin@bimbelaja.com
+            <strong>' . htmlspecialchars($settings['nama']) . '</strong><br>
+            ' . htmlspecialchars($settings['alamat']) . '<br>
+            Telp: ' . htmlspecialchars($settings['telepon']) . '<br>
+            Email: ' . htmlspecialchars($settings['email']) . '
         </div>
     </div>
 
@@ -262,14 +278,14 @@ $html = '
     <div class="ttd">
         Jakarta, ' . date('d F Y') . '<br>
         Hormat Kami,<br><br><br><br>
-        <strong>BimbelAja</strong><br>
+        <strong>' . htmlspecialchars($settings['nama']) . '</strong><br>
         <em>Admin System</em>
     </div>
 
     <div class="footer">
-        Terima kasih telah mempercayai BimbelAja untuk pendidikan yang lebih baik.<br>
-        Invoice ini sah dan diproses secara elektronik oleh sistem BimbelAja.<br>
-        © ' . date('Y') . ' BimbelAja - All Rights Reserved
+        Terima kasih telah mempercayai ' . htmlspecialchars($settings['nama']) . ' untuk pendidikan yang lebih baik.<br>
+        Invoice ini sah dan diproses secara elektronik oleh sistem ' . htmlspecialchars($settings['nama']) . '.<br>
+        © ' . date('Y') . ' ' . htmlspecialchars($settings['nama']) . ' - All Rights Reserved
     </div>
 </body>
 </html>';
