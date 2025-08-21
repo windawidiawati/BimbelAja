@@ -40,7 +40,7 @@ if (!empty($status)) {
 }
 if (!empty($search)) {
     $safeSearch = mysqli_real_escape_string($conn, $search);
-    $whereClauses[] = "(u.nama LIKE '%$safeSearch%' OR p.kode_bayar LIKE '%$safeSearch%')";
+   $whereClauses[] = "(u.nama LIKE '%$safeSearch%' OR p.kode_unik LIKE '%$safeSearch%')";
 }
 
 $where = "";
@@ -170,13 +170,13 @@ if (!$result) {
                 </select>
             </div>
             <div class="col-md-2">
-                <select name="status" class="form-control">
-                    <option value="">Semua Status</option>
-                    <option value="lunas" <?= $status == 'lunas' ? 'selected' : '' ?>>Lunas</option>
-                    <option value="pending" <?= $status == 'pending' ? 'selected' : '' ?>>Pending</option>
-                    <option value="ditolak" <?= $status == 'ditolak' ? 'selected' : '' ?>>Ditolak</option>
-                    <option value="menunggu_kasir" <?= $status == 'menunggu_kasir' ? 'selected' : '' ?>>Menunggu Kasir</option>
-                </select>
+                <select name="status" id="edit_status" class="form-control" required>
+    <option value="lunas">Lunas</option>
+    <option value="pending">Pending</option>
+    <option value="ditolak">Ditolak</option>
+    <option value="menunggu_kasir">Menunggu Kasir</option>
+</select>
+
             </div>
             <div class="col-md-4">
                 <input type="text" name="search" class="form-control" placeholder="Cari nama / kode transaksi" value="<?= htmlspecialchars($search) ?>">
@@ -213,24 +213,25 @@ if (!$result) {
                                 <td><?= htmlspecialchars($row['nama_paket'] ?? '-') ?> <small>(<?= ucfirst($row['tipe_paket'] ?? '-') ?>)</small></td>
                                 <td>Rp <?= number_format($row['harga'], 0, ',', '.') ?></td>
                                 <td><?= !empty($row['tanggal']) ? date("d M Y", strtotime($row['tanggal'])) : '-' ?></td>
-                                <td><?= htmlspecialchars($row['kode_bayar'] ?? '-') ?></td>
+                               <td><?= htmlspecialchars($row['kode_unik'] ?? '-') ?></td>
                                 <td><?= htmlspecialchars($row['metode'] ?? '-') ?></td>
                                 <td>
-                                    <span class="badge bg-<?= 
-                                        ($row['status'] ?? '')=='lunas' ? 'success' : 
-                                        (($row['status'] ?? '')=='ditolak' ? 'danger' : 
-                                        (($row['status'] ?? '')=='pending' ? 'warning text-dark' : 
-                                        (($row['status'] ?? '')=='sukses' ? 'success' : 'secondary'))) 
-                                    ?>">
-                                        <?= ucfirst($row['status'] ?? '-') ?>
-                                    </span>
+                                   <span class="badge bg-<?= 
+    ($row['status'] ?? '')=='lunas' ? 'success' : 
+    (($row['status'] ?? '')=='pending' ? 'warning text-dark' : 
+    (($row['status'] ?? '')=='ditolak' ? 'danger' : 
+    (($row['status'] ?? '')=='menunggu_kasir' ? 'info text-dark' : 'secondary'))) 
+?>">
+    <?= ucfirst(str_replace('_',' ',$row['status'] ?? '-')) ?>
+</span>
+
                                 </td>
                                 <td>
                                     <div class="btn-group">
                                         <button type="button" 
                                             class="btn btn-warning btn-sm edit-btn"
                                             data-id="<?= $row['pembayaran_id'] ?>"
-                                            data-kode="<?= htmlspecialchars($row['kode_bayar'] ?? '') ?>"
+                                           data-kode="<?= htmlspecialchars($row['kode_unik'] ?? '') ?>"
                                             data-tanggal="<?= !empty($row['tanggal']) ? date("Y-m-d", strtotime($row['tanggal'])) : '' ?>"
                                             data-metode="<?= htmlspecialchars($row['metode'] ?? '') ?>"
                                             data-status="<?= htmlspecialchars($row['status'] ?? '') ?>"
@@ -279,7 +280,7 @@ if (!$result) {
                 <div class="modal-body">
                     <div class="mb-2">
                         <label>Kode Transaksi</label>
-                        <input type="text" name="kode_bayar" id="edit_kode_bayar" class="form-control" required>
+                        <input type="text" name="kode_unik" id="edit_kode_unik" class="form-control" required>
                     </div>
                     <div class="mb-2">
                         <label>Tanggal</label>
@@ -294,14 +295,15 @@ if (!$result) {
                         </select>
                     </div>
                     <div class="mb-2">
-                        <label>Status</label>
-                        <select name="status" id="edit_status" class="form-control" required>
-                            <option value="pending">Pending</option>
-                            <option value="sukses">Lunas</option>
-                            <option value="ditolak">Ditolak</option>
-                            <option value="gagal">Menunggu transfer</option>
-                        </select>
-                    </div>
+    <label>Status</label>
+    <select name="status" id="edit_status" class="form-control" required>
+        <option value="lunas">Lunas</option>
+        <option value="pending">Pending</option>
+        <option value="ditolak">Ditolak</option>
+        <option value="menunggu_kasir">Menunggu Kasir</option>
+    </select>
+</div>
+
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
@@ -317,7 +319,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.edit-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             document.getElementById('edit_pembayaran_id').value = this.dataset.id;
-            document.getElementById('edit_kode_bayar').value = this.dataset.kode;
+            document.getElementById('edit_kode_unik').value = this.dataset.kode;
             document.getElementById('edit_tanggal').value = this.dataset.tanggal;
             document.getElementById('edit_metode').value = this.dataset.metode;
             document.getElementById('edit_status').value = this.dataset.status;

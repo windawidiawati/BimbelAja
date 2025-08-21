@@ -196,7 +196,7 @@ $html = '
     <!-- HEADER -->
     <div class="header">
         <div class="brand">
-            ' . ($settings['logo_path'] ? '<img src="' . htmlspecialchars($settings['logo_path']) . '" class="brand-logo" alt="Logo BimbelAja">' : '') . '
+            ' . ($settings['logo_path'] ? '<img src="' . htmlspecialchars($settings['logo_path']) . '" class="brand-logo" alt="">' : '') . '
             <div class="brand-info">
                 <div class="brand-name">' . htmlspecialchars($settings['nama']) . '</div>
                 <div class="brand-tagline">Bimbingan Belajar Online Terpercaya</div>
