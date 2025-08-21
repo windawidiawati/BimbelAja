@@ -9,7 +9,7 @@ if ($_SESSION['user']['role'] !== 'siswa') {
 }
 
 $user_id = $_SESSION['user']['id'];
-$username = $_SESSION['user']['username'];
+$username = $_SESSION['user']['nama'];
 // Ambil data langganan aktif
 $user_id = $_SESSION['user']['id'];
 $today = date('Y-m-d');

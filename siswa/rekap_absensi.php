@@ -12,6 +12,25 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'siswa') {
 
 $siswa_id = $_SESSION['user']['id'];
 
+// --- PAGINATION ---
+$limit = 10; // jumlah baris per halaman
+$page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int) $_GET['page'] : 1;
+$offset = ($page - 1) * $limit;
+
+// Hitung total data jadwal untuk siswa
+$sqlCount = "
+    SELECT COUNT(*) as total 
+    FROM jadwal_offline j
+    LEFT JOIN absensi_offline a 
+        ON j.id = a.jadwal_id 
+        AND a.siswa_id = ?
+";
+$stmtCount = $conn->prepare($sqlCount);
+$stmtCount->bind_param("i", $siswa_id);
+$stmtCount->execute();
+$totalData = $stmtCount->get_result()->fetch_assoc()['total'];
+$totalPages = ceil($totalData / $limit);
+
 // Ambil data jadwal + absensi
 $sql = "
     SELECT 
@@ -28,10 +47,12 @@ $sql = "
         ON j.id = a.jadwal_id 
         AND a.siswa_id = ?
     ORDER BY j.tanggal DESC, j.jam_mulai DESC
+    LIMIT ? OFFSET ?
 ";
 
 $stmt = $conn->prepare($sql);
-$stmt->bind_param("i", $siswa_id);
+$stmt->bind_param("iii", $siswa_id, $limit, $offset);
+
 $stmt->execute();
 $result = $stmt->get_result();
 
@@ -157,8 +178,33 @@ while ($row = $result->fetch_assoc()) {
         </table>
     </div>
 </div>
+<!-- Pagination -->
+<?php if ($totalPages > 1): ?>
+  <nav>
+    <ul class="pagination justify-content-center mt-3">
+      <?php if ($page > 1): ?>
+        <li class="page-item">
+          <a class="page-link" href="?page=<?= $page - 1 ?>">Prev</a>
+        </li>
+      <?php endif; ?>
+
+      <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+        <li class="page-item <?= $i == $page ? 'active' : '' ?>">
+          <a class="page-link" href="?page=<?= $i ?>"><?= $i ?></a>
+        </li>
+      <?php endfor; ?>
+
+      <?php if ($page < $totalPages): ?>
+        <li class="page-item">
+          <a class="page-link" href="?page=<?= $page + 1 ?>">Next</a>
+        </li>
+      <?php endif; ?>
+    </ul>
+  </nav>
+<?php endif; ?>
 
 <?php
+
 include '../includes/footer.php';
 ?>
 

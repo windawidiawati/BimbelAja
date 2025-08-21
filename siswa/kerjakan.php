@@ -9,7 +9,7 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'siswa') {
 
 $siswa_id = $_SESSION['user']['id'];
 $latihan_id = $_GET['id'] ?? null;
-
+$current_q = isset($_GET['q']) ? intval($_GET['q']) : 1; // nomor soal aktif
 if (!$latihan_id) {
     header("Location: soal.php");
     exit;
@@ -32,6 +32,16 @@ if ($now > $latihan['tenggat_waktu']) {
     exit;
 }
 
+// Ambil jumlah soal
+$sql = "SELECT COUNT(*) as total FROM soal WHERE latihan_id = ?";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("i", $latihan_id);
+$stmt->execute();
+$total_soal = $stmt->get_result()->fetch_assoc()['total'];
+
+if ($current_q < 1) $current_q = 1;
+if ($current_q > $total_soal) $current_q = $total_soal;
+
 $sql = "SELECT * FROM jawaban_siswa WHERE latihan_id = ? AND user_id = ?";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("ii", $latihan_id, $siswa_id);
@@ -42,12 +52,14 @@ if ($cek->num_rows > 0) {
     header("Location: soal.php?msg=sudah_dikerjakan");
     exit;
 }
-
+// Ambil soal sesuai halaman
+$offset = $current_q - 1;
 $sql = "SELECT id, pertanyaan, opsi_a, opsi_b, opsi_c, opsi_d 
         FROM soal 
-        WHERE latihan_id = ?";
+        WHERE latihan_id = ?
+        LIMIT 1 OFFSET ?";
 $stmt = $conn->prepare($sql);
-$stmt->bind_param("i", $latihan_id);
+$stmt->bind_param("ii", $latihan_id, $offset);
 $stmt->execute();
 $soal = $stmt->get_result();
 
@@ -164,6 +176,18 @@ if ($res_check->num_rows === 0) {
     cursor: pointer;
     flex: 1; /* teks memenuhi sisa ruang */
 }
+.nav-panel {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* 3 kolom */
+    gap: 8px;
+    margin-top: 10px;
+}
+.nav-panel a {
+    text-align: center;
+    padding: 8px 0;
+}
+
+
 </style>
 </head>
 <body>
@@ -176,31 +200,56 @@ if ($res_check->num_rows === 0) {
         </div>
     </div>
 
-    <form id="formLatihan" action="submit_latihan.php" method="POST">
-        <input type="hidden" name="latihan_id" value="<?= $latihan_id ?>">
+<div class="row">
+    <!-- Kolom Soal -->
+    <div class="col-md-9">
+        <form id="formLatihan" action="submit_latihan.php" method="POST">
+            <input type="hidden" name="latihan_id" value="<?= $latihan_id ?>">
 
-        <?php $no = 1; while ($row = $soal->fetch_assoc()): ?>
-            <div class="soal-box">
-                <p><strong><?= $no++ ?>. <?= htmlspecialchars($row['pertanyaan']) ?></strong></p>
-                <?php foreach (['A', 'B', 'C', 'D'] as $opsi): ?>
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" 
-                               name="jawaban[<?= $row['id'] ?>]" 
-                               value="<?= $opsi ?>" 
-                               id="<?= $opsi . $row['id'] ?>">
-                        <label class="form-check-label" for="<?= $opsi . $row['id'] ?>">
-                            <?= $opsi ?>. <?= htmlspecialchars($row['opsi_' . strtolower($opsi)]) ?>
-                        </label>
-                    </div>
-                <?php endforeach; ?>
+            <?php while ($row = $soal->fetch_assoc()): ?>
+                <div class="soal-box">
+                    <p><strong><?= $current_q ?>. <?= htmlspecialchars($row['pertanyaan']) ?></strong></p>
+                    <?php foreach (['A', 'B', 'C', 'D'] as $opsi): ?>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" 
+                                name="jawaban[<?= $row['id'] ?>]" 
+                                value="<?= $opsi ?>" 
+                                id="<?= $opsi . $row['id'] ?>">
+                            <label class="form-check-label" for="<?= $opsi . $row['id'] ?>">
+                                <?= $opsi ?>. <?= htmlspecialchars($row['opsi_' . strtolower($opsi)]) ?>
+                            </label>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php endwhile; ?>
+
+            <!-- Navigasi Soal -->
+            <div class="mt-3">
+                <?php if ($current_q > 1): ?>
+                    <a href="?id=<?= $latihan_id ?>&q=<?= $current_q-1 ?>" class="btn btn-secondary">⬅ Prev</a>
+                <?php endif; ?>
+                <?php if ($current_q < $total_soal): ?>
+                    <a href="?id=<?= $latihan_id ?>&q=<?= $current_q+1 ?>" class="btn btn-primary">Next ➡</a>
+                <?php else: ?>
+                    <button type="submit" class="btn btn-success">🚀 Kirim Jawaban</button>
+                <?php endif; ?>
             </div>
-        <?php endwhile; ?>
+        </form>
+    </div>
 
-        <button type="submit" class="btn btn-primary mt-3">
-            🚀 Kirim Jawaban
-        </button>
-    </form>
+    <!-- Kolom Navigasi -->
+    <div class="col-md-3">
+        <div class="nav-panel">
+            <?php for ($i=1; $i <= $total_soal; $i++): ?>
+                <a href="?id=<?= $latihan_id ?>&q=<?= $i ?>" 
+                   class="btn btn-sm <?= $i == $current_q ? 'btn-primary' : 'btn-outline-primary' ?>">
+                    <?= $i ?>
+                </a>
+            <?php endfor; ?>
+        </div>
+    </div>
 </div>
+
 
 <script>
 let endTime = localStorage.getItem("latihan_<?= $latihan_id ?>_endtime");

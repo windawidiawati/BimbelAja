@@ -35,6 +35,22 @@ if ($kelas_id === 0 || $paket_id === 0) {
     die("Data kelas atau paket langganan tidak valid.");
 }
 
+// --- PAGINATION ---
+$limit = 5; // jumlah data per halaman
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+if ($page < 1) $page = 1;
+$offset = ($page - 1) * $limit;
+
+// Hitung total data
+$countQuery = "
+    SELECT COUNT(*) as total 
+    FROM jadwal_offline j
+    WHERE j.kelas_id = $kelas_id AND j.paket_id = $paket_id
+";
+$countResult = mysqli_query($conn, $countQuery);
+$totalData = mysqli_fetch_assoc($countResult)['total'];
+$totalPages = ceil($totalData / $limit);
+
 // Ambil jadwal berdasarkan kelas, paket, dan tanggal
 $today = date('Y-m-d');
 
@@ -51,6 +67,7 @@ $queryJadwal = "
       CASE WHEN j.tanggal < '$today' THEN 1 ELSE 0 END, 
       j.tanggal ASC, 
       j.jam_mulai ASC
+      LIMIT $limit OFFSET $offset
 ";
 
 
@@ -59,11 +76,21 @@ $result = mysqli_query($conn, $queryJadwal);
 if (!$result) {
     die("Terjadi kesalahan saat mengambil data jadwal: " . mysqli_error($conn));
 }
-// Siapkan data untuk kalender
+// Siapkan data untuk kalender (tanpa paging, semua data ditarik)
+$allEventsQuery = "
+    SELECT j.tanggal, j.jam_mulai, j.jam_selesai, 
+           k.nama_kelas, kat.nama_kategori, u.nama 
+    FROM jadwal_offline j
+    JOIN kelas k ON j.kelas_id = k.id
+    JOIN kategori_materi kat ON j.kategori_id = kat.id
+    JOIN users u ON j.tutor_id = u.id AND u.role = 'tutor'
+    WHERE j.kelas_id = $kelas_id
+      AND j.paket_id = $paket_id
+";
+$allEventsResult = mysqli_query($conn, $allEventsQuery);
 $events = [];
-if (mysqli_num_rows($result) > 0) {
-    mysqli_data_seek($result, 0);
-    while ($row = mysqli_fetch_assoc($result)) {
+if (mysqli_num_rows($allEventsResult) > 0) {
+    while ($row = mysqli_fetch_assoc($allEventsResult)) {
         $events[] = [
             'title' => $row['nama_kelas'] . ' - ' . $row['nama_kategori'],
             'start' => $row['tanggal'] . 'T' . $row['jam_mulai'],
@@ -166,6 +193,23 @@ mysqli_data_seek($result, 0);
         <?php endif; ?>
     </div>
 
+    <!-- PAGINATION -->
+        <nav>
+            <ul class="pagination justify-content-center">
+                <li class="page-item <?= ($page <= 1) ? 'disabled' : '' ?>">
+                    <a class="page-link" href="?page=<?= $page-1 ?>">«</a>
+                </li>
+                <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                    <li class="page-item <?= ($i == $page) ? 'active' : '' ?>">
+                        <a class="page-link" href="?page=<?= $i ?>"><?= $i ?></a>
+                    </li>
+                <?php endfor; ?>
+                <li class="page-item <?= ($page >= $totalPages) ? 'disabled' : '' ?>">
+                    <a class="page-link" href="?page=<?= $page+1 ?>">»</a>
+                </li>
+            </ul>
+        </nav>
+</div>
     <!-- KALENDER -->
     <div id="calendarView" style="display:none;">
         <div id="calendar"></div>

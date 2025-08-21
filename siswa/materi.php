@@ -71,6 +71,7 @@ $sqlMateri = "
   AND m.status = 'diterima'
   $kategoriFilter
   ORDER BY m.id DESC
+  LIMIT $limit OFFSET $offset
 ";
 
 $resMateri = $conn->query($sqlMateri);
@@ -88,7 +89,6 @@ if (isset($_GET['view']) && isset($_GET['type'])) {
   }
 }
 ?>
-
 <style>
   body {
     background: #f8f9fa;
@@ -235,5 +235,31 @@ if (isset($_GET['view']) && isset($_GET['type'])) {
     <div class="alert alert-info">Belum ada materi untuk paket <b><?= htmlspecialchars($paket_siswa) ?></b> dan jenjang <b><?= htmlspecialchars($jenjang) ?></b>.</div>
   <?php endif; ?>
 </div>
+<!-- Pagination -->
+<?php if ($totalPages > 1): ?>
+  <nav>
+    <ul class="pagination justify-content-center mt-4">
+      <?php if ($page > 1): ?>
+        <li class="page-item">
+          <a class="page-link" href="?page=<?= $page - 1 ?><?= isset($kategori_id) ? '&kategori_id=' . $kategori_id : '' ?>">Prev</a>
+        </li>
+      <?php endif; ?>
+
+      <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+        <li class="page-item <?= $i == $page ? 'active' : '' ?>">
+          <a class="page-link" href="?page=<?= $i ?><?= isset($kategori_id) ? '&kategori_id=' . $kategori_id : '' ?>">
+            <?= $i ?>
+          </a>
+        </li>
+      <?php endfor; ?>
+
+      <?php if ($page < $totalPages): ?>
+        <li class="page-item">
+          <a class="page-link" href="?page=<?= $page + 1 ?><?= isset($kategori_id) ? '&kategori_id=' . $kategori_id : '' ?>">Next</a>
+        </li>
+      <?php endif; ?>
+    </ul>
+  </nav>
+<?php endif; ?>
 
 <?php include '../includes/footer.php'; ?>

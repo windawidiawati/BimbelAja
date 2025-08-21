@@ -32,11 +32,9 @@ $persen_absensi = $total_absensi > 0 ? round(($absensi['hadir'] / $total_absensi
 // =====================
 // Hitung Latihan
 // =====================
-// Hitung total latihan
 $sql_total_latihan = "SELECT COUNT(*) AS total FROM latihan";
 $total_latihan = $conn->query($sql_total_latihan)->fetch_assoc()['total'] ?? 0;
 
-// Hitung latihan yang sudah selesai oleh siswa ini
 $sql_latihan_selesai = "
     SELECT COUNT(*) AS selesai
     FROM latihan_siswa
@@ -47,9 +45,7 @@ $stmt_latihan->bind_param("i", $siswa_id);
 $stmt_latihan->execute();
 $latihan_selesai = $stmt_latihan->get_result()->fetch_assoc()['selesai'] ?? 0;
 
-// Persentase progres
 $persen_latihan = $total_latihan > 0 ? round(($latihan_selesai / $total_latihan) * 100) : 0;
-
 
 // =====================
 // Hitung Progress Akhir
@@ -58,33 +54,62 @@ $progress_akhir = ($persen_absensi + $persen_latihan) / 2;
 ?>
 
 <style>
-.progress { height: 25px; }
-.progress-bar { font-weight: bold; }
+    .progress { 
+        height: 30px; 
+        border-radius: 15px; 
+        overflow: hidden;
+    }
+    .progress-bar { 
+        font-weight: bold; 
+        transition: width 1.5s ease-in-out; 
+    }
+    .fade-in {
+        animation: fadeInUp 1s ease both;
+    }
+    @keyframes fadeInUp {
+        from {opacity: 0; transform: translateY(20px);}
+        to {opacity: 1; transform: translateY(0);}
+    }
 </style>
 
 <div class="container mt-5">
-    <h3>Progress Belajar</h3>
+    <div class="card shadow-lg p-4 fade-in">
+        <h3 class="mb-4 text-center text-primary">
+            <i class="bi bi-bar-chart-fill"></i> Progress Belajar
+        </h3>
 
-    <h5>Absensi</h5>
-    <p>Hadir: <strong><?= $absensi['hadir'] ?? 0 ?></strong> | Sakit: <strong><?= $absensi['sakit'] ?? 0 ?></strong> | Alpha: <strong><?= $absensi['alpha'] ?? 0 ?></strong></p>
-    <div class="progress mb-4">
-        <div class="progress-bar bg-info" role="progressbar" style="width: <?= $persen_absensi ?>%">
-            <?= $persen_absensi ?>%
+        <div class="mb-4 fade-in">
+            <h5><i class="bi bi-people-fill text-info"></i> Absensi</h5>
+            <p>Hadir: <strong><?= $absensi['hadir'] ?? 0 ?></strong> | 
+               Sakit: <strong><?= $absensi['sakit'] ?? 0 ?></strong> | 
+               Alpha: <strong><?= $absensi['alpha'] ?? 0 ?></strong>
+            </p>
+            <div class="progress mb-2">
+                <div class="progress-bar bg-info" role="progressbar" style="width: <?= $persen_absensi ?>%">
+                    <?= $persen_absensi ?>%
+                </div>
+            </div>
         </div>
-    </div>
 
-    <h5>Latihan</h5>
-    <p>Total Latihan: <strong><?= $total_latihan ?></strong> | Selesai: <strong><?= $latihan_selesai ?></strong></p>
-    <div class="progress mb-4">
-        <div class="progress-bar bg-success" role="progressbar" style="width: <?= $persen_latihan ?>%">
-            <?= $persen_latihan ?>%
+        <div class="mb-4 fade-in">
+            <h5><i class="bi bi-journal-check text-success"></i> Latihan</h5>
+            <p>Total Latihan: <strong><?= $total_latihan ?></strong> | 
+               Selesai: <strong><?= $latihan_selesai ?></strong>
+            </p>
+            <div class="progress mb-2">
+                <div class="progress-bar bg-success" role="progressbar" style="width: <?= $persen_latihan ?>%">
+                    <?= $persen_latihan ?>%
+                </div>
+            </div>
         </div>
-    </div>
 
-    <h4 class="mt-4">Progress Akhir</h4>
-    <div class="progress">
-        <div class="progress-bar bg-primary" role="progressbar" style="width: <?= $progress_akhir ?>%">
-            <?= $progress_akhir ?>%
+        <div class="fade-in">
+            <h4 class="mt-4"><i class="bi bi-trophy-fill text-warning"></i> Progress Akhir</h4>
+            <div class="progress">
+                <div class="progress-bar bg-primary" role="progressbar" style="width: <?= $progress_akhir ?>%">
+                    <?= $progress_akhir ?>%
+                </div>
+            </div>
         </div>
     </div>
 </div>
