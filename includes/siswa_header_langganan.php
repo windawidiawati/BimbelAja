@@ -92,10 +92,16 @@ if (!$user || $user['role'] !== 'siswa') {
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link <?= ($current_page === 'riwayat.php') ? 'active' : '' ?>" href="../langganan/riwayat.php">
-            <i class="bi bi-clock-history me-1"></i> Riwayat
+          <a class="nav-link <?= ($current_page === 'jadwal_kelas.php') ? 'active' : '' ?>" href="../siswa/jadwal_kelas.php">
+            <i class="bi bi-clock-history me-1"></i> Jadwal Kelas
           </a>
         </li>
+        <li class="nav-item">
+          <a class="nav-link <?= ($current_page === '../siswa/buku_panduan/Buku Panduan BimbelAja - Role Siswa.pdf') ? 'active' : '' ?>"href="../siswa/buku_panduan/Buku Panduan BimbelAja - Role Siswa.pdf" target="_blank">
+            <i class="bi bi-book me-1"></i> Buku Panduan
+          </a>
+        </li>
+       
         
         <!-- Profile -->
         <li class="nav-item">

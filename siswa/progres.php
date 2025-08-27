@@ -104,7 +104,7 @@ $progress_akhir = ($persen_absensi + $persen_latihan) / 2;
         </div>
 
         <div class="fade-in">
-            <h4 class="mt-4"><i class="bi bi-trophy-fill text-warning"></i> Progress Akhir</h4>
+            <h4 class="mt-4"><i class="bi bi-trophy-fill text-warning"></i> Progres Akhir</h4>
             <div class="progress">
                 <div class="progress-bar bg-primary" role="progressbar" style="width: <?= $progress_akhir ?>%">
                     <?= $progress_akhir ?>%

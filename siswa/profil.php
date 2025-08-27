@@ -51,9 +51,9 @@ $success = $error = '';
             <?php if ($user['role'] === 'siswa'): ?>
               <a href="?mode=langganan" class="btn btn-outline-primary"><i class="bi bi-receipt"></i> Riwayat Langganan</a>
             <?php endif; ?>
-            <a href="?mode=hapus" class="btn btn-danger" onclick="return confirm('Yakin ingin menghapus akun ini?')">
+            <!-- <a href="?mode=hapus" class="btn btn-danger" onclick="return confirm('Yakin ingin menghapus akun ini?')">
               <i class="bi bi-trash"></i> Hapus Akun
-            </a>
+            </a> -->
             <a href="../auth/logout.php" class="btn btn-dark"><i class="bi bi-box-arrow-right"></i> Logout</a>
 
             <a href="dashboard.php" class="btn btn-secondary"><i class="bi bi-arrow-left-circle"></i> Kembali</a>
@@ -189,15 +189,15 @@ $success = $error = '';
 </form>
 
 
-        <!-- MODE: HAPUS AKUN -->
-        <?php elseif ($mode === 'hapus'):
+       <!-- MODE: HAPUS AKUN -->
+        <!-- <?php elseif ($mode === 'hapus'):
           $stmt = mysqli_prepare($conn, "DELETE FROM users WHERE id=?");
           mysqli_stmt_bind_param($stmt, 'i', $user['id']);
           mysqli_stmt_execute($stmt);
           session_destroy();
           header("Location: ../login.php");
           exit;
-        ?>
+        ?> -->
 
         <!-- MODE: RIWAYAT LANGGANAN -->
          <?php elseif ($mode === 'langganan'):

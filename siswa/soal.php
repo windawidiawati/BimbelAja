@@ -18,7 +18,17 @@ $kategori_id = isset($_GET['kategori_id']) ? (int)$_GET['kategori_id'] : 0;
 
 
 // Ambil semua kategori untuk dropdown
-$kategoriRes = $conn->query("SELECT id, nama_kategori FROM kategori_materi ORDER BY nama_kategori");
+$sqlKategori = "SELECT DISTINCT k.id, k.nama_kategori
+                FROM kategori_materi k
+                JOIN latihan l ON l.kategori_id = k.id
+                WHERE l.kelas_id = ? 
+                  AND l.tanggal_publish <= NOW()
+                ORDER BY k.nama_kategori";
+$stmtKat = $conn->prepare($sqlKategori);
+$stmtKat->bind_param("i", $kelas_id);
+$stmtKat->execute();
+$kategoriRes = $stmtKat->get_result();
+
 
 // --- PAGINATION ---
 $limit = 10; 
@@ -124,9 +134,16 @@ $result = $stmt->get_result();
                                 Deadline: <?= date('d-m-Y H:i', strtotime($tenggat)) ?>
                             <?php endif; ?>
                         </div>
-                        <div>
+                        <div class="d-flex gap-2">
                             <?php if ($sudah_dikerjakan): ?>
                                 <span class="badge bg-success">Sudah Dikerjakan</span>
+                                <!-- Tombol Detail -->
+                                <button 
+                                    class="btn btn-info btn-sm detail-btn" 
+                                    data-id="<?= $row['id'] ?>" 
+                                    data-judul="<?= htmlspecialchars($row['judul']) ?>">
+                                    Detail
+                                </button>
                             <?php elseif ($now > $tenggat): ?>
                                 <span class="badge bg-danger">Lewat Tenggat</span>
                             <?php else: ?>
@@ -187,17 +204,51 @@ $result = $stmt->get_result();
   </div>
 </div>
 
+<!-- Modal Detail -->
+<div class="modal fade" id="detailLatihan" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Detail Jawaban <span id="judulDetail"></span></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="isiDetail">
+        Memuat...
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
+// Tombol Kerjakan (sudah ada)
 document.querySelectorAll('.kerjakan-btn').forEach(function(btn) {
     btn.addEventListener('click', function() {
-        // Set judul latihan ke modal
         document.getElementById('judulLatihanPopup').textContent = this.dataset.judul;
-        
-        // Atur link ke kerjakan.php
         document.getElementById('konfirmasiMulaiBtn').href = 'kerjakan.php?id=' + this.dataset.id;
-        
-        // Tampilkan modal
         new bootstrap.Modal(document.getElementById('konfirmasiKerjakan')).show();
+    });
+});
+
+// Tombol Detail
+document.querySelectorAll('.detail-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        let latihanId = this.dataset.id;
+        let judul = this.dataset.judul;
+
+        document.getElementById('judulDetail').textContent = judul;
+        document.getElementById('isiDetail').innerHTML = "Memuat...";
+
+        // Ambil data via AJAX
+        fetch("preview_jawaban.php?latihan_id=" + latihanId)
+            .then(res => res.text())
+            .then(data => {
+                document.getElementById('isiDetail').innerHTML = data;
+            });
+
+        new bootstrap.Modal(document.getElementById('detailLatihan')).show();
     });
 });
 </script>

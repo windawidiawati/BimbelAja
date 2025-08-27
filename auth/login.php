@@ -339,6 +339,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <button type="submit" class="btn btn-primary btn-login">
               <i class="bi bi-box-arrow-in-right me-2"></i>Login
             </button>
+            <div class="text-center mt-3">
+  <a href="forgot_password.php">Lupa Password?</a>
+</div>
+
           </div>
         </form>
       <meta name="viewport" content="width=device-width, initial-scale=1.0">

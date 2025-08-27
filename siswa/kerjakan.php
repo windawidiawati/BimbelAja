@@ -304,12 +304,25 @@ window.addEventListener("DOMContentLoaded", () => {
     }
 });
 
-// Saat form disubmit, hapus data jawaban
 document.getElementById("formLatihan").addEventListener("submit", function() {
     let latihanId = <?= $latihan_id ?>;
+    let jawabanSiswa = JSON.parse(localStorage.getItem("latihan_" + latihanId + "_jawaban") || "{}");
+
+    // Tambahkan semua jawaban ke hidden input
+    for (let name in jawabanSiswa) {
+        let value = jawabanSiswa[name];
+        let hidden = document.createElement("input");
+        hidden.type = "hidden";
+        hidden.name = name;  // contoh: jawaban[5]
+        hidden.value = value;
+        this.appendChild(hidden);
+    }
+
+    // Hapus setelah submit biar tidak numpuk
     localStorage.removeItem("latihan_" + latihanId + "_jawaban");
-    localStorage.removeItem("latihan_" + latihanId + "_endtime"); // sekalian hapus timer
+    localStorage.removeItem("latihan_" + latihanId + "_endtime");
 });
+
 
 
 </script>

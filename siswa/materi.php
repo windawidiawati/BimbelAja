@@ -35,8 +35,17 @@ if (count($kelasIdList) === 0) {
 
 $idListStr = implode(',', array_map('intval', $kelasIdList));
 
-// Ambil semua kategori untuk dropdown
-$kategoriList = $conn->query("SELECT * FROM kategori_materi ORDER BY nama_kategori ASC");
+// Ambil kategori hanya untuk jenjang siswa
+$sqlKategori = "
+  SELECT DISTINCT kat.id, kat.nama_kategori
+  FROM kategori_materi kat
+  JOIN materi m ON m.kategori_id = kat.id
+  JOIN kelas k ON m.kelas_id = k.id
+  WHERE k.jenjang = '$jenjang' AND m.status = 'diterima'
+  ORDER BY kat.nama_kategori ASC
+";
+$kategoriList = $conn->query($sqlKategori);
+
 
 // Filter kategori kalau ada
 $kategoriFilter = "";
