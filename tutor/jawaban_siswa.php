@@ -10,7 +10,7 @@ if ($_SESSION['user']['role'] !== 'tutor') {
 
 $tutor_id = $_SESSION['user']['id'];
 
-// Karena tabel latihan_siswa tidak ada tutor_id, maka kita join ke tabel latihan yang punya tutor_id
+// Filter dasar berdasarkan tutor
 $where = "WHERE l.tutor_id = '$tutor_id'";
 
 // Filter kelas
@@ -19,14 +19,14 @@ if (!empty($_GET['kelas_id'])) {
     $where .= " AND u.kelas_id = '$kelas_id'";
 }
 
-// Filter tanggal (tanggal mulai latihan)
+// Filter tanggal
 if (!empty($_GET['tanggal_awal']) && !empty($_GET['tanggal_akhir'])) {
     $awal = $_GET['tanggal_awal'] . " 00:00:00";
     $akhir = $_GET['tanggal_akhir'] . " 23:59:59";
     $where .= " AND ls.waktu_mulai BETWEEN '$awal' AND '$akhir'";
 }
 
-// Ambil data rekap dari latihan_siswa
+// Ambil data rekap latihan_siswa
 $query = mysqli_query($conn, "
     SELECT 
         ls.siswa_id AS user_id,
@@ -125,9 +125,9 @@ $query = mysqli_query($conn, "
                                             $user_id = $row['user_id'];
                                             $latihan_id = $row['latihan_id'];
 
-                                            // Detail jawaban per soal dari jawaban_siswa
+                                            // Ambil detail jawaban
                                             $detail = mysqli_query($conn, "
-                                                SELECT js.jawaban, js.benar, s.pertanyaan, s.jawaban AS kunci
+                                                SELECT js.jawaban, s.pertanyaan, s.jawaban AS kunci
                                                 FROM jawaban_siswa js
                                                 JOIN soal s ON js.soal_id = s.id
                                                 WHERE js.user_id = '$user_id' AND s.latihan_id = '$latihan_id'
@@ -135,15 +135,16 @@ $query = mysqli_query($conn, "
 
                                             $no_d = 1;
                                             while ($d = mysqli_fetch_assoc($detail)):
+                                                // Tentukan status langsung dengan perbandingan
+                                                $status = ($d['jawaban'] === $d['kunci']) ? 'Benar' : 'Salah';
+                                                $status_class = ($status === 'Benar') ? 'text-success fw-bold' : 'text-danger fw-bold';
                                             ?>
                                             <tr>
                                                 <td><?= $no_d ?></td>
                                                 <td><?= htmlspecialchars($d['pertanyaan'] ?? '', ENT_QUOTES, 'UTF-8') ?></td>
                                                 <td><?= htmlspecialchars($d['jawaban'] ?? '', ENT_QUOTES, 'UTF-8') ?></td>
                                                 <td><?= htmlspecialchars($d['kunci'] ?? '', ENT_QUOTES, 'UTF-8') ?></td>
-                                                <td>
-                                                    <?= $d['benar'] ? '<span class="text-success fw-bold">Benar</span>' : '<span class="text-danger fw-bold">Salah</span>' ?>
-                                                </td>
+                                                <td><span class="<?= $status_class ?>"><?= $status ?></span></td>
                                             </tr>
                                             <?php 
                                             $no_d++;

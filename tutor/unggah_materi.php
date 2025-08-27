@@ -68,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['id_edit'])) {
         $id_edit = (int) $_POST['id_edit'];
         if (!empty($fileName) && in_array($ext, $allowed_extensions)) {
-            $newFileName = preg_replace('/[^a-zA-Z0-9._-]/', '_', $fileName);
+            $newFileName = time() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '_', $fileName);
             $filePath = $uploadDir . '/' . $newFileName;
             $tipe_file = ($ext === 'pdf') ? 'pdf' : 'video';
 
@@ -93,7 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     } else {
         if (in_array($ext, $allowed_extensions)) {
-            $newFileName = preg_replace('/[^a-zA-Z0-9._-]/', '_', $fileName);
+            $newFileName = time() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '_', $fileName);
             $filePath = $uploadDir . '/' . $newFileName;
             $tipe_file = ($ext === 'pdf') ? 'pdf' : 'video';
 
@@ -128,65 +128,70 @@ $materi = mysqli_query($conn, $query);
 ?>
 
 <div class="content">
-    <h3 class="mb-4"><?= $edit_id ? 'Edit Materi' : 'Unggah Materi' ?></h3>
+    <h4 class="fw-bold mb-4"><i class="bi bi-upload me-2"></i><?= $edit_id ? 'Edit Materi' : 'Unggah Materi' ?></h4>
+
     <?php if (isset($success)) echo "<div class='alert alert-success'>$success</div>"; ?>
     <?php if (isset($error)) echo "<div class='alert alert-danger'>$error</div>"; ?>
 
-    <!-- FORM -->
-    <form method="POST" enctype="multipart/form-data" class="card p-4 shadow-sm mb-4">
-        <?php if ($edit_id): ?>
-            <input type="hidden" name="id_edit" value="<?= $edit_id ?>">
-        <?php endif; ?>
+    <!-- FORM UPLOAD / EDIT -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form method="POST" enctype="multipart/form-data">
+                <?php if ($edit_id): ?>
+                    <input type="hidden" name="id_edit" value="<?= $edit_id ?>">
+                <?php endif; ?>
 
-        <div class="mb-3">
-            <label>Judul Materi</label>
-            <input type="text" name="judul" class="form-control" required value="<?= htmlspecialchars($judul_edit) ?>">
+                <div class="mb-3">
+                    <label>Judul Materi</label>
+                    <input type="text" name="judul" class="form-control" required value="<?= htmlspecialchars($judul_edit) ?>">
+                </div>
+                <div class="mb-3">
+                    <label>Deskripsi</label>
+                    <textarea name="deskripsi" class="form-control" required><?= htmlspecialchars($deskripsi_edit) ?></textarea>
+                </div>
+                <div class="mb-3">
+                    <label>Kategori</label>
+                    <select name="kategori_id" class="form-select" required>
+                        <option value="">-- Pilih Kategori --</option>
+                        <?php mysqli_data_seek($kategori_result, 0); while ($k = mysqli_fetch_assoc($kategori_result)): ?>
+                            <option value="<?= $k['id'] ?>" <?= ($k['id'] == $kategori_edit) ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($k['nama_kategori']) ?>
+                            </option>
+                        <?php endwhile; ?>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label>Kelas</label>
+                    <select name="kelas_id" class="form-select" required>
+                        <option value="">-- Pilih Kelas --</option>
+                        <?php mysqli_data_seek($kelas_result, 0); while ($kl = mysqli_fetch_assoc($kelas_result)): ?>
+                            <option value="<?= $kl['id'] ?>" <?= ($kl['id'] == $kelas_edit) ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($kl['nama_kelas']) ?>
+                            </option>
+                        <?php endwhile; ?>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label>Paket</label>
+                    <select name="paket_id" class="form-select" required>
+                        <option value="">-- Pilih Paket --</option>
+                        <?php mysqli_data_seek($paket_result, 0); while ($p = mysqli_fetch_assoc($paket_result)): ?>
+                            <option value="<?= $p['id'] ?>" <?= ($p['id'] == $paket_edit) ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($p['nama']) ?>
+                            </option>
+                        <?php endwhile; ?>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label>File Materi (PDF/Video)</label>
+                    <input type="file" name="file" class="form-control" accept=".pdf,.mp4,.avi,.mkv,.mov">
+                </div>
+                <button type="submit" class="btn btn-<?= $edit_id ? 'warning' : 'primary' ?> w-100">
+                    <?= $edit_id ? 'Update Materi' : 'Unggah Materi' ?>
+                </button>
+            </form>
         </div>
-        <div class="mb-3">
-            <label>Deskripsi</label>
-            <textarea name="deskripsi" class="form-control" required><?= htmlspecialchars($deskripsi_edit) ?></textarea>
-        </div>
-        <div class="mb-3">
-            <label>Kategori</label>
-            <select name="kategori_id" class="form-select" required>
-                <option value="">-- Pilih Kategori --</option>
-                <?php mysqli_data_seek($kategori_result, 0); while ($k = mysqli_fetch_assoc($kategori_result)): ?>
-                    <option value="<?= $k['id'] ?>" <?= ($k['id'] == $kategori_edit) ? 'selected' : '' ?>>
-                        <?= htmlspecialchars($k['nama_kategori']) ?>
-                    </option>
-                <?php endwhile; ?>
-            </select>
-        </div>
-        <div class="mb-3">
-            <label>Kelas</label>
-            <select name="kelas_id" class="form-select" required>
-                <option value="">-- Pilih Kelas --</option>
-                <?php mysqli_data_seek($kelas_result, 0); while ($kl = mysqli_fetch_assoc($kelas_result)): ?>
-                    <option value="<?= $kl['id'] ?>" <?= ($kl['id'] == $kelas_edit) ? 'selected' : '' ?>>
-                        <?= htmlspecialchars($kl['nama_kelas']) ?>
-                    </option>
-                <?php endwhile; ?>
-            </select>
-        </div>
-        <div class="mb-3">
-            <label>Paket</label>
-            <select name="paket_id" class="form-select" required>
-                <option value="">-- Pilih Paket --</option>
-                <?php mysqli_data_seek($paket_result, 0); while ($p = mysqli_fetch_assoc($paket_result)): ?>
-                    <option value="<?= $p['id'] ?>" <?= ($p['id'] == $paket_edit) ? 'selected' : '' ?>>
-                        <?= htmlspecialchars($p['nama']) ?>
-                    </option>
-                <?php endwhile; ?>
-            </select>
-        </div>
-        <div class="mb-3">
-            <label>File Materi (PDF/Video)</label>
-            <input type="file" name="file" class="form-control" accept=".pdf,.mp4,.avi,.mkv,.mov">
-        </div>
-        <button type="submit" class="btn btn-<?= $edit_id ? 'warning' : 'primary' ?>">
-            <?= $edit_id ? 'Update Materi' : 'Unggah Materi' ?>
-        </button>
-    </form>
+    </div>
 
     <!-- FILTER -->
     <form method="GET" class="row g-2 mb-4">
@@ -217,50 +222,61 @@ $materi = mysqli_query($conn, $query);
 
     <div class="alert alert-warning"><strong>Catatan:</strong> Materi akan dicek oleh admin sebelum tampil ke siswa.</div>
 
-    <!-- TABEL -->
-    <table class="table table-bordered table-striped">
-        <thead class="table-dark">
-            <tr>
-                <th>Judul</th>
-                <th>Deskripsi</th>
-                <th>Kategori</th>
-                <th>Kelas</th>
-                <th>Paket</th>
-                <th>File</th>
-                <th>Status</th>
-                <th>Aksi</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php while ($row = mysqli_fetch_assoc($materi)): ?>
-                <tr>
-                    <td><?= htmlspecialchars($row['judul']) ?></td>
-                    <td><?= htmlspecialchars($row['deskripsi']) ?></td>
-                    <td><?= htmlspecialchars($row['nama_kategori']) ?: '-' ?></td>
-                    <td><?= htmlspecialchars($row['nama_kelas']) ?: '-' ?></td>
-                    <td><?= htmlspecialchars($row['nama_paket']) ?: '-' ?></td>
-                    <td>
-                        <a href="../assets/uploads/<?= htmlspecialchars($row['file']) ?>" target="_blank">
-                            <?= ($row['tipe_file'] === 'video') ? 'Tonton Video' : 'Lihat PDF'; ?>
-                        </a>
-                    </td>
-                    <td>
-                        <?php if ($row['status'] === 'proses'): ?>
-                            <span class="badge bg-warning text-dark">Proses</span>
-                        <?php elseif ($row['status'] === 'diterima'): ?>
-                            <span class="badge bg-success">Diterima</span>
-                        <?php else: ?>
-                            <span class="badge bg-danger">Ditolak</span>
-                        <?php endif; ?>
-                    </td>
-                    <td>
-                        <a href="?edit=<?= $row['id'] ?>" class="btn btn-sm btn-warning">Edit</a>
-                        <a href="?hapus=<?= $row['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Hapus materi ini?')">Hapus</a>
-                    </td>
-                </tr>
-            <?php endwhile; ?>
-        </tbody>
-    </table>
+    <!-- TABEL MATERI -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-secondary text-white">
+            <b>📚 Daftar Materi</b>
+        </div>
+        <div class="card-body table-responsive">
+            <table class="table table-bordered table-striped text-center">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Judul</th>
+                        <th>Deskripsi</th>
+                        <th>Kategori</th>
+                        <th>Kelas</th>
+                        <th>Paket</th>
+                        <th>File</th>
+                        <th>Status</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php while ($row = mysqli_fetch_assoc($materi)): ?>
+                        <tr>
+                            <td><?= htmlspecialchars($row['judul']) ?></td>
+                            <td><?= htmlspecialchars($row['deskripsi']) ?></td>
+                            <td><?= htmlspecialchars($row['nama_kategori']) ?: '-' ?></td>
+                            <td><?= htmlspecialchars($row['nama_kelas']) ?: '-' ?></td>
+                            <td><?= htmlspecialchars($row['nama_paket']) ?: '-' ?></td>
+                            <td>
+                                <a href="../assets/uploads/<?= htmlspecialchars($row['file']) ?>" target="_blank">
+                                    <?= ($row['tipe_file'] === 'video') ? 'Tonton Video' : 'Lihat PDF'; ?>
+                                </a>
+                            </td>
+                            <td>
+                                <?php 
+                                    $status_badge = [
+                                        'proses' => 'warning text-dark',
+                                        'diterima' => 'success',
+                                        'ditolak' => 'danger'
+                                    ];
+                                ?>
+                                <span class="badge bg-<?= $status_badge[$row['status']] ?? 'secondary' ?>">
+                                    <?= ucfirst($row['status']) ?>
+                                </span>
+                            </td>
+                            <td>
+                                <a href="?edit=<?= $row['id'] ?>" class="btn btn-sm btn-warning">Edit</a>
+                                <a href="?hapus=<?= $row['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Hapus materi ini?')">Hapus</a>
+                            </td>
+                        </tr>
+                    <?php endwhile; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
 </div>
 
 <?php include '../includes/tutor_footer.php'; ?>

@@ -39,31 +39,30 @@ $hari = [
 include '../includes/kasir_header.php';
 ?>
 
-<div class="container-fluid">
+<div class="container mt-4">
     <h4 class="fw-bold mb-4"><i class="bi bi-receipt-cutoff me-2"></i>Riwayat Transaksi</h4>
 
     <!-- Filter -->
-    <form method="GET" class="row mb-4 g-2">
+    <form method="GET" class="row mb-4 g-2 align-items-end">
         <div class="col-md-3">
-            <select name="metode" class="form-select">
-                <option value="">-- Filter Metode Pembayaran --</option>
+            <label for="metode" class="form-label">Filter Metode Pembayaran</label>
+            <select name="metode" id="metode" class="form-select">
+                <option value="">-- Semua Metode --</option>
                 <option value="tunai" <?= $filter_metode === 'tunai' ? 'selected' : '' ?>>Tunai</option>
                 <option value="transfer" <?= $filter_metode === 'transfer' ? 'selected' : '' ?>>Transfer</option>
             </select>
         </div>
-        <div class="col-md-2">
+        <div class="col-auto">
             <button type="submit" class="btn btn-primary"><i class="bi bi-funnel-fill me-1"></i>Filter</button>
-        </div>
-        <div class="col-md-2">
-            <a href="transaksi.php" class="btn btn-secondary"><i class="bi bi-x-circle me-1"></i>Reset</a>
+            <a href="<?= basename($_SERVER['PHP_SELF']) ?>" class="btn btn-secondary"><i class="bi bi-x-circle me-1"></i>Reset</a>
         </div>
     </form>
 
-    <!-- Tabel -->
-    <div class="card shadow border-0">
+    <!-- Tabel Transaksi -->
+    <div class="card shadow-sm border-0">
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-bordered table-striped align-middle text-center">
+                <table class="table table-bordered align-middle text-center">
                     <thead class="table-dark">
                         <tr>
                             <th>No</th>
@@ -83,6 +82,10 @@ include '../includes/kasir_header.php';
                                 $day = $hari[date('l', strtotime($row['tanggal']))];
                                 $tanggal_format = $day . ', ' . date('d-m-Y', strtotime($row['tanggal']));
                             }
+
+                            $badgeClass = ($row['status'] === 'lunas') ? 'bg-success' 
+                                        : (($row['status'] === 'pending' || $row['status'] === 'menunggu_kasir') ? 'bg-warning text-dark'
+                                        : ($row['status'] === 'ditolak' ? 'bg-danger' : 'bg-secondary'));
                             ?>
                             <tr>
                                 <td><?= $no++ ?></td>
@@ -90,17 +93,7 @@ include '../includes/kasir_header.php';
                                 <td><?= htmlspecialchars($row['paket']) ?></td>
                                 <td>Rp<?= number_format($row['harga'], 0, ',', '.') ?></td>
                                 <td class="text-capitalize small"><?= $row['metode'] ?></td>
-                                <td>
-                                    <?php
-                                    $badgeClass = match($row['status']) {
-                                        'lunas' => 'bg-success',
-                                        'pending', 'menunggu_kasir' => 'bg-warning text-dark',
-                                        'ditolak' => 'bg-danger',
-                                        default => 'bg-secondary'
-                                    };
-                                    ?>
-                                    <span class="badge <?= $badgeClass ?>"><?= ucfirst($row['status']) ?></span>
-                                </td>
+                                <td><span class="badge <?= $badgeClass ?>"><?= ucfirst($row['status']) ?></span></td>
                                 <td><?= $tanggal_format ?></td>
                             </tr>
                         <?php endwhile; ?>

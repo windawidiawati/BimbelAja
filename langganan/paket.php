@@ -190,6 +190,13 @@ $result_all = mysqli_stmt_get_result($query_all);
         </div>
       <?php endwhile; ?>
     <?php endif; ?>
+<<<<<<< HEAD
+  </div>
+</div>
+</body>
+</html>
+
+=======
 
     <!-- SEMUA PAKET -->
     <?php mysqli_data_seek($result_all, 0); ?>
@@ -217,3 +224,4 @@ $result_all = mysqli_stmt_get_result($query_all);
   <?php endif; ?>
 </div
 <?php include '../includes/footer.php'; ?>
+>>>>>>> c093bc66fee073282575d2ed979fa6e3bd10d5f8

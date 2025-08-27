@@ -122,14 +122,14 @@ if ($edit_id) {
 </div>
 
 <!-- Modal Tambah/Edit Materi -->
-<div class="modal fade show" id="modalTambah" tabindex="-1" aria-labelledby="modalTambahLabel" aria-modal="true" style="display:<?= $edit_id ? 'block' : 'none' ?>;">
+<div class="modal fade" id="modalTambah" tabindex="-1" aria-labelledby="modalTambahLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg">
     <form method="POST" action="proses_materi.php" enctype="multipart/form-data" class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="modalTambahLabel">
           <?= $edit_id ? 'Edit Materi' : 'Tambah Materi' ?>
         </h5>
-        <a href="kelola_materi.php" class="btn-close"></a>
+        <a href="kelola_materi.php" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></a>
       </div>
       <div class="modal-body">
         <?php if ($edit_id): ?><input type="hidden" name="id" value="<?= $edit_data['id'] ?>"><?php endif; ?>
@@ -170,7 +170,7 @@ if ($edit_id) {
         <div class="mb-3">
           <label>File Materi <?= $edit_id ? '(Kosongkan jika tidak diubah)' : '' ?></label>
           <input type="file" name="file" class="form-control" accept=".pdf,.mp4,.mkv,.avi,.mov" <?= $edit_id ? '' : 'required' ?>>
-          <small class="text-muted">Format file yang diperbolehkan: PDF, MP4, MKV, AVI, MOV. Maksimal ukuran: 10MB</small>
+          <small class="text-muted">Format file: PDF/MP4/MKV/AVI/MOV. Maksimal 10MB.</small>
         </div>
       </div>
       <div class="modal-footer">
@@ -181,5 +181,18 @@ if ($edit_id) {
     </form>
   </div>
 </div>
+
+<?php if ($edit_id): ?>
+<!-- Auto open modal saat mode edit -->
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    var modalEdit = new bootstrap.Modal(document.getElementById('modalTambah'));
+    modalEdit.show();
+  });
+</script>
+<?php endif; ?>
+
+<!-- Pastikan ini ada sebelum penutup </body> -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <?php include '../includes/admin_footer.php'; ?>

@@ -1,6 +1,5 @@
 <?php
 ob_start();
-
 include '../config/database.php';
 include '../includes/admin_header.php';
 
@@ -11,13 +10,13 @@ if ($_SESSION['user']['role'] !== 'admin') {
 
 // Hapus
 if (isset($_GET['hapus'])) {
-  $id = $_GET['hapus'];
+  $id = intval($_GET['hapus']);
   mysqli_query($conn, "DELETE FROM users WHERE id = $id");
   header("Location: kelola_user.php");
   exit;
 }
 
-// Tambah user (via modal form POST)
+// Tambah user
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_user'])) {
   $nama = $_POST['nama'] ?? '';
   $username = $_POST['username'] ?? '';
@@ -119,7 +118,7 @@ $result = mysqli_query($conn, $sql);
     <?php endif; ?>
   </form>
 
-  <!-- Tabel -->
+  <!-- Table -->
   <div class="table-responsive">
     <table class="table table-bordered table-striped">
       <thead class="table-light">
@@ -137,18 +136,18 @@ $result = mysqli_query($conn, $sql);
         <?php if (mysqli_num_rows($result) > 0): ?>
           <?php while($row = mysqli_fetch_assoc($result)): ?>
             <tr>
-              <td><?= htmlspecialchars($row['nama']) ?></td>
-              <td><?= htmlspecialchars($row['username']) ?></td>
-              <td><?= $row['role'] ?></td>
-              <td><?= $row['role'] === 'siswa' ? $row['jenjang'] : '-' ?></td>
-              <td><?= $row['role'] === 'siswa' ? $row['kelas'] : '-' ?></td>
-              <td><?= $row['role'] === 'tutor' ? $row['keahlian'] : '-' ?></td>
+              <td><?= htmlspecialchars($row['nama'] ?? '-') ?></td>
+              <td><?= htmlspecialchars($row['username'] ?? '-') ?></td>
+              <td><?= $row['role'] ?? '-' ?></td>
+              <td><?= ($row['role'] === 'siswa') ? ($row['jenjang'] ?? '-') : '-' ?></td>
+              <td><?= ($row['role'] === 'siswa') ? ($row['kelas'] ?? '-') : '-' ?></td>
+              <td><?= ($row['role'] === 'tutor') ? ($row['keahlian'] ?? '-') : '-' ?></td>
               <td>
                 <?php if ($row['role'] === 'siswa'): ?>
-                  <a href="kelola_siswa.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-info">Detail</a>
+                  <a href="kelola_siswa.php?id=<?= intval($row['id']) ?>" class="btn btn-sm btn-info">Detail</a>
                 <?php endif; ?>
-                <a href="edit_user.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-warning">Edit</a>
-                <a href="?hapus=<?= $row['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Yakin hapus user ini?')">Hapus</a>
+                <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#modalEditUser" onclick='editUser(<?= json_encode($row) ?>)'>Edit</button>
+                <a href="?hapus=<?= intval($row['id']) ?>" class="btn btn-sm btn-danger" onclick="return confirm('Yakin hapus user ini?')">Hapus</a>
               </td>
             </tr>
           <?php endwhile; ?>
@@ -211,10 +210,60 @@ $result = mysqli_query($conn, $sql);
   </div>
 </div>
 
+<!-- Modal Edit User -->
+<div class="modal fade" id="modalEditUser" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <form method="POST" action="update_user.php">
+        <div class="modal-header bg-warning">
+          <h5 class="modal-title">Edit User</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" name="id" id="edit-id">
+          <div class="mb-3"><label>Nama</label><input type="text" name="nama" id="edit-nama" class="form-control" required></div>
+          <div class="mb-3"><label>Username</label><input type="text" name="username" id="edit-username" class="form-control" required></div>
+          <div class="mb-3"><label>Password (kosongkan jika tidak diubah)</label><input type="password" name="password" class="form-control"></div>
+          <div class="mb-3">
+            <label>Role</label>
+            <select name="role" id="edit-role" class="form-select" onchange="handleEditRoleChange(this.value)">
+              <option value="">-- Pilih Role --</option>
+              <option value="admin">Admin</option>
+              <option value="siswa">Siswa</option>
+              <option value="tutor">Tutor</option>
+              <option value="kasir">Kasir</option>
+            </select>
+          </div>
+          <div id="edit-siswa-fields" style="display: none;">
+            <label>Jenjang</label>
+            <select name="jenjang" id="edit-jenjang" class="form-select" onchange="updateEditKelasOptions()">
+              <option value="">-- Pilih Jenjang --</option>
+              <option value="SD">SD</option>
+              <option value="SMP">SMP</option>
+              <option value="SMA">SMA</option>
+            </select>
+            <label class="mt-2">Kelas</label>
+            <select name="kelas" id="edit-kelas" class="form-select"></select>
+          </div>
+          <div class="mb-3" id="edit-tutor-fields" style="display: none;">
+            <label>Keahlian</label>
+            <input type="text" name="keahlian" id="edit-keahlian" class="form-control">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-warning">Simpan</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 <script>
 function handleRoleChange(role) {
   document.getElementById('siswa-fields').style.display = role === 'siswa' ? 'block' : 'none';
   document.getElementById('tutor-fields').style.display = role === 'tutor' ? 'block' : 'none';
+  updateKelasOptions();
 }
 
 function updateKelasOptions() {
@@ -234,7 +283,50 @@ function updateKelasOptions() {
     kelasSelect.appendChild(opt);
   });
 }
+
+function editUser(data) {
+  document.getElementById('edit-id').value = data.id;
+  document.getElementById('edit-nama').value = data.nama;
+  document.getElementById('edit-username').value = data.username;
+  document.getElementById('edit-role').value = data.role;
+  handleEditRoleChange(data.role);
+
+  if (data.role === 'siswa') {
+    document.getElementById('edit-jenjang').value = data.jenjang;
+    updateEditKelasOptions();
+    setTimeout(() => {
+      document.getElementById('edit-kelas').value = data.kelas;
+    }, 200);
+  }
+
+  if (data.role === 'tutor') {
+    document.getElementById('edit-keahlian').value = data.keahlian;
+  }
+}
+
+function handleEditRoleChange(role) {
+  document.getElementById('edit-siswa-fields').style.display = role === 'siswa' ? 'block' : 'none';
+  document.getElementById('edit-tutor-fields').style.display = role === 'tutor' ? 'block' : 'none';
+}
+
+function updateEditKelasOptions() {
+  const jenjang = document.getElementById('edit-jenjang').value;
+  const kelasSelect = document.getElementById('edit-kelas');
+  let options = [];
+
+  if (jenjang === 'SD') options = ['1','2','3','4','5','6'];
+  else if (jenjang === 'SMP') options = ['7','8','9'];
+  else if (jenjang === 'SMA') options = ['10','11','12'];
+
+  kelasSelect.innerHTML = '<option value="">-- Pilih Kelas --</option>';
+  options.forEach(k => {
+    const opt = document.createElement('option');
+    opt.value = k;
+    opt.textContent = 'Kelas ' + k;
+    kelasSelect.appendChild(opt);
+  });
+}
 </script>
 
+
 <?php include '../includes/admin_footer.php'; ?>
-<? ob_end_flush();

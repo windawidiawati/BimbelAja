@@ -26,11 +26,16 @@ $current_page = basename($_SERVER['SCRIPT_NAME']);
             background-color: #f9f9f9;
         }
         .navbar-brand { font-weight: bold; font-size: 1.5rem; }
+        .nav-link.active {
+            font-weight: bold;
+            border-bottom: 2px solid #ffc107;
+        }
         .sidebar {
             position: fixed; top: 56px; left: 0;
             width: 240px; height: 100%;
             background-color: #0d6efd;
             padding-top: 20px;
+            overflow-y: auto;
         }
         .sidebar a {
             color: white; padding: 12px 20px; display: block;
@@ -57,31 +62,54 @@ $current_page = basename($_SERVER['SCRIPT_NAME']);
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
       <span class="navbar-toggler-icon"></span>
     </button>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarContent">
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item">
-                    <a class="nav-link text-white <?= ($current_page === 'profil.php') ? 'active' : '' ?>" href="profil.php">
-                        <i class="bi bi-person-circle me-1"></i>Profil
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link text-white" href="../auth/logout.php">
-                        <i class="bi bi-box-arrow-right me-1"></i>Logout
-                    </a>
-                </li>
-            </ul>
-        </div>
+
+    <div class="collapse navbar-collapse" id="navbarContent">
+      <!-- Menu mobile -->
+      <ul class="navbar-nav me-auto d-lg-none">
+        <li class="nav-item">
+          <a class="nav-link" href="../kasir/buku_panduan/Buku_Panduan_Kasir_BimbelAja.pdf" target="_blank">
+            <i class="bi bi-book me-1"></i> Buku Panduan
+          </a>
+        </li>
+        <li class="nav-item"><a class="nav-link <?= ($current_page === 'dashboard.php') ? 'active' : '' ?>" href="dashboard.php"><i class="bi bi-speedometer2 me-1"></i> Dashboard</a></li>
+        <li class="nav-item"><a class="nav-link <?= ($current_page === 'checkout_tunai.php') ? 'active' : '' ?>" href="checkout_tunai.php"><i class="bi bi-cash-coin me-1"></i> Checkout Tunai</a></li>
+        <li class="nav-item"><a class="nav-link <?= ($current_page === 'data_siswa.php') ? 'active' : '' ?>" href="data_siswa.php"><i class="bi bi-people me-1"></i> Data Siswa</a></li>
+        <li class="nav-item"><a class="nav-link <?= ($current_page === 'transaksi.php') ? 'active' : '' ?>" href="transaksi.php"><i class="bi bi-receipt-cutoff me-1"></i> Riwayat Transaksi</a></li>
+        <li class="nav-item"><a class="nav-link <?= ($current_page === 'pendapatan.php') ? 'active' : '' ?>" href="pendapatan.php"><i class="bi bi-cash-coin me-1"></i> Rincian Pendapatan</a></li>
+        <li class="nav-item"><a class="nav-link <?= ($current_page === 'perpanjang_paket.php') ? 'active' : '' ?>" href="perpanjang_paket.php"><i class="bi bi-cash-coin me-1"></i> Perpanjang Paket</a></li>
+      </ul>
+
+      <!-- Menu kanan desktop -->
+      <ul class="navbar-nav ms-auto d-none d-lg-flex">
+        <li class="nav-item">
+          <a class="nav-link text-white" href="../kasir/buku_panduan/Buku_Panduan_Kasir_BimbelAja.pdf" target="_blank">
+            <i class="bi bi-book me-1"></i> Buku Panduan
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link text-white <?= ($current_page === 'profil.php') ? 'active' : '' ?>" href="profil.php">
+            <i class="bi bi-person-circle me-1"></i> Profil
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link text-white" href="../auth/logout.php">
+            <i class="bi bi-box-arrow-right me-1"></i> Logout
+          </a>
+        </li>
+      </ul>
     </div>
+  </div>
 </nav>
 
 <!-- Sidebar -->
 <div class="sidebar d-none d-lg-block">
+    <!-- <a href="../kasir/buku_panduan/Buku_Panduan_Kasir_BimbelAja.pdf" target="_blank"><i class="bi bi-book me-2"></i>Buku Panduan</a> -->
     <a class="<?= ($current_page === 'dashboard.php') ? 'active' : '' ?>" href="dashboard.php"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a>
     <a class="<?= ($current_page === 'checkout_tunai.php') ? 'active' : '' ?>" href="checkout_tunai.php"><i class="bi bi-cash-coin me-2"></i>Checkout Tunai</a>
     <a class="<?= ($current_page === 'data_siswa.php') ? 'active' : '' ?>" href="data_siswa.php"><i class="bi bi-people me-2"></i>Data Siswa</a>
     <a class="<?= ($current_page === 'transaksi.php') ? 'active' : '' ?>" href="transaksi.php"><i class="bi bi-receipt-cutoff me-2"></i>Riwayat Transaksi</a>
     <a class="<?= ($current_page === 'pendapatan.php') ? 'active' : '' ?>" href="pendapatan.php"><i class="bi bi-cash-coin me-2"></i>Rincian Pendapatan</a>
+    <a class="<?= ($current_page === 'perpanjang_paket.php') ? 'active' : '' ?>" href="perpanjang_paket.php"><i class="bi bi-cash-coin me-2"></i>Perpanjang Paket</a>
 </div>
 
 <div class="content">

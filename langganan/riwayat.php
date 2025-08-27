@@ -28,7 +28,6 @@ $result = mysqli_stmt_get_result($stmt);
         <th>Metode</th>
         <th>Tanggal</th>
         <th>Status</th>
-        <th>Bukti</th>
       </tr>
     </thead>
     <tbody>
@@ -49,12 +48,6 @@ $result = mysqli_stmt_get_result($stmt);
           echo "<td>" . htmlspecialchars($row['metode']) . "</td>";
           echo "<td>" . date('d M Y', strtotime($row['tanggal'])) . "</td>";
           echo "<td><span class='badge bg-$badge'>" . htmlspecialchars($row['status']) . "</span></td>";
-          echo "<td>";
-          if ($row['bukti_transfer']) {
-              echo "<a href='../uploads/bukti_transfer/" . $row['bukti_transfer'] . "' target='_blank' class='btn btn-sm btn-primary'>Lihat</a>";
-          } else {
-              echo "-";
-          }
           echo "</td>";
           echo "</tr>";
       }

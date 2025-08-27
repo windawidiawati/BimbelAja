@@ -4,7 +4,6 @@ include '../includes/auth.php';
 include '../includes/admin_header.php';
 
 
-
 // Ambil data
 $sql_users = "SELECT role, COUNT(*) AS total FROM users WHERE role IN ('siswa', 'tutor') GROUP BY role";
 $result_users = $conn->query($sql_users);
