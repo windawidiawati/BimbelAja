@@ -15,8 +15,8 @@ $tutor_id = $_SESSION['user']['id'];
 $materi = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) AS total FROM materi WHERE tutor_id = '$tutor_id'"))['total'] ?? 0;
 // Total Soal
 $soal = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) AS total FROM soal WHERE tutor_id = '$tutor_id'"))['total'] ?? 0;
-// Total Jadwal Online
-$jadwal = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) AS total FROM kelas_online WHERE tutor_id = '$tutor_id'"))['total'] ?? 0;
+// Total Jadwal Offline
+$jadwal = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) AS total FROM jadwal_offline WHERE tutor_id = '$tutor_id'"))['total'] ?? 0;
 // Total Forum
 $forum = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) AS total FROM forum WHERE user_id = '$tutor_id'"))['total'] ?? 0;
 
@@ -118,7 +118,7 @@ include '../includes/tutor_header.php';
                 <div class="card-body d-flex align-items-center">
                     <div class="text-warning fs-2 me-3"><i class="bi bi-calendar-event"></i></div>
                     <div>
-                        <div class="text-muted small">Jadwal Online</div>
+                        <div class="text-muted small">Jadwal Offline</div>
                         <div class="fw-bold fs-5"><?= $jadwal ?></div>
                     </div>
                 </div>

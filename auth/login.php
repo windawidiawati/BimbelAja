@@ -269,6 +269,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         font-size: 2rem;
       }
     }
+    @media (max-width: 576px) {
+  .login-container {
+    padding: 0 10px;
+  }
+  .login-card {
+    width: 100%;
+  }
+  .card-body {
+    padding: 1.5rem;
+  }
+  .login-title {
+    font-size: 1.5rem;
+  }
+  .brand-logo {
+    font-size: 2rem;
+  }
+  .form-control {
+    font-size: 0.95rem;
+    padding: 8px 12px;
+  }
+  .btn-login {
+    font-size: 0.95rem;
+    padding: 8px;
+  }
+}
+
   </style>
 </head>
 <body>
@@ -315,8 +341,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </button>
           </div>
         </form>
-        
-  
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
       </div>
     </div>
   </div>

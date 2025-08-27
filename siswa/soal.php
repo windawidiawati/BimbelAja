@@ -1,6 +1,7 @@
 <?php
 session_start();
 include '../config/database.php';
+$title = "Latihan Siswa";
 include '../includes/siswa_header_langganan.php';
 
 // Pastikan user adalah siswa
@@ -12,88 +13,193 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'siswa') {
 $siswa_id = $_SESSION['user']['id'];
 $kelas_id = $_SESSION['user']['kelas_id'] ?? null;
 
-// Tanggal hari ini
-$today = date('Y-m-d');
+// Ambil kategori dari filter (kalau ada), default = 0 (semua mapel)
+$kategori_id = isset($_GET['kategori_id']) ? (int)$_GET['kategori_id'] : 0;
 
-// Ambil daftar latihan sesuai tanggal publish
 
-$sql = "SELECT * FROM latihan 
-        WHERE kelas_id = ? 
-        AND tanggal_publish <= NOW()
-        ORDER BY tanggal_publish DESC";
+// Ambil semua kategori untuk dropdown
+$kategoriRes = $conn->query("SELECT id, nama_kategori FROM kategori_materi ORDER BY nama_kategori");
+
+// --- PAGINATION ---
+$limit = 10; 
+$page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
+$offset = ($page - 1) * $limit;
+
+// Hitung total data
+$sqlCount = "SELECT COUNT(*) as total 
+             FROM latihan 
+             WHERE kelas_id = ? 
+               AND tanggal_publish <= NOW()";
+$params = [$kelas_id];
+$types = "i";
+
+if ($kategori_id > 0) {
+    $sqlCount .= " AND kategori_id = ?";
+    $params[] = $kategori_id;
+    $types .= "i";
+}
+
+$stmtCount = $conn->prepare($sqlCount);
+$stmtCount->bind_param($types, ...$params);
+$stmtCount->execute();
+$totalData = $stmtCount->get_result()->fetch_assoc()['total'] ?? 0;
+$totalPages = ceil($totalData / $limit);
+
+// Ambil daftar latihan
+$sql = "SELECT l.*, k.nama_kategori 
+        FROM latihan l
+        JOIN kategori_materi k ON l.kategori_id = k.id
+        WHERE l.kelas_id = ? 
+          AND l.tanggal_publish <= NOW()";
+$params = [$kelas_id];
+$types = "i";
+
+if ($kategori_id > 0) {
+    $sql .= " AND l.kategori_id = ?";
+    $params[] = $kategori_id;
+    $types .= "i";
+}
+
+$sql .= " ORDER BY l.tanggal_publish DESC
+          LIMIT ? OFFSET ?";
+$params[] = $limit;
+$params[] = $offset;
+$types .= "ii";
+
 $stmt = $conn->prepare($sql);
-$stmt->bind_param("i", $kelas_id);
+$stmt->bind_param($types, ...$params);
 $stmt->execute();
 $result = $stmt->get_result();
 ?>
 <div class="container mt-4">
     <h3>Daftar Latihan</h3>
-    <div class="list-group">
-        <?php while ($row = $result->fetch_assoc()): 
-            $now = date('Y-m-d H:i:s');
-            $tenggat = $row['tenggat_waktu'];
 
-            // Cek apakah sudah pernah dikerjakan
-            $cek = $conn->prepare("SELECT 1 FROM jawaban_siswa WHERE user_id = ? AND latihan_id = ? LIMIT 1");
-            $cek->bind_param("ii", $siswa_id, $row['id']);
-            $cek->execute();
-            $sudah_dikerjakan = $cek->get_result()->num_rows > 0;
-        ?>
-            <div class="list-group-item">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <strong><?= htmlspecialchars($row['judul']) ?></strong><br>
-                        Durasi: <?= $row['durasi_menit'] ?> menit | Deadline: <?= date('d-m-Y H:i', strtotime($tenggat)) ?>
-                    </div>
-                    <div>
-                        <?php if ($sudah_dikerjakan): ?>
-                            <span class="badge bg-success">Sudah Dikerjakan</span>
-                        <?php elseif ($now > $tenggat): ?>
-                            <span class="badge bg-danger">Lewat Tenggat</span>
-                        <?php else: ?>
-                            <a href="kerjakan.php?id=<?= $row['id'] ?>" class="btn btn-primary btn-sm">Kerjakan</a>
-                        <?php endif; ?>
+    <!-- Filter Mapel -->
+    <form method="get" class="mb-3 d-flex gap-2">
+        <select name="kategori_id" class="form-select" style="max-width:250px">
+            <option value="0">-- Semua Mapel --</option>
+            <?php while ($kat = $kategoriRes->fetch_assoc()): ?>
+                <option value="<?= $kat['id'] ?>" 
+                    <?= $kategori_id == $kat['id'] ? 'selected' : '' ?>>
+                    <?= htmlspecialchars($kat['nama_kategori']) ?>
+                </option>
+            <?php endwhile; ?>
+        </select>
+        <button type="submit" class="btn btn-primary">Filter</button>
+    </form>
+
+
+    <div class="list-group">
+        <?php if ($result && $result->num_rows > 0): ?>
+            <?php while ($row = $result->fetch_assoc()): 
+                $now = date('Y-m-d H:i:s');
+                $tenggat = $row['tenggat_waktu'];
+
+                // Cek pengerjaan
+                $cek = $conn->prepare("SELECT nilai, waktu_selesai 
+                                       FROM latihan_siswa 
+                                       WHERE siswa_id = ? AND latihan_id = ? 
+                                       LIMIT 1");
+                $cek->bind_param("ii", $siswa_id, $row['id']);
+                $cek->execute();
+                $resCek = $cek->get_result();
+                $sudah_dikerjakan = $resCek && $resCek->num_rows > 0;
+                $jawaban = $sudah_dikerjakan ? $resCek->fetch_assoc() : null;
+            ?>
+                <div class="list-group-item">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong><?= htmlspecialchars($row['judul']) ?></strong><br>
+                            <em><?= htmlspecialchars($row['nama_kategori']) ?></em><br>
+                            <?php if ($sudah_dikerjakan): ?>
+                                Nilai: <strong>
+                                    <?= $jawaban['nilai'] !== null ? $jawaban['nilai'] : 'Belum dinilai' ?>
+                                </strong><br>
+                                Dikerjakan: 
+                                <?= $jawaban['waktu_selesai'] 
+                                    ? date('d-m-Y H:i', strtotime($jawaban['waktu_selesai'])) 
+                                    : '-' ?>
+                            <?php else: ?>
+                                Durasi: <?= $row['durasi_menit'] ?> menit | 
+                                Deadline: <?= date('d-m-Y H:i', strtotime($tenggat)) ?>
+                            <?php endif; ?>
+                        </div>
+                        <div>
+                            <?php if ($sudah_dikerjakan): ?>
+                                <span class="badge bg-success">Sudah Dikerjakan</span>
+                            <?php elseif ($now > $tenggat): ?>
+                                <span class="badge bg-danger">Lewat Tenggat</span>
+                            <?php else: ?>
+                                <!-- Tombol Kerjakan -->
+                                <button 
+                                    class="btn btn-primary btn-sm kerjakan-btn" 
+                                    data-id="<?= $row['id'] ?>" 
+                                    data-judul="<?= htmlspecialchars($row['judul']) ?>">
+                                    Kerjakan
+                                </button>
+                            <?php endif; ?>
+                        </div>
                     </div>
                 </div>
-            </div>
-        <?php endwhile; ?>
+            <?php endwhile; ?>
+        <?php else: ?>
+            <div class="alert alert-info">Belum ada latihan tersedia.</div>
+        <?php endif; ?>
     </div>
+
+    <!-- Pagination -->
+    <?php if ($totalPages > 1): ?>
+        <nav class="mt-3">
+            <ul class="pagination justify-content-center">
+                <li class="page-item <?= ($page <= 1) ? 'disabled' : '' ?>">
+                    <a class="page-link" href="?page=<?= $page - 1 ?>">Prev</a>
+                </li>
+                <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                    <li class="page-item <?= ($i == $page) ? 'active' : '' ?>">
+                        <a class="page-link" href="?page=<?= $i ?>"><?= $i ?></a>
+                    </li>
+                <?php endfor; ?>
+                <li class="page-item <?= ($page >= $totalPages) ? 'disabled' : '' ?>">
+                    <a class="page-link" href="?page=<?= $page + 1 ?>">Next</a>
+                </li>
+            </ul>
+        </nav>
+    <?php endif; ?>
 </div>
 
-<!-- Modal Detail Latihan -->
-<div class="modal fade" id="latihanModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="judulLatihan"></h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <p id="deskripsiLatihan"></p>
-                <p><strong>Durasi:</strong> <span id="durasiLatihan"></span> menit</p>
-                <p><strong>Deadline:</strong> <span id="tenggatLatihan"></span></p>
-            </div>
-            <div class="modal-footer">
-                <a id="mulaiBtn" class="btn btn-primary">Mulai Mengerjakan</a>
-            </div>
-        </div>
+<!-- Modal Konfirmasi -->
+<div class="modal fade" id="konfirmasiKerjakan" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Konfirmasi Mulai Latihan</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        Apakah kamu yakin ingin mulai latihan <span id="judulLatihanPopup"></span>?  
+        Waktu akan langsung berjalan setelah latihan dimulai.
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+        <a href="#" id="konfirmasiMulaiBtn" class="btn btn-primary">Mulai Sekarang</a>
+      </div>
     </div>
+  </div>
 </div>
 
 <script>
-document.querySelectorAll('.latihan-item').forEach(function(item) {
-    item.addEventListener('click', function(e) {
-        e.preventDefault(); // Cegah link default cuma untuk item ini
-
-        document.getElementById('judulLatihan').textContent = this.dataset.judul;
-        document.getElementById('deskripsiLatihan').textContent = this.dataset.deskripsi || 'Tidak ada deskripsi';
-        document.getElementById('durasiLatihan').textContent = this.dataset.durasi;
-        document.getElementById('tenggatLatihan').textContent = this.dataset.tenggat;
-        document.getElementById('mulaiBtn').href = 'kerjakan.php?id=' + this.dataset.id;
-
-        new bootstrap.Modal(document.getElementById('latihanModal')).show();
+document.querySelectorAll('.kerjakan-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        // Set judul latihan ke modal
+        document.getElementById('judulLatihanPopup').textContent = this.dataset.judul;
+        
+        // Atur link ke kerjakan.php
+        document.getElementById('konfirmasiMulaiBtn').href = 'kerjakan.php?id=' + this.dataset.id;
+        
+        // Tampilkan modal
+        new bootstrap.Modal(document.getElementById('konfirmasiKerjakan')).show();
     });
 });
 </script>
 
-<style>
+<?php include '../includes/footer.php'; ?>

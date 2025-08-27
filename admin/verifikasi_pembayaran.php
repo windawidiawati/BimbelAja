@@ -9,24 +9,11 @@ if ($_SESSION['user']['role'] !== 'admin') {
     exit;
 }
 
-// Paginasi
-$limit = 10; // jumlah data per halaman
-$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-if ($page < 1) $page = 1;
-$offset = ($page - 1) * $limit;
-
-// Hitung total data
-$total_result = $conn->query("SELECT COUNT(*) AS total FROM pembayaran");
-$total_row = $total_result->fetch_assoc();
-$total_data = $total_row['total'];
-$total_pages = ceil($total_data / $limit);
-
-// Ambil data pembayaran + user dengan LIMIT
+// Ambil data pembayaran + user (tanpa LIMIT karena DataTables yg atur)
 $query = "SELECT p.*, u.username, u.nama 
           FROM pembayaran p 
           JOIN users u ON p.user_id = u.id 
-          ORDER BY p.tanggal DESC
-          LIMIT $limit OFFSET $offset";
+          ORDER BY p.tanggal DESC";
 $result = $conn->query($query);
 
 // Proses hapus pembayaran
@@ -63,7 +50,7 @@ if (isset($_POST['edit_status']) && isset($_POST['id'])) {
         </div>
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-striped table-hover">
+                <table id="pembayaranTable" class="table table-striped table-hover">
                     <thead class="table-light">
                         <tr>
                             <th>No</th>
@@ -78,7 +65,7 @@ if (isset($_POST['edit_status']) && isset($_POST['id'])) {
                     </thead>
                     <tbody>
                         <?php if ($result && $result->num_rows > 0): ?>
-                            <?php $no = $offset + 1; while ($row = $result->fetch_assoc()): ?>
+                            <?php $no = 1; while ($row = $result->fetch_assoc()): ?>
                                 <tr>
                                     <td><?= $no++ ?></td>
                                     <td><?= htmlspecialchars($row['nama']) ?></td>
@@ -111,17 +98,6 @@ if (isset($_POST['edit_status']) && isset($_POST['id'])) {
                     </tbody>
                 </table>
             </div>
-
-            <!-- Paginasi -->
-            <nav>
-                <ul class="pagination justify-content-center">
-                    <?php for ($i = 1; $i <= $total_pages; $i++): ?>
-                        <li class="page-item <?= ($i == $page) ? 'active' : '' ?>">
-                            <a class="page-link" href="?page=<?= $i ?>"><?= $i ?></a>
-                        </li>
-                    <?php endfor; ?>
-                </ul>
-            </nav>
         </div>
     </div>
 </div>
@@ -169,24 +145,30 @@ if (isset($_POST['edit_status']) && isset($_POST['id'])) {
     </div>
 </div>
 
-<script>
-    document.querySelectorAll('.btn-edit').forEach(button => {
-        button.addEventListener('click', () => {
-            const id = button.dataset.id;
-            const nama = button.dataset.nama;
-            const username = button.dataset.username;
-            const paket = button.dataset.paket;
-            const harga = button.dataset.harga;
-            const status = button.dataset.status;
+<!-- DataTables -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
 
-            document.getElementById('edit-id').value = id;
-            document.getElementById('edit-nama').value = nama;
-            document.getElementById('edit-username').value = username;
-            document.getElementById('edit-paket').value = paket;
-            document.getElementById('edit-harga').value = harga;
-            document.getElementById('edit-status').value = status;
-        });
+<script>
+$(document).ready(function() {
+    $('#pembayaranTable').DataTable({
+        "pageLength": 10,
+        "lengthMenu": [10, 25, 50, 100],
+        "order": [[6, "desc"]], // Kolom tanggal paling baru di atas
     });
+
+    // Modal edit data
+    $(document).on('click', '.btn-edit', function() {
+        $('#edit-id').val($(this).data('id'));
+        $('#edit-nama').val($(this).data('nama'));
+        $('#edit-username').val($(this).data('username'));
+        $('#edit-paket').val($(this).data('paket'));
+        $('#edit-harga').val($(this).data('harga'));
+        $('#edit-status').val($(this).data('status'));
+    });
+});
 </script>
 
 <?php include '../includes/admin_footer.php'; ?>

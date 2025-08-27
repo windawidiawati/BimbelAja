@@ -1,6 +1,7 @@
 <?php
 session_start();
 include '../config/database.php';
+$title = "Profil Siswa";
 include '../includes/siswa_header_langganan.php';
 
 if (!isset($_SESSION['user']) || !in_array($_SESSION['user']['role'], ['siswa', 'tutor'])) {

@@ -59,7 +59,7 @@ $html = '
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Invoice #' . $transaksi['kode_bayar'] . '</title>
+    <title>Invoice #' . $transaksi['kode_unik'] . '</title>
     <style>
         body { 
             font-family: Helvetica, Arial, sans-serif; 

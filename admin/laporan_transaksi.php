@@ -9,9 +9,6 @@ $bulan  = isset($_GET['bulan']) ? $_GET['bulan'] : '';
 $tahun  = isset($_GET['tahun']) ? $_GET['tahun'] : '';
 $status = isset($_GET['status']) ? $_GET['status'] : '';
 $search = isset($_GET['search']) ? $_GET['search'] : '';
-$page   = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-$per_page = 10;
-$offset = ($page - 1) * $per_page;
 
 // Ringkasan Pendapatan
 $total_hari_ini  = 0;
@@ -27,7 +24,7 @@ if ($q_bulan) $total_bulan_ini = mysqli_fetch_assoc($q_bulan)['total'] ?? 0;
 $q_tahun = mysqli_query($conn, "SELECT SUM(harga) AS total FROM pembayaran WHERE YEAR(tanggal) = YEAR(CURDATE()) AND status = 'sukses'");
 if ($q_tahun) $total_tahun_ini = mysqli_fetch_assoc($q_tahun)['total'] ?? 0;
 
-// Bangun filter dinamis
+// Query untuk mengambil semua data (DataTables akan menangani pagination di sisi klien)
 $whereClauses = [];
 if (!empty($bulan)) {
     $whereClauses[] = "MONTH(p.tanggal) = " . intval($bulan);
@@ -38,9 +35,10 @@ if (!empty($tahun)) {
 if (!empty($status)) {
     $whereClauses[] = "p.status = '" . mysqli_real_escape_string($conn, $status) . "'";
 }
+// Tambahkan filter pencarian jika ada
 if (!empty($search)) {
-    $safeSearch = mysqli_real_escape_string($conn, $search);
-   $whereClauses[] = "(u.nama LIKE '%$safeSearch%' OR p.kode_unik LIKE '%$safeSearch%')";
+    $search_query = mysqli_real_escape_string($conn, $search);
+    $whereClauses[] = "(u.nama LIKE '%$search_query%' OR p.kode_unik LIKE '%$search_query%')";
 }
 
 $where = "";
@@ -48,22 +46,7 @@ if (!empty($whereClauses)) {
     $where = "WHERE " . implode(" AND ", $whereClauses);
 }
 
-// Hitung total data untuk pagination
-$total_rows = 0;
-$total_pages = 1;
-$total_query = "SELECT COUNT(*) AS total
-                FROM pembayaran p
-                LEFT JOIN users u ON p.user_id = u.id
-                LEFT JOIN paket pk ON p.paket_id = pk.id
-                LEFT JOIN langganan l ON p.user_id = l.user_id AND p.paket_id = l.paket_id
-                $where";
-$res_total = mysqli_query($conn, $total_query);
-if ($res_total) {
-    $total_rows = mysqli_fetch_assoc($res_total)['total'] ?? 0;
-    $total_pages = max(1, ceil($total_rows / $per_page));
-}
-
-// Query utama
+// Query utama untuk mengambil semua data
 $sql = "SELECT p.id AS pembayaran_id, p.*, 
                u.nama AS nama_siswa, 
                u.email AS email_siswa, 
@@ -84,8 +67,7 @@ $sql = "SELECT p.id AS pembayaran_id, p.*,
         LEFT JOIN paket pk ON p.paket_id = pk.id
         LEFT JOIN langganan l ON p.user_id = l.user_id AND p.paket_id = l.paket_id
         $where
-        ORDER BY p.tanggal DESC
-        LIMIT $offset, $per_page";
+        ORDER BY p.tanggal DESC";
 $result = mysqli_query($conn, $sql);
 if (!$result) {
     $error = "Query error: " . mysqli_error($conn);
@@ -98,6 +80,8 @@ if (!$result) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Laporan Transaksi</title>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
     <style>
         /* CSS untuk tombol aksi */
         .btn-group .btn-sm {
@@ -110,6 +94,38 @@ if (!$result) {
         .btn-group .btn:last-child {
             margin-right: 0;
         }
+        /* Styling untuk DataTables */
+        .dataTables_wrapper {
+            padding: 0;
+        }
+        .dataTables_length, .dataTables_filter {
+            margin-bottom: 15px;
+        }
+        table.dataTable {
+            border-collapse: collapse !important;
+            margin-top: 0 !important;
+            margin-bottom: 15px !important;
+        }
+        /* Untuk memastikan filter form tetap rapi */
+        .filter-form .form-control {
+            margin-bottom: 10px;
+        }
+        /* Badge status */
+        .badge-success { background-color: #28a745; }
+        .badge-warning { background-color: #ffc107; color: #212529; }
+        .badge-danger { background-color: #dc3545; }
+        .badge-info { background-color: #17a2b8; color: white; }
+        .badge-secondary { background-color: #6c757d; }
+        /* Toast notification */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+        .toast {
+            min-width: 250px;
+        }
     </style>
 </head>
 <body>
@@ -121,7 +137,8 @@ if (!$result) {
             <div class="alert alert-danger"><?= $error ?></div>
         <?php endif; ?>
 
-        <!-- Ringkasan -->
+        <div class="toast-container"></div>
+
         <div class="row mb-4">
             <div class="col-md-4">
                 <div class="card bg-primary text-white">
@@ -149,8 +166,7 @@ if (!$result) {
             </div>
         </div>
 
-        <!-- Filter -->
-        <form method="get" class="row mb-3">
+        <form method="get" class="row mb-3 filter-form">
             <div class="col-md-2">
                 <select name="bulan" class="form-control">
                     <option value="">Semua Bulan</option>
@@ -170,13 +186,13 @@ if (!$result) {
                 </select>
             </div>
             <div class="col-md-2">
-                <select name="status" id="edit_status" class="form-control" required>
-    <option value="lunas">Lunas</option>
-    <option value="pending">Pending</option>
-    <option value="ditolak">Ditolak</option>
-    <option value="menunggu_kasir">Menunggu Kasir</option>
-</select>
-
+                <select name="status" class="form-control">
+                    <option value="">Semua Status</option>
+                    <option value="lunas" <?= ($status=='lunas')?'selected':'' ?>>Lunas</option>
+                    <option value="pending" <?= ($status=='pending')?'selected':'' ?>>Pending</option>
+                    <option value="ditolak" <?= ($status=='ditolak')?'selected':'' ?>>Ditolak</option>
+                    <option value="menunggu_kasir" <?= ($status=='menunggu_kasir')?'selected':'' ?>>Menunggu Kasir</option>
+                </select>
             </div>
             <div class="col-md-4">
                 <input type="text" name="search" class="form-control" placeholder="Cari nama / kode transaksi" value="<?= htmlspecialchars($search) ?>">
@@ -186,9 +202,8 @@ if (!$result) {
             </div>
         </form>
 
-        <!-- Tabel -->
         <div class="table-responsive">
-            <table class="table table-bordered">
+            <table id="tabelTransaksi" class="table table-bordered table-striped" style="width:100%">
                 <thead class="table-light">
                     <tr>
                         <th>No</th>
@@ -204,18 +219,18 @@ if (!$result) {
                     </tr>
                 </thead>
                 <tbody>
-                    <?php if($result && $result->num_rows > 0): $no = $offset + 1; ?>
+                    <?php if($result && $result->num_rows > 0): $no = 1; ?>
                         <?php while($row = $result->fetch_assoc()): ?>
-                            <tr>
+                            <tr id="row-<?= $row['pembayaran_id'] ?>">
                                 <td><?= $no++ ?></td>
                                 <td><?= htmlspecialchars($row['nama_siswa'] ?? '-') ?></td>
                                 <td><?= htmlspecialchars($row['jenjang_siswa'] ?? '-') ?></td>
                                 <td><?= htmlspecialchars($row['nama_paket'] ?? '-') ?> <small>(<?= ucfirst($row['tipe_paket'] ?? '-') ?>)</small></td>
                                 <td>Rp <?= number_format($row['harga'], 0, ',', '.') ?></td>
-                                <td><?= !empty($row['tanggal']) ? date("d M Y", strtotime($row['tanggal'])) : '-' ?></td>
-                               <td><?= htmlspecialchars($row['kode_unik'] ?? '-') ?></td>
-                                <td><?= htmlspecialchars($row['metode'] ?? '-') ?></td>
-                                <td>
+                                <td class="tanggal-cell"><?= !empty($row['tanggal']) ? date("d M Y", strtotime($row['tanggal'])) : '-' ?></td>
+                                <td class="kode-cell"><?= htmlspecialchars($row['kode_unik'] ?? '-') ?></td>
+                                <td class="metode-cell"><?= htmlspecialchars($row['metode'] ?? '-') ?></td>
+                                <td class="status-cell">
                                    <span class="badge bg-<?= 
     ($row['status'] ?? '')=='lunas' ? 'success' : 
     (($row['status'] ?? '')=='pending' ? 'warning text-dark' : 
@@ -224,14 +239,13 @@ if (!$result) {
 ?>">
     <?= ucfirst(str_replace('_',' ',$row['status'] ?? '-')) ?>
 </span>
-
                                 </td>
                                 <td>
                                     <div class="btn-group">
                                         <button type="button" 
                                             class="btn btn-warning btn-sm edit-btn"
                                             data-id="<?= $row['pembayaran_id'] ?>"
-                                           data-kode="<?= htmlspecialchars($row['kode_unik'] ?? '') ?>"
+                                            data-kode="<?= htmlspecialchars($row['kode_unik'] ?? '') ?>"
                                             data-tanggal="<?= !empty($row['tanggal']) ? date("Y-m-d", strtotime($row['tanggal'])) : '' ?>"
                                             data-metode="<?= htmlspecialchars($row['metode'] ?? '') ?>"
                                             data-status="<?= htmlspecialchars($row['status'] ?? '') ?>"
@@ -253,26 +267,19 @@ if (!$result) {
                 </tbody>
             </table>
         </div>
-
-        <!-- Pagination -->
-        <nav>
-            <ul class="pagination justify-content-center">
-                <?php for($i=1; $i<=$total_pages; $i++): ?>
-                    <li class="page-item <?= ($page==$i)?'active':'' ?>">
-                        <a class="page-link" href="?page=<?= $i ?>&bulan=<?= $bulan ?>&tahun=<?= $tahun ?>&status=<?= $status ?>&search=<?= urlencode($search) ?>"><?= $i ?></a>
-                    </li>
-                <?php endfor; ?>
-            </ul>
-        </nav>
     </div>
 </div>
 
-<!-- Modal Edit -->
 <div class="modal fade" id="editModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form method="post" action="update_transaksi.php">
+            <form id="editForm" action="update_transaksi.php" method="POST">
                 <input type="hidden" name="pembayaran_id" id="edit_pembayaran_id">
+                <input type="hidden" name="bulan_filter" value="<?= htmlspecialchars($bulan) ?>">
+                <input type="hidden" name="tahun_filter" value="<?= htmlspecialchars($tahun) ?>">
+                <input type="hidden" name="status_filter" value="<?= htmlspecialchars($status) ?>">
+                <input type="hidden" name="search_filter" value="<?= htmlspecialchars($search) ?>">
+
                 <div class="modal-header">
                     <h5 class="modal-title">Edit Transaksi</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -295,15 +302,14 @@ if (!$result) {
                         </select>
                     </div>
                     <div class="mb-2">
-    <label>Status</label>
-    <select name="status" id="edit_status" class="form-control" required>
-        <option value="lunas">Lunas</option>
-        <option value="pending">Pending</option>
-        <option value="ditolak">Ditolak</option>
-        <option value="menunggu_kasir">Menunggu Kasir</option>
-    </select>
-</div>
-
+                        <label>Status</label>
+                        <select name="status" id="edit_status" class="form-control" required>
+                            <option value="lunas">Lunas</option>
+                            <option value="pending">Pending</option>
+                            <option value="ditolak">Ditolak</option>
+                            <option value="menunggu_kasir">Menunggu Kasir</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
@@ -314,16 +320,44 @@ if (!$result) {
     </div>
 </div>
 
+<script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
+
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.edit-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            document.getElementById('edit_pembayaran_id').value = this.dataset.id;
-            document.getElementById('edit_kode_unik').value = this.dataset.kode;
-            document.getElementById('edit_tanggal').value = this.dataset.tanggal;
-            document.getElementById('edit_metode').value = this.dataset.metode;
-            document.getElementById('edit_status').value = this.dataset.status;
-        });
+$(document).ready(function() {
+    // Inisialisasi DataTable
+    $('#tabelTransaksi').DataTable({
+        responsive: true,
+        ordering: true,
+        searching: true,
+        lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Semua"]],
+        pageLength: 10,
+        language: {
+            search: "Cari:",
+            lengthMenu: "Tampilkan _MENU_ data per halaman",
+            info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+            infoEmpty: "Menampilkan 0 sampai 0 dari 0 data",
+            infoFiltered: "(disaring dari _MAX_ total data)",
+            paginate: {
+                first: "Pertama",
+                last: "Terakhir",
+                next: "Selanjutnya",
+                previous: "Sebelumnya"
+            }
+        }
+    });
+
+    // Handle klik tombol Edit
+    $(document).on('click', '.edit-btn', function() {
+        var $btn = $(this);
+        $('#edit_pembayaran_id').val($btn.data('id') || '');
+        $('#edit_kode_unik').val($btn.data('kode') || '');
+        $('#edit_tanggal').val($btn.data('tanggal') || '');
+        $('#edit_metode').val($btn.data('metode') || '');
+        $('#edit_status').val($btn.data('status') || '');
     });
 });
 </script>

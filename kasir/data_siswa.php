@@ -2,33 +2,79 @@
 include '../includes/kasir_header.php';
 include '../config/database.php';
 
-// Ambil data siswa dari langganan yang sudah pernah langganan
-    $query = "
-        SELECT 
-            l.*, 
-            u.nama AS nama_siswa,
-            k.nama_kelas, k.jenjang,
-            p.nama AS nama_paket
-        FROM langganan l
-        JOIN users u ON l.user_id = u.id
-        JOIN kelas k ON l.kelas_id = k.id
-        JOIN paket p ON l.paket_id = p.id
-        ORDER BY l.created_at DESC
-    ";
+// Ambil filter dari GET jika ada
+$filter_kelas = isset($_GET['kelas_id']) && is_numeric($_GET['kelas_id']) ? intval($_GET['kelas_id']) : 0;
+$filter_paket = isset($_GET['paket_id']) && is_numeric($_GET['paket_id']) ? intval($_GET['paket_id']) : 0;
+
+// Buat query utama dengan filter
+$query = "
+    SELECT 
+        l.*, 
+        u.nama AS nama_siswa,
+        k.nama_kelas, k.jenjang,
+        p.nama AS nama_paket
+    FROM langganan l
+    JOIN users u ON l.user_id = u.id
+    JOIN kelas k ON l.kelas_id = k.id
+    JOIN paket p ON l.paket_id = p.id
+    WHERE 1=1
+";
+
+// Tambahkan kondisi filter jika ada
+if ($filter_kelas > 0) {
+    $query .= " AND l.kelas_id = $filter_kelas ";
+}
+if ($filter_paket > 0) {
+    $query .= " AND l.paket_id = $filter_paket ";
+}
+
+$query .= " ORDER BY l.created_at DESC";
 $result = mysqli_query($conn, $query);
 
-// Data dropdown kelas & paket
-// $kelas_result = mysqli_query($conn, "SELECT DISTINCT nama_kelas FROM kelas");
-// $paket_result = mysqli_query($conn, "SELECT DISTINCT nama FROM paket");
-// ?>
+// Ambil data dropdown kelas & paket untuk filter dan modal
+$kelas_result = mysqli_query($conn, "SELECT id, nama_kelas FROM kelas ORDER BY nama_kelas ASC");
+$paket_result = mysqli_query($conn, "SELECT id, nama FROM paket ORDER BY nama ASC");
+?>
 
 <div class="container mt-4">
     <h4 class="fw-bold mb-4"><i class="bi bi-people-fill me-2"></i>Data Siswa (Perpanjang Paket)</h4>
 
-    <!-- Tombol Perpanjang -->
-    <button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#perpanjangModal">
-        <i class="bi bi-arrow-repeat me-1"></i> Perpanjang Paket
-    </button>
+    <!-- Form Filter -->
+    <form method="GET" class="row g-3 mb-3 align-items-end">
+        <div class="col-auto">
+            <label for="kelas_id" class="form-label">Filter Kelas</label>
+            <select name="kelas_id" id="kelas_id" class="form-select">
+                <option value="0">-- Semua Kelas --</option>
+                <?php 
+                // Karena $kelas_result sudah dipakai di modal nanti, reload dulu agar pointer kembali ke awal
+                mysqli_data_seek($kelas_result, 0); 
+                while ($k = mysqli_fetch_assoc($kelas_result)) : ?>
+                    <option value="<?= $k['id'] ?>" <?= $filter_kelas == $k['id'] ? 'selected' : '' ?>>
+                        <?= htmlspecialchars($k['nama_kelas']) ?>
+                    </option>
+                <?php endwhile; ?>
+            </select>
+        </div>
+
+        <div class="col-auto">
+            <label for="paket_id" class="form-label">Filter Paket</label>
+            <select name="paket_id" id="paket_id" class="form-select">
+                <option value="0">-- Semua Paket --</option>
+                <?php 
+                mysqli_data_seek($paket_result, 0);
+                while ($p = mysqli_fetch_assoc($paket_result)) : ?>
+                    <option value="<?= $p['id'] ?>" <?= $filter_paket == $p['id'] ? 'selected' : '' ?>>
+                        <?= htmlspecialchars($p['nama']) ?>
+                    </option>
+                <?php endwhile; ?>
+            </select>
+        </div>
+
+        <div class="col-auto">
+            <button type="submit" class="btn btn-primary">Filter</button>
+            <a href="<?= basename($_SERVER['PHP_SELF']) ?>" class="btn btn-secondary">Reset</a>
+        </div>
+    </form>
 
     <div class="table-responsive">
         <table class="table table-bordered align-middle">
@@ -66,7 +112,8 @@ $result = mysqli_query($conn, $query);
     </div>
 </div>
 
-<!-- Modal Perpanjang -->
+<!-- Modal Perpanjang tetap sama -->
+
 <div class="modal fade" id="perpanjangModal" tabindex="-1" aria-labelledby="perpanjangModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <form action="proses_perpanjang.php" method="POST" class="modal-content">
@@ -91,11 +138,11 @@ $result = mysqli_query($conn, $query);
 
               <!-- Kelas -->
                 <div class="mb-3">
-                    <label for="kelas_id" class="form-label">Kelas</label>
-                    <select name="kelas_id" class="form-select" required>
+                    <label for="kelas_id_modal" class="form-label">Kelas</label>
+                    <select name="kelas_id" id="kelas_id_modal" class="form-select" required>
                         <option value="">-- Pilih Kelas --</option>
                         <?php
-                        $kelas_result = mysqli_query($conn, "SELECT id, nama_kelas FROM kelas");
+                        mysqli_data_seek($kelas_result, 0);
                         while ($k = mysqli_fetch_assoc($kelas_result)) :
                         ?>
                             <option value="<?= $k['id'] ?>"><?= $k['nama_kelas'] ?></option>
@@ -105,18 +152,17 @@ $result = mysqli_query($conn, $query);
 
                 <!-- Paket -->
                 <div class="mb-3">
-                    <label for="paket_id" class="form-label">Paket</label>
-                    <select name="paket_id" class="form-select" required>
+                    <label for="paket_id_modal" class="form-label">Paket</label>
+                    <select name="paket_id" id="paket_id_modal" class="form-select" required>
                         <option value="">-- Pilih Paket --</option>
                         <?php
-                        $paket_result = mysqli_query($conn, "SELECT id, nama FROM paket");
+                        mysqli_data_seek($paket_result, 0);
                         while ($p = mysqli_fetch_assoc($paket_result)) :
                         ?>
                             <option value="<?= $p['id'] ?>"><?= $p['nama'] ?></option>
                         <?php endwhile; ?>
                     </select>
                 </div>
-
 
                 <!-- Tanggal mulai dan berakhir -->
                 <div class="mb-3">

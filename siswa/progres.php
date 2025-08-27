@@ -4,6 +4,7 @@ if ($_SESSION['user']['role'] !== 'siswa') {
     header('Location: ../index.php');
     exit;
 }
+$title = "Progres Siswa";
 include '../includes/siswa_header_langganan.php';
 include '../config/database.php';
 

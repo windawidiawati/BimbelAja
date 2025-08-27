@@ -55,7 +55,7 @@ if ($edit_id) {
   <?php endif; ?>
 
   <div class="table-responsive">
-    <table class="table table-bordered bg-white shadow-sm">
+    <table class="table table-bordered bg-white shadow-sm" id="materiTable">
       <thead class="table-primary">
         <tr>
           <th>Judul</th>
@@ -95,33 +95,31 @@ if ($edit_id) {
           </td>
           <td><?= ucfirst($row['tipe_file']) ?></td>
           <td>
-           <span class="badge
-  <?= $row['status'] == 'diterima' ? 'bg-success' 
-      : ($row['status'] == 'ditolak' ? 'bg-danger' 
-      : 'bg-warning text-dark') ?>">
-  <?= $row['status'] ? ucfirst($row['status']) : 'Diproses' ?>
-</span>
-
+            <span class="badge
+              <?= $row['status'] == 'diterima' ? 'bg-success' 
+                  : ($row['status'] == 'ditolak' ? 'bg-danger' 
+                  : 'bg-warning text-dark') ?>">
+              <?= $row['status'] ? ucfirst($row['status']) : 'Diproses' ?>
+            </span>
           </td>
           <td>
-  <div class="btn-group" role="group" aria-label="Aksi">
-    <a href="?edit=<?= $row['id'] ?>" class="btn btn-warning btn-sm" title="Edit">✏</a>
-    <form action="proses_materi.php" method="POST" class="d-inline">
-      <input type="hidden" name="id" value="<?= $row['id'] ?>">
-      <button name="setujui" class="btn btn-success btn-sm" title="Setujui" onclick="return confirm('Setujui materi ini?')">✔</button>
-      <input type="hidden" name="status" value="diterima">
-    </form>
-    <form action="proses_materi.php" method="POST" class="d-inline">
-      <input type="hidden" name="id" value="<?= $row['id'] ?>">
-      <button name="tolak" class="btn btn-danger btn-sm" title="Tolak" onclick="return confirm('Tolak materi ini?')">✖</button>
-    </form>
-    <form action="proses_materi.php" method="POST" class="d-inline">
-      <input type="hidden" name="id" value="<?= $row['id'] ?>">
-      <button name="hapus" class="btn btn-secondary btn-sm" title="Hapus" onclick="return confirm('Hapus materi ini?')">🗑</button>
-    </form>
-  </div>
-</td>
-
+            <div class="btn-group" role="group" aria-label="Aksi">
+              <a href="?edit=<?= $row['id'] ?>" class="btn btn-warning btn-sm" title="Edit">✏</a>
+              <form action="proses_materi.php" method="POST" class="d-inline">
+                <input type="hidden" name="id" value="<?= $row['id'] ?>">
+                <button name="setujui" class="btn btn-success btn-sm" title="Setujui" onclick="return confirm('Setujui materi ini?')">✔</button>
+                <input type="hidden" name="status" value="diterima">
+              </form>
+              <form action="proses_materi.php" method="POST" class="d-inline">
+                <input type="hidden" name="id" value="<?= $row['id'] ?>">
+                <button name="tolak" class="btn btn-danger btn-sm" title="Tolak" onclick="return confirm('Tolak materi ini?')">✖</button>
+              </form>
+              <form action="proses_materi.php" method="POST" class="d-inline">
+                <input type="hidden" name="id" value="<?= $row['id'] ?>">
+                <button name="hapus" class="btn btn-secondary btn-sm" title="Hapus" onclick="return confirm('Hapus materi ini?')">🗑</button>
+              </form>
+            </div>
+          </td>
         </tr>
         <?php endwhile; else: ?>
         <tr><td colspan="9" class="text-center">Belum ada materi.</td></tr>
@@ -155,7 +153,6 @@ if ($edit_id) {
           <label>Kategori</label>
           <select name="kategori_id" class="form-select" required>
             <option value="">-- Pilih Kategori --</option>
-            
             <?php
             $kategori = mysqli_query($conn, "SELECT * FROM kategori_materi");
             while ($k = mysqli_fetch_assoc($kategori)):
@@ -164,26 +161,21 @@ if ($edit_id) {
               <option value="<?= $k['id'] ?>" <?= $selected ?>><?= htmlspecialchars($k['nama_kategori']) ?></option>
             <?php endwhile; ?>
           </select>
-          <?php if ($edit_id): ?>
-<div class="mb-3">
-    <label>Status</label>
-    <select name="status" class="form-select" required>
-        <?php
-        $allowedStatus = ['menunggu', 'diproses', 'disetujui', 'ditolak'];
-        foreach ($allowedStatus as $s) {
-            $selected = ($edit_data['status'] ?? '') == $s ? 'selected' : '';
-            echo "<option value='$s' $selected>" . ucfirst($s) . "</option>";
-        }
-        ?>
-    </select>
-</div>
-
-
-</div>
-<?php endif; ?>
-
-
         </div>
+        <?php if ($edit_id): ?>
+        <div class="mb-3">
+          <label>Status</label>
+          <select name="status" class="form-select" required>
+            <?php
+            $allowedStatus = ['menunggu', 'diproses', 'diterima', 'ditolak'];
+            foreach ($allowedStatus as $s) {
+                $selected = ($edit_data['status'] ?? '') == $s ? 'selected' : '';
+                echo "<option value='$s' $selected>" . ucfirst($s) . "</option>";
+            }
+            ?>
+          </select>
+        </div>
+        <?php endif; ?>
         <div class="mb-3">
           <label>Kelas</label>
           <select name="kelas_id" class="form-select" required>
@@ -198,24 +190,23 @@ if ($edit_id) {
           </select>
         </div>
         <div class="mb-3">
-  <label>Paket</label>
-  <select name="paket_id" class="form-select">
-    <option value="">-- Pilih Paket --</option>
-    <?php
-    $paket = mysqli_query($conn, "SELECT * FROM paket");
-    while ($p = mysqli_fetch_assoc($paket)):
-      $selected = ($edit_data['paket_id'] ?? '') == $p['id'] ? 'selected' : '';
-    ?>
-      <option value="<?= $p['id'] ?>" <?= $selected ?>><?= htmlspecialchars($p['nama']) ?></option>
-    <?php endwhile; ?>
-    <option value="0">-- Tambah Paket Baru --</option>
-  </select>
-</div>
-
-<div class="mb-3" id="paketBaruField" style="display:none;">
-  <label>Nama Paket Baru</label>
-  <input type="text" name="paket_baru" class="form-control" placeholder="Masukkan nama paket baru">
-</div>
+          <label>Paket</label>
+          <select name="paket_id" class="form-select">
+            <option value="">-- Pilih Paket --</option>
+            <?php
+            $paket = mysqli_query($conn, "SELECT * FROM paket");
+            while ($p = mysqli_fetch_assoc($paket)):
+              $selected = ($edit_data['paket_id'] ?? '') == $p['id'] ? 'selected' : '';
+            ?>
+              <option value="<?= $p['id'] ?>" <?= $selected ?>><?= htmlspecialchars($p['nama']) ?></option>
+            <?php endwhile; ?>
+            <option value="0">-- Tambah Paket Baru --</option>
+          </select>
+        </div>
+        <div class="mb-3" id="paketBaruField" style="display:none;">
+          <label>Nama Paket Baru</label>
+          <input type="text" name="paket_baru" class="form-control" placeholder="Masukkan nama paket baru">
+        </div>
         <div class="mb-3">
           <label>File Materi <?= $edit_id ? '(Kosongkan jika tidak diubah)' : '' ?></label>
           <input type="file" name="file" class="form-control" accept=".pdf,.mp4,.mkv,.avi,.mov" <?= $edit_id ? '' : 'required' ?>>
@@ -241,5 +232,30 @@ if ($edit_id) {
 </script>
 <?php endif; ?>
 
+<!-- DataTables -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script>
+$(document).ready(function() {
+  $('#materiTable').DataTable({
+    "pageLength": 10,
+    "lengthMenu": [10, 25, 50, 100],
+    "ordering": true,
+    "searching": true,
+    "language": {
+      "search": "Cari:",
+      "lengthMenu": "Tampilkan _MENU_ data",
+      "info": "Menampilkan _START_ - _END_ dari _TOTAL_ data",
+      "paginate": {
+        "next": "Berikutnya",
+        "previous": "Sebelumnya"
+      }
+    }
+  });
+});
+</script>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<?php include '../includes/admin_footer.php'; ?>
+<?php include '../includes/admin_footer.php'; ?> 

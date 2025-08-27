@@ -1,6 +1,7 @@
 <?php
 session_start();
 include '../config/database.php';
+$title = "Rekap Absensi";
 include '../includes/siswa_header_langganan.php';
 
 // Pastikan user adalah siswa
