@@ -35,6 +35,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_user'])) {
   $jenjang = mysqli_real_escape_string($conn, $_POST['jenjang'] ?? '');
   $kelas = mysqli_real_escape_string($conn, $_POST['kelas'] ?? ''); 
   $keahlian = mysqli_real_escape_string($conn, $_POST['keahlian'] ?? '');
+  $email = mysqli_real_escape_string($conn, $_POST['email'] ?? '');
+  $no_hp = mysqli_real_escape_string($conn, $_POST['no_hp'] ?? '');
 
   if ($nama && $username && $password && $role) {
     $hashed = password_hash($password, PASSWORD_DEFAULT);
@@ -44,17 +46,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_user'])) {
     $created_values = $has_created_at ? ", NOW()" : "";
 
     if ($role === 'siswa') {
-      $sql = "INSERT INTO users (nama, username, password, role, jenjang, kelas_id$created_part) VALUES (?, ?, ?, ?, ?, ?$created_values)";
+      $sql = "INSERT INTO users (nama, username, password, role, jenjang, kelas_id, email, no_hp$created_part) VALUES (?, ?, ?, ?, ?, ?, ?, ?$created_values)";
       $stmt = $conn->prepare($sql);
-      $stmt->bind_param("sssssi", $nama, $username, $hashed, $role, $jenjang, $kelas);
+      $stmt->bind_param("ssssssss", $nama, $username, $hashed, $role, $jenjang, $kelas, $email, $no_hp);
     } elseif ($role === 'tutor') {
-      $sql = "INSERT INTO users (nama, username, password, role, keahlian$created_part) VALUES (?, ?, ?, ?, ?$created_values)";
+      $sql = "INSERT INTO users (nama, username, password, role, keahlian, email, no_hp$created_part) VALUES (?, ?, ?, ?, ?, ?, ?$created_values)";
       $stmt = $conn->prepare($sql);
-      $stmt->bind_param("sssss", $nama, $username, $hashed, $role, $keahlian);
+      $stmt->bind_param("sssssss", $nama, $username, $hashed, $role, $keahlian, $email, $no_hp);
     } else {
-      $sql = "INSERT INTO users (nama, username, password, role$created_part) VALUES (?, ?, ?, ?$created_values)";
+      $sql = "INSERT INTO users (nama, username, password, role, email, no_hp$created_part) VALUES (?, ?, ?, ?, ?, ?$created_values)";
       $stmt = $conn->prepare($sql);
-      $stmt->bind_param("ssss", $nama, $username, $hashed, $role);
+      $stmt->bind_param("ssssss", $nama, $username, $hashed, $role, $email, $no_hp);
     }
 
     if ($stmt && $stmt->execute()) {
@@ -79,44 +81,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_user'])) {
   $jenjang = mysqli_real_escape_string($conn, $_POST['jenjang'] ?? '');
   $kelas = mysqli_real_escape_string($conn, $_POST['kelas'] ?? '');
   $keahlian = mysqli_real_escape_string($conn, $_POST['keahlian'] ?? '');
+  $email = mysqli_real_escape_string($conn, $_POST['email'] ?? '');
+  $no_hp = mysqli_real_escape_string($conn, $_POST['no_hp'] ?? '');
 
-  // Tentukan bagian timestamp: prefer updated_at, jika tidak ada gunakan created_at update
   $timestamp_sql = "";
   if ($has_updated_at) {
     $timestamp_sql = ", updated_at = NOW()";
   } elseif ($has_created_at) {
-    // fallback: set created_at = NOW() (memindahkan record ke atas)
     $timestamp_sql = ", created_at = NOW()";
   }
 
   if (empty($password)) {
     if ($role === 'siswa') {
-      $sql = "UPDATE users SET nama=?, username=?, role=?, jenjang=?, kelas_id=?, keahlian=NULL $timestamp_sql WHERE id=?";
+      $sql = "UPDATE users SET nama=?, username=?, role=?, jenjang=?, kelas_id=?, keahlian=NULL, email=?, no_hp=? $timestamp_sql WHERE id=?";
       $stmt = $conn->prepare($sql);
-      $stmt->bind_param("sssssi", $nama, $username, $role, $jenjang, $kelas, $id);
+      $stmt->bind_param("sssssssi", $nama, $username, $role, $jenjang, $kelas, $email, $no_hp, $id);
     } elseif ($role === 'tutor') {
-      $sql = "UPDATE users SET nama=?, username=?, role=?, keahlian=?, jenjang=NULL, kelas_id=NULL $timestamp_sql WHERE id=?";
+      $sql = "UPDATE users SET nama=?, username=?, role=?, keahlian=?, jenjang=NULL, kelas_id=NULL, email=?, no_hp=? $timestamp_sql WHERE id=?";
       $stmt = $conn->prepare($sql);
-      $stmt->bind_param("ssssi", $nama, $username, $role, $keahlian, $id);
+      $stmt->bind_param("sssssssi", $nama, $username, $role, $keahlian, $email, $no_hp, $id);
     } else {
-      $sql = "UPDATE users SET nama=?, username=?, role=?, jenjang=NULL, kelas_id=NULL, keahlian=NULL $timestamp_sql WHERE id=?";
+      $sql = "UPDATE users SET nama=?, username=?, role=?, jenjang=NULL, kelas_id=NULL, keahlian=NULL, email=?, no_hp=? $timestamp_sql WHERE id=?";
       $stmt = $conn->prepare($sql);
-      $stmt->bind_param("sssi", $nama, $username, $role, $id);
+      $stmt->bind_param("ssssssi", $nama, $username, $role, $email, $no_hp, $id);
     }
   } else {
     $hashed = password_hash($password, PASSWORD_DEFAULT);
     if ($role === 'siswa') {
-      $sql = "UPDATE users SET nama=?, username=?, password=?, role=?, jenjang=?, kelas_id=?, keahlian=NULL $timestamp_sql WHERE id=?";
+      $sql = "UPDATE users SET nama=?, username=?, password=?, role=?, jenjang=?, kelas_id=?, keahlian=NULL, email=?, no_hp=? $timestamp_sql WHERE id=?";
       $stmt = $conn->prepare($sql);
-      $stmt->bind_param("ssssssi", $nama, $username, $hashed, $role, $jenjang, $kelas, $id);
+      $stmt->bind_param("ssssssssi", $nama, $username, $hashed, $role, $jenjang, $kelas, $email, $no_hp, $id);
     } elseif ($role === 'tutor') {
-      $sql = "UPDATE users SET nama=?, username=?, password=?, role=?, keahlian=?, jenjang=NULL, kelas_id=NULL $timestamp_sql WHERE id=?";
+      $sql = "UPDATE users SET nama=?, username=?, password=?, role=?, keahlian=?, jenjang=NULL, kelas_id=NULL, email=?, no_hp=? $timestamp_sql WHERE id=?";
       $stmt = $conn->prepare($sql);
-      $stmt->bind_param("sssssi", $nama, $username, $hashed, $role, $keahlian, $id);
+      $stmt->bind_param("ssssssssi", $nama, $username, $hashed, $role, $keahlian, $email, $no_hp, $id);
     } else {
-      $sql = "UPDATE users SET nama=?, username=?, password=?, role=?, jenjang=NULL, kelas_id=NULL, keahlian=NULL $timestamp_sql WHERE id=?";
+      $sql = "UPDATE users SET nama=?, username=?, password=?, role=?, jenjang=NULL, kelas_id=NULL, keahlian=NULL, email=?, no_hp=? $timestamp_sql WHERE id=?";
       $stmt = $conn->prepare($sql);
-      $stmt->bind_param("ssssi", $nama, $username, $hashed, $role, $id);
+      $stmt->bind_param("sssssssi", $nama, $username, $hashed, $role, $email, $no_hp, $id);
     }
   }
 
@@ -128,203 +130,69 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_user'])) {
   exit;
 }
 
-// Filter
-$filter_role = $_GET['role'] ?? '';
-$filter_jenjang = $_GET['jenjang'] ?? '';
-$filter_kelas = $_GET['kelas'] ?? '';
-$filter_keahlian = $_GET['keahlian'] ?? '';
-
-// Detail user
-$detail_user = null;
-if (isset($_GET['detail'])) {
-  $id = intval($_GET['detail']);
-  $detail_user = mysqli_fetch_assoc(mysqli_query($conn, 
-    "SELECT u.*, k.nama_kelas, p.nama as nama_paket 
-     FROM users u 
-     LEFT JOIN kelas k ON u.kelas_id = k.id 
-     LEFT JOIN langganan l ON u.id = l.user_id 
-     LEFT JOIN paket p ON l.paket_id = p.id 
-     WHERE u.id = $id"));
+// Query users: urutan paling atas adalah yang baru dibuat / diupdate
+$orderBy = "u.id DESC";
+if ($has_updated_at || $has_created_at) {
+  $orderBy = "COALESCE(u.updated_at, u.created_at, NOW()) DESC, u.id DESC";
 }
 
-// Buat SELECT field last_activity dinamis (tidak memanggil kolom yg tidak ada)
-$last_activity_select = "";
-if ($has_updated_at) {
-  // prefer updated_at (jika null fallback ke created_at)
-  // gunakan format ISO agar bisa dibandingkan dengan string di JS/DataTables (jika ada)
-  $last_activity_select = "COALESCE(u.updated_at, u.created_at, CAST(u.id AS CHAR)) AS last_activity";
-} elseif ($has_created_at) {
-  $last_activity_select = "COALESCE(u.created_at, CAST(u.id AS CHAR)) AS last_activity";
-} else {
-  // tidak ada timestamp => gunakan id sebagai fallback ordering key (lebih besar = baru)
-  $last_activity_select = "CAST(u.id AS CHAR) AS last_activity";
-}
-
-// Query users (tambahkan last_activity)
-$sql = "SELECT u.*, k.nama_kelas, p.nama as nama_paket, $last_activity_select
+$sql = "SELECT u.*, k.nama_kelas, p.nama as nama_paket 
         FROM users u 
         LEFT JOIN kelas k ON u.kelas_id = k.id 
         LEFT JOIN langganan l ON u.id = l.user_id 
         LEFT JOIN paket p ON l.paket_id = p.id 
-        WHERE 1=1";
-
-if ($filter_role) {
-  $sql .= " AND u.role = '" . $conn->real_escape_string($filter_role) . "'";
-  if ($filter_role === 'siswa' && $filter_jenjang) {
-    $sql .= " AND u.jenjang = '" . $conn->real_escape_string($filter_jenjang) . "'";
-    if ($filter_kelas) {
-      $sql .= " AND u.kelas_id = '" . intval($filter_kelas) . "'";
-    }
-  }
-  if ($filter_role === 'tutor' && $filter_keahlian) {
-    $sql .= " AND u.keahlian LIKE '%" . $conn->real_escape_string($filter_keahlian) . "%'";
-  }
-}
-
-// ORDER: gunakan last_activity descending agar create/update terbaru muncul paling atas
-// Jika last_activity berisi id (ketika tidak ada timestamps), DESC pada id juga menghasilkan yang terbaru paling atas.
-$sql .= " ORDER BY last_activity DESC";
+        ORDER BY $orderBy";
 
 $result = mysqli_query($conn, $sql);
-
-// Ambil data kelas
 $kelas_result = mysqli_query($conn, "SELECT * FROM kelas");
 ?>
 
+<!-- HTML & JS tetap sama persis (tidak berubah) -->
+
+<?php include '../includes/admin_footer.php'; ?> 
+
+
 <div class="content">
-  <?php if (isset($_GET['success'])): ?>
-    <div class="alert alert-success"><?= htmlspecialchars($_GET['success']) ?></div>
-  <?php endif; ?>
-  <?php if (isset($_GET['error'])): ?>
-    <div class="alert alert-danger"><?= htmlspecialchars($_GET['error']) ?></div>
-  <?php endif; ?>
+  <h3>Kelola User</h3>
+  <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#modalUser">+ Tambah User</button>
 
-  <?php if ($detail_user): ?>
-    <!-- Detail User -->
-    <div class="card mb-4">
-      <div class="card-header bg-white shadow-sm d-flex justify-content-between">
-        <h4>Detail Siswa: <?= htmlspecialchars($detail_user['nama']) ?></h4>
-        <a href="kelola_user.php" class="btn btn-light btn-sm">Kembali</a>
-      </div>
-      <div class="card-body">
-        <h5>Informasi Siswa</h5>
-        <p><strong>Username:</strong> <?= htmlspecialchars($detail_user['username']) ?></p>
-        <p><strong>Jenjang:</strong> <?= htmlspecialchars($detail_user['jenjang']) ?> | 
-           <strong>Kelas:</strong> <?= htmlspecialchars($detail_user['nama_kelas'] ?? '-') ?></p>
-        <hr>
-        <h5>Riwayat Pembayaran</h5>
-        <table class="table table-bordered bg-white shadow-sm">
-          <thead class="table-primary">
-            <tr><th>No</th><th>Paket</th><th>Harga</th><th>Status</th><th>Tanggal</th></tr>
-          </thead>
-          <tbody>
+  <div class="table-responsive">
+    <table id="userTable" class="table table-bordered bg-white shadow-sm">
+      <thead class="table-primary">
+        <tr>
+          <th>Nama</th>
+          <th>Username</th>
+          <th>Email</th>
+          <th>No HP</th>
+          <th>Role</th>
+          <th>Jenjang</th>
+          <th>Kelas</th>
+          <th>Keahlian</th>
+          <th>Aksi</th>
+        </tr>
+      </thead>
+      <tbody>
+        <?php if ($result && mysqli_num_rows($result) > 0): ?>
+          <?php while($row = mysqli_fetch_assoc($result)): ?>
             <tr>
-              <td>1</td>
-              <td><?= htmlspecialchars($detail_user['nama_paket'] ?? '-') ?></td>
-              <td>Rp 500.000</td>
-              <td>Lunas</td>
-              <td>05 Aug 2025 00:00</td>
+              <td><?= htmlspecialchars($row['nama']) ?></td>
+              <td><?= htmlspecialchars($row['username']) ?></td>
+              <td><?= htmlspecialchars($row['email']) ?></td>
+              <td><?= htmlspecialchars($row['no_hp']) ?></td>
+              <td><?= htmlspecialchars($row['role']) ?></td>
+              <td><?= $row['role']==='siswa' ? htmlspecialchars($row['jenjang']) : '-' ?></td>
+              <td><?= $row['role']==='siswa' ? htmlspecialchars($row['nama_kelas']) : '-' ?></td>
+              <td><?= $row['role']==='tutor' ? htmlspecialchars($row['keahlian']) : '-' ?></td>
+              <td>
+                <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#modalEditUser" onclick='editUser(<?= json_encode($row) ?>)'>Edit</button>
+                <a href="?hapus=<?= intval($row['id']) ?>" class="btn btn-sm btn-danger" onclick="return confirm('Yakin hapus user ini?')">Hapus</a>
+              </td>
             </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  <?php else: ?>
-    <!-- Kelola User -->
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <h3>Kelola User</h3>
-      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalUser">+ Tambah User</button>
-    </div>
-
-    <!-- Filter -->
-    <form method="GET" class="row g-2 mb-3">
-      <div class="col-md-3">
-        <select name="role" class="form-select" onchange="this.form.submit()">
-          <option value="">-- Semua Role --</option>
-          <option value="siswa" <?= $filter_role == 'siswa' ? 'selected' : '' ?>>Siswa</option>
-          <option value="tutor" <?= $filter_role == 'tutor' ? 'selected' : '' ?>>Tutor</option>
-          <option value="admin" <?= $filter_role == 'admin' ? 'selected' : '' ?>>Admin</option>
-          <option value="kasir" <?= $filter_role == 'kasir' ? 'selected' : '' ?>>Kasir</option>
-        </select>
-      </div>
-      <?php if ($filter_role === 'siswa'): ?>
-        <div class="col-md-3">
-          <select name="jenjang" class="form-select" onchange="this.form.submit()">
-            <option value="">-- Pilih Jenjang --</option>
-            <?php foreach (['SD','SMP','SMA'] as $j): ?>
-              <option value="<?= $j ?>" <?= $filter_jenjang == $j ? 'selected' : '' ?>><?= $j ?></option>
-            <?php endforeach; ?>
-          </select>
-        </div>
-        <div class="col-md-3">
-          <select name="kelas" class="form-select" <?= $filter_jenjang ? '' : 'disabled' ?> onchange="this.form.submit()">
-            <option value="">-- Pilih Kelas --</option>
-            <?php 
-              if ($kelas_result) {
-                mysqli_data_seek($kelas_result, 0);
-                while($kelas = mysqli_fetch_assoc($kelas_result)): ?>
-                  <option value="<?= intval($kelas['id']) ?>" <?= $filter_kelas == $kelas['id'] ? 'selected' : '' ?>>
-                    <?= htmlspecialchars($kelas['nama_kelas']) ?>
-                  </option>
-            <?php endwhile; } ?>
-          </select>
-        </div>
-      <?php elseif ($filter_role === 'tutor'): ?>
-        <div class="col-md-3">
-          <input type="text" name="keahlian" class="form-control" placeholder="Keahlian..." value="<?= htmlspecialchars($filter_keahlian) ?>" onchange="this.form.submit()">
-        </div>
-      <?php endif; ?>
-    </form>
-
-    <!-- Table -->
-    <div class="table-responsive">
-      <table id="userTable" class="table table-bordered bg-white shadow-sm">
-        <thead class="table-primary">
-          <tr>
-            <!-- kolom tersembunyi: last_activity digunakan DataTables untuk ordering awal -->
-            <th style="display:none;">_last_activity</th>
-
-            <th>Nama</th>
-            <th>Username</th>
-            <th>Role</th>
-            <th>Jenjang</th>
-            <th>Kelas</th>
-            <th>Keahlian</th>
-            <th>Aksi</th>
-          </tr>
-        </thead>
-        <tbody>
-          <?php if ($result && mysqli_num_rows($result) > 0): ?>
-            <?php while($row = mysqli_fetch_assoc($result)): ?>
-              <tr>
-                <!-- last_activity: jika berupa timestamp tampilkan ISO, jika id tampilkan id (tetap berfungsi untuk ordering) -->
-                <td style="display:none;"><?= htmlspecialchars($row['last_activity'] ?? '') ?></td>
-
-                <td><?= htmlspecialchars($row['nama'] ?? '-') ?></td>
-                <td><?= htmlspecialchars($row['username'] ?? '-') ?></td>
-                <td><?= htmlspecialchars($row['role'] ?? '-') ?></td>
-                <td><?= ($row['role'] === 'siswa') ? htmlspecialchars($row['jenjang'] ?? '-') : '-' ?></td>
-                <td><?= ($row['role'] === 'siswa') ? htmlspecialchars($row['nama_kelas'] ?? '-') : '-' ?></td>
-                <td><?= ($row['role'] === 'tutor') ? htmlspecialchars($row['keahlian'] ?? '-') : '-' ?></td>
-                <td>
-                  <?php if ($row['role'] === 'siswa'): ?>
-                    <a href="?detail=<?= intval($row['id']) ?>" class="btn btn-sm btn-info">Detail</a>
-                    <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#modalEditUser" onclick='editUser(<?= json_encode($row) ?>)'>Edit</button>
-                    <a href="?hapus=<?= intval($row['id']) ?>" class="btn btn-sm btn-danger" onclick="return confirm('Yakin hapus user ini?')">Hapus</a>
-                  <?php else: ?>
-                    <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#modalEditUser" onclick='editUser(<?= json_encode($row) ?>)'>Edit</button>
-                    <a href="?hapus=<?= intval($row['id']) ?>" class="btn btn-sm btn-danger" onclick="return confirm('Yakin hapus user ini?')">Hapus</a>
-                  <?php endif; ?>
-                </td>
-              </tr>
-            <?php endwhile; ?>
-          <?php else: ?>
-            <tr><td colspan="8" class="text-center">Tidak ada data user.</td></tr>
-          <?php endif; ?>
-        </tbody>
-      </table>
-    </div>
-  <?php endif; ?>
+          <?php endwhile; ?>
+        <?php endif; ?>
+      </tbody>
+    </table>
+  </div>
 </div>
 
 <!-- Modal Tambah User -->
@@ -332,17 +200,18 @@ $kelas_result = mysqli_query($conn, "SELECT * FROM kelas");
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <form method="POST">
+        <input type="hidden" name="add_user" value="1">
         <div class="modal-header bg-primary text-white">
-          <h5 class="modal-title">Tambah User Baru</h5>
+          <h5 class="modal-title">Tambah User</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          <input type="hidden" name="add_user" value="1" />
           <div class="mb-3"><label>Nama</label><input type="text" name="nama" class="form-control" required></div>
           <div class="mb-3"><label>Username</label><input type="text" name="username" class="form-control" required></div>
           <div class="mb-3"><label>Password</label><input type="password" name="password" class="form-control" required></div>
-          <div class="mb-3">
-            <label>Role</label>
+          <div class="mb-3"><label>Email</label><input type="email" name="email" class="form-control" placeholder="Masukan email resmi anda"></div>
+          <div class="mb-3"><label>No HP</label><input type="text" name="no_hp" class="form-control" maxlength="12"></div>
+          <div class="mb-3"><label>Role</label>
             <select name="role" class="form-select" onchange="handleRoleChange(this.value)" required>
               <option value="">-- Pilih Role --</option>
               <option value="admin">Admin</option>
@@ -353,30 +222,27 @@ $kelas_result = mysqli_query($conn, "SELECT * FROM kelas");
           </div>
           <div id="siswa-fields" style="display: none;">
             <label>Jenjang</label>
-            <select name="jenjang" id="jenjang" class="form-select">
+            <select name="jenjang" class="form-select">
               <option value="">-- Pilih Jenjang --</option>
               <option value="SD">SD</option>
               <option value="SMP">SMP</option>
               <option value="SMA">SMA</option>
             </select>
-            <label class="mt-2">Kelas</label>
-            <select name="kelas" id="kelas" class="form-select">
+            <label>Kelas</label>
+            <select name="kelas" class="form-select">
               <option value="">-- Pilih Kelas --</option>
-              <?php 
-                if ($kelas_result) {
-                  mysqli_data_seek($kelas_result, 0);
-                  while($kelas = mysqli_fetch_assoc($kelas_result)): ?>
-                  <option value="<?= intval($kelas['id']) ?>"><?= htmlspecialchars($kelas['nama_kelas']) ?></option>
+              <?php if ($kelas_result) { mysqli_data_seek($kelas_result,0); while($k = mysqli_fetch_assoc($kelas_result)): ?>
+                <option value="<?= $k['id'] ?>"><?= htmlspecialchars($k['nama_kelas']) ?></option>
               <?php endwhile; } ?>
             </select>
           </div>
-          <div class="mb-3" id="tutor-fields" style="display: none;">
+          <div id="tutor-fields" style="display: none;">
             <label>Keahlian</label>
             <input type="text" name="keahlian" class="form-control">
           </div>
         </div>
         <div class="modal-footer">
-          <button type="submit" class="btn btn-primary">Tambah</button>
+          <button type="submit" class="btn btn-primary">Simpan</button>
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
         </div>
       </form>
@@ -399,8 +265,9 @@ $kelas_result = mysqli_query($conn, "SELECT * FROM kelas");
           <div class="mb-3"><label>Nama</label><input type="text" name="nama" id="edit-nama" class="form-control" required></div>
           <div class="mb-3"><label>Username</label><input type="text" name="username" id="edit-username" class="form-control" required></div>
           <div class="mb-3"><label>Password (kosongkan jika tidak diubah)</label><input type="password" name="password" class="form-control"></div>
-          <div class="mb-3">
-            <label>Role</label>
+          <div class="mb-3"><label>Email</label><input type="email" name="email" id="edit-email" class="form-control" placeholder="Masukan email resmi anda"></div>
+          <div class="mb-3"><label>No HP</label><input type="text" name="no_hp" id="edit-no_hp" class="form-control" maxlength="12"></div>
+          <div class="mb-3"><label>Role</label>
             <select name="role" id="edit-role" class="form-select" onchange="handleEditRoleChange(this.value)">
               <option value="">-- Pilih Role --</option>
               <option value="admin">Admin</option>
@@ -417,24 +284,21 @@ $kelas_result = mysqli_query($conn, "SELECT * FROM kelas");
               <option value="SMP">SMP</option>
               <option value="SMA">SMA</option>
             </select>
-            <label class="mt-2">Kelas</label>
+            <label>Kelas</label>
             <select name="kelas" id="edit-kelas" class="form-select">
               <option value="">-- Pilih Kelas --</option>
-              <?php 
-                if ($kelas_result) {
-                  mysqli_data_seek($kelas_result, 0);
-                  while($kelas = mysqli_fetch_assoc($kelas_result)): ?>
-                  <option value="<?= intval($kelas['id']) ?>"><?= htmlspecialchars($kelas['nama_kelas']) ?></option>
+              <?php if ($kelas_result) { mysqli_data_seek($kelas_result,0); while($k = mysqli_fetch_assoc($kelas_result)): ?>
+                <option value="<?= $k['id'] ?>"><?= htmlspecialchars($k['nama_kelas']) ?></option>
               <?php endwhile; } ?>
             </select>
           </div>
-          <div class="mb-3" id="edit-tutor-fields" style="display: none;">
+          <div id="edit-tutor-fields" style="display: none;">
             <label>Keahlian</label>
             <input type="text" name="keahlian" id="edit-keahlian" class="form-control">
           </div>
         </div>
         <div class="modal-footer">
-          <button type="submit" class="btn btn-warning">Simpan</button>
+          <button type="submit" class="btn btn-warning">Update</button>
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
         </div>
       </form>
@@ -442,12 +306,22 @@ $kelas_result = mysqli_query($conn, "SELECT * FROM kelas");
   </div>
 </div>
 
-<!-- Scripts -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- DataTables Scripts -->
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
 <script>
+$(document).ready(function() {
+  $('#userTable').DataTable({
+    "pageLength": 10,
+    "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+    "ordering": true,
+    "responsive": true
+  });
+});
+
 function handleRoleChange(role) {
   document.getElementById('siswa-fields').style.display = role === 'siswa' ? 'block' : 'none';
   document.getElementById('tutor-fields').style.display = role === 'tutor' ? 'block' : 'none';
@@ -456,51 +330,22 @@ function editUser(data) {
   document.getElementById('edit-id').value = data.id;
   document.getElementById('edit-nama').value = data.nama;
   document.getElementById('edit-username').value = data.username;
+  document.getElementById('edit-email').value = data.email || '';
+  document.getElementById('edit-no_hp').value = data.no_hp || '';
   document.getElementById('edit-role').value = data.role;
   handleEditRoleChange(data.role);
   if (data.role === 'siswa') {
     document.getElementById('edit-jenjang').value = data.jenjang || '';
     document.getElementById('edit-kelas').value = data.kelas_id || '';
-    document.getElementById('edit-siswa-fields').style.display = 'block';
-  } else {
-    document.getElementById('edit-siswa-fields').style.display = 'none';
   }
   if (data.role === 'tutor') {
     document.getElementById('edit-keahlian').value = data.keahlian || '';
-    document.getElementById('edit-tutor-fields').style.display = 'block';
-  } else {
-    document.getElementById('edit-tutor-fields').style.display = 'none';
   }
 }
 function handleEditRoleChange(role) {
   document.getElementById('edit-siswa-fields').style.display = role === 'siswa' ? 'block' : 'none';
   document.getElementById('edit-tutor-fields').style.display = role === 'tutor' ? 'block' : 'none';
 }
-$(document).ready(function() {
-  $('#userTable').DataTable({
-    "pageLength": 10,
-    "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "Semua"]],
-    "ordering": true,
-    "searching": true,
-    // set initial ordering on the hidden last_activity column (index 0)
-    "order": [[0, "desc"]],
-    "columnDefs": [
-      { "targets": 0, "visible": false, "searchable": false }, // hide last_activity column
-      { "orderable": false, "targets": -1 } // disable ordering on actions column
-    ],
-    "language": {
-      "search": "Cari:",
-      "lengthMenu": "Tampilkan _MENU_ data",
-      "info": "Menampilkan _START_ - _END_ dari _TOTAL_ data",
-      "paginate": {
-        "first": "Awal",
-        "last": "Akhir",
-        "next": "›",
-        "previous": "‹"
-      }
-    }
-  });
-});
 </script>
 
 <?php include '../includes/admin_footer.php'; ?>

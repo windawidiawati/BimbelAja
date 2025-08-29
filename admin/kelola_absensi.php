@@ -44,7 +44,6 @@ if (isset($_POST['update_absensi'])) {
     }
 }
 
-
 // --- PROSES DELETE ABSENSI ---
 if (isset($_GET['delete_id'])) {
     $id = $_GET['delete_id'];
@@ -76,11 +75,6 @@ $paket_filter = isset($_POST['paket']) ? $_POST['paket'] : '';
 $jadwal_filter = isset($_POST['jadwal']) ? $_POST['jadwal'] : '';
 $tanggal_filter = isset($_POST['tanggal']) ? $_POST['tanggal'] : '';
 
-// Paginasi
-$limit = 10;
-$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-$offset = ($page - 1) * $limit;
-
 // Query dasar untuk absensi
 $query_absensi = "SELECT a.*, 
                  p.nama AS paket_nama, 
@@ -90,7 +84,10 @@ $query_absensi = "SELECT a.*,
                  km.nama_kategori AS mata_pelajaran,
                  u.nama AS nama_siswa,
                  u.email,
-                 u.no_hp
+                 u.no_hp,
+                 j.kelas_id,
+                 j.paket_id,
+                 j.kategori_id
                  FROM absensi_offline a 
                  LEFT JOIN jadwal_offline j ON a.jadwal_id = j.id
                  LEFT JOIN kategori_materi km ON j.kategori_id = km.id
@@ -108,29 +105,27 @@ if (!empty($where_clause)) {
     $query_absensi .= " WHERE " . implode(" AND ", $where_clause);
 }
 
-// Hitung total data
-$total_query = "SELECT COUNT(*) as total FROM ($query_absensi) AS total_query";
-$total_result = mysqli_query($conn, $total_query);
-$total_row = mysqli_fetch_assoc($total_result);
-$total_pages = ceil($total_row['total'] / $limit);
-
-// Sorting dan limit
-$query_absensi .= " ORDER BY j.tanggal DESC, a.created_at DESC LIMIT $limit OFFSET $offset";
+// Sorting
+$query_absensi .= " ORDER BY j.tanggal DESC, a.created_at DESC";
 $result_absensi = mysqli_query($conn, $query_absensi);
 ?>
+
+<!-- DataTables CSS & JS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
 <style>
 .main-content { margin-left: 250px; padding: 20px; background: #fff; min-height: 100vh; }
 .filter-container { background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
-.table-container { overflow-x: auto; }
-table.table { min-width: 1000px; }
-.status-hadir { background-color: #d4edda; }
-.status-izin { background-color: #fff3cd; }
-.status-alpa { background-color: #f8d7da; }
+.status-hadir { background-color: #28a745; color: #fff; }   /* Hijau */
+.status-izin  { background-color: #ffc107; color: #000; }   /* Kuning */
+.status-alpa  { background-color: #dc3545; color: #fff; }   /* Merah */
+
 </style>
 
 <div class="main-content">
-    <h2 class="text-center mb-4">Kelola Absensi Offline</h2>
+    <h2 class="text-center mb-4">Kelola Absensi </h2>
 
     <!-- Filter -->
     <form method="POST" action="" class="filter-container">
@@ -183,7 +178,7 @@ table.table { min-width: 1000px; }
 
     <!-- Table -->
     <div class="table-responsive">
-        <table class="table table-bordered bg-white shadow-sm">
+        <table id="absensiTable" class="table table-bordered bg-white shadow-sm">
             <thead class="table-primary">
                 <tr>
                     <th>NO</th>
@@ -199,7 +194,7 @@ table.table { min-width: 1000px; }
             </thead>
             <tbody>
                 <?php 
-                $no = $offset + 1; 
+                $no = 1; 
                 while ($row_absensi = mysqli_fetch_assoc($result_absensi)) { 
                     $status_class = 'status-' . $row_absensi['status'];
 
@@ -222,25 +217,9 @@ table.table { min-width: 1000px; }
                         <td><?= ucfirst($row_absensi['status']); ?></td>
                         <td><?= date('H:i', strtotime($row_absensi['created_at'])); ?></td>
                         <td>
-                            <!-- Detail -->
-                            <button class="btn btn-sm btn-info"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#detailModal<?= $row_absensi['id']; ?>">
-                                <i class="fas fa-eye"></i>
-                            </button>
-
-                            <!-- Edit -->
-                            <button class="btn btn-sm btn-warning"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#editModal<?= $row_absensi['id']; ?>">
-                                <i class="fas fa-edit"></i>
-                            </button>
-
-                            <!-- Hapus -->
-                            <a href="?delete_id=<?= $row_absensi['id']; ?>" class="btn btn-sm btn-danger"
-                               onclick="return confirm('Yakin hapus absensi ini?');">
-                                <i class="fas fa-trash"></i>
-                            </a>
+                            <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#detailModal<?= $row_absensi['id']; ?>"><i class="fas fa-eye"></i></button>
+                            <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editModal<?= $row_absensi['id']; ?>"><i class="fas fa-edit"></i></button>
+                            <a href="?delete_id=<?= $row_absensi['id']; ?>" class="btn btn-sm btn-danger" onclick="return confirm('Yakin hapus absensi ini?');"><i class="fas fa-trash"></i></a>
                         </td>
                     </tr>
 
@@ -275,117 +254,101 @@ table.table { min-width: 1000px; }
                     </div>
 
                     <!-- Modal Edit -->
-<div class="modal fade" id="editModal<?= $row_absensi['id']; ?>" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <form method="POST" action="">
-                <div class="modal-header">
-                    <h5 class="modal-title">Edit Absensi</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <input type="hidden" name="id" value="<?= $row_absensi['id']; ?>">
+                    <div class="modal fade" id="editModal<?= $row_absensi['id']; ?>" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <form method="POST" action="">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Edit Absensi</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <input type="hidden" name="id" value="<?= $row_absensi['id']; ?>">
+                                        <input type="hidden" name="siswa_id" value="<?= $row_absensi['siswa_id']; ?>">
 
-                    <!-- Siswa -->
-<div class="form-group mb-2">
-    <label>Siswa:</label>
-    <input type="hidden" name="siswa_id" value="<?= $row_absensi['siswa_id']; ?>">
-    <input type="text" class="form-control" value="<?= $row_absensi['nama_siswa']; ?>" readonly>
-</div>
+                                        <!-- Pilih Kelas -->
+                                        <div class="form-group mb-2">
+                                            <label>Kelas:</label>
+                                            <select name="kelas_id" class="form-control" required>
+                                                <?php
+                                                $kelas_q = mysqli_query($conn, "SELECT id, nama_kelas, jenjang FROM kelas ORDER BY jenjang, nama_kelas");
+                                                while ($k = mysqli_fetch_assoc($kelas_q)) {
+                                                    $selected = ($k['id'] == $row_absensi['kelas_id']) ? 'selected' : '';
+                                                    echo "<option value='{$k['id']}' $selected>{$k['nama_kelas']} ({$k['jenjang']})</option>";
+                                                }
+                                                ?>
+                                            </select>
+                                        </div>
 
+                                        <!-- Pilih Paket -->
+                                        <div class="form-group mb-2">
+                                            <label>Paket:</label>
+                                            <select name="paket_id" class="form-control" required>
+                                                <?php
+                                                $paket_q = mysqli_query($conn, "SELECT id, nama FROM paket WHERE status='aktif'");
+                                                while ($p = mysqli_fetch_assoc($paket_q)) {
+                                                    $selected = ($p['id'] == $row_absensi['paket_id']) ? 'selected' : '';
+                                                    echo "<option value='{$p['id']}' $selected>{$p['nama']}</option>";
+                                                }
+                                                ?>
+                                            </select>
+                                        </div>
 
-                    <!-- Pilih Kelas -->
-                    <div class="form-group mb-2">
-                        <label>Kelas:</label>
-                        <select name="kelas_id" class="form-control" required>
-                            <?php
-                            $kelas_q = mysqli_query($conn, "SELECT id, nama_kelas, jenjang FROM kelas ORDER BY jenjang, nama_kelas");
-                            while ($k = mysqli_fetch_assoc($kelas_q)) {
-                                $selected = ($k['id'] == $row_absensi['kelas_id']) ? 'selected' : '';
-                                echo "<option value='{$k['id']}' $selected>{$k['nama_kelas']} ({$k['jenjang']})</option>";
-                            }
-                            ?>
-                        </select>
-                    </div>
+                                        <!-- Pilih Mata Pelajaran -->
+                                        <div class="form-group mb-2">
+                                            <label>Mata Pelajaran:</label>
+                                            <select name="mapel_id" class="form-control" required>
+                                                <?php
+                                                $mapel_q = mysqli_query($conn, "SELECT id, nama_kategori FROM kategori_materi ORDER BY nama_kategori");
+                                                while ($m = mysqli_fetch_assoc($mapel_q)) {
+                                                    $selected = ($m['id'] == $row_absensi['kategori_id']) ? 'selected' : '';
+                                                    echo "<option value='{$m['id']}' $selected>{$m['nama_kategori']}</option>";
+                                                }
+                                                ?>
+                                            </select>
+                                        </div>
 
-                    <!-- Pilih Paket -->
-                    <div class="form-group mb-2">
-                        <label>Paket:</label>
-                        <select name="paket_id" class="form-control" required>
-                            <?php
-                            $paket_q = mysqli_query($conn, "SELECT id, nama FROM paket WHERE status='aktif'");
-                            while ($p = mysqli_fetch_assoc($paket_q)) {
-                                $selected = ($p['id'] == $row_absensi['paket_id']) ? 'selected' : '';
-                                echo "<option value='{$p['id']}' $selected>{$p['nama']}</option>";
-                            }
-                            ?>
-                        </select>
-                    </div>
+                                        <!-- Tanggal -->
+                                        <div class="form-group mb-2">
+                                            <label>Tanggal:</label>
+                                            <input type="date" name="tanggal" class="form-control" value="<?= date('Y-m-d', strtotime($row_absensi['tanggal_jadwal'])); ?>" required>
+                                        </div>
 
-                    <!-- Pilih Mata Pelajaran -->
-                    <div class="form-group mb-2">
-                        <label>Mata Pelajaran:</label>
-                        <select name="mapel_id" class="form-control" required>
-                            <?php
-                            $mapel_q = mysqli_query($conn, "SELECT id, nama_kategori FROM kategori_materi ORDER BY nama_kategori");
-                            while ($m = mysqli_fetch_assoc($mapel_q)) {
-                                $selected = ($m['id'] == $row_absensi['kategori_id']) ? 'selected' : '';
-                                echo "<option value='{$m['id']}' $selected>{$m['nama_kategori']}</option>";
-                            }
-                            ?>
-                        </select>
-                    </div>
-
-                    <!-- Tanggal -->
-                    <div class="form-group mb-2">
-                        <label>Tanggal:</label>
-                        <input type="date" name="tanggal" class="form-control"
-                               value="<?= date('Y-m-d', strtotime($row_absensi['tanggal_jadwal'])); ?>" required>
-                    </div>
-
-                    <!-- Status -->
-                    <div class="form-group mb-2">
-                        <label>Status:</label>
-                        <select name="status" class="form-control" required>
-                            <option value="hadir" <?= ($row_absensi['status'] == 'hadir') ? 'selected' : ''; ?>>Hadir</option>
-                            <option value="izin" <?= ($row_absensi['status'] == 'izin') ? 'selected' : ''; ?>>Izin</option>
-                            <option value="alpa" <?= ($row_absensi['status'] == 'alpa') ? 'selected' : ''; ?>>Alpa</option>
-                        </select>
-                    </div>
-
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" name="update_absensi" class="btn btn-primary">Simpan Perubahan</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
+                                        <!-- Status -->
+                                        <div class="form-group mb-2">
+                                            <label>Status:</label>
+                                            <select name="status" class="form-control" required>
+                                                <option value="hadir" <?= ($row_absensi['status'] == 'hadir') ? 'selected' : ''; ?>>Hadir</option>
+                                                <option value="izin" <?= ($row_absensi['status'] == 'izin') ? 'selected' : ''; ?>>Izin</option>
+                                                <option value="alpa" <?= ($row_absensi['status'] == 'alpa') ? 'selected' : ''; ?>>Alpa</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                        <button type="submit" name="update_absensi" class="btn btn-primary">Simpan Perubahan</button>
+                                    </div>
+                                </form>
+                            </div>
                         </div>
                     </div>
+
                 <?php } ?>
             </tbody>
         </table>
     </div>
-
-    <?php if ($total_pages > 1) { ?>
-    <nav aria-label="Page navigation">
-        <ul class="pagination justify-content-center">
-            <li class="page-item <?= ($page <= 1) ? 'disabled' : ''; ?>">
-                <a class="page-link" href="?page=<?= $page-1; ?>">&laquo;</a>
-            </li>
-            <?php for ($i = 1; $i <= $total_pages; $i++) { ?>
-                <li class="page-item <?= ($i == $page) ? 'active' : ''; ?>">
-                    <a class="page-link" href="?page=<?= $i; ?>"><?= $i; ?></a>
-                </li>
-            <?php } ?>
-            <li class="page-item <?= ($page >= $total_pages) ? 'disabled' : ''; ?>">
-                <a class="page-link" href="?page=<?= $page+1; ?>">&raquo;</a>
-            </li>
-        </ul>
-    </nav>
-    <?php } ?>
 </div>
+
+<script>
+$(document).ready(function() {
+    $('#absensiTable').DataTable({
+        "ordering": true,
+        "paging": true,
+        "info": true,
+        "lengthChange": true,
+        "pageLength": 10
+    });
+});
+</script>
 
 <?php include '../includes/admin_footer.php'; ?>
