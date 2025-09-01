@@ -12,23 +12,23 @@ $filter_jenjang = isset($_GET['filter_jenjang']) ? $_GET['filter_jenjang'] : '';
 
 // Query dasar dengan join ke tabel users, latihan_siswa, latihan, soal, kelas, dan kategori_materi
 $query = "SELECT
-            ls.*,
-            u.nama AS nama_siswa,
-            l.judul AS judul_latihan,
-            l.kelas_id,
-            l.kategori_id,
-            km.nama_kategori,
-            k.nama_kelas,
-            k.jenjang AS jenjang_kelas,
-            COUNT(js.id) AS total_soal,
-            SUM(js.benar) AS jawaban_benar
-          FROM latihan_siswa ls
-          JOIN users u ON ls.siswa_id = u.id
-          JOIN latihan l ON ls.latihan_id = l.id
-          LEFT JOIN jawaban_siswa js ON ls.latihan_id = js.latihan_id AND ls.siswa_id = js.user_id
-          LEFT JOIN kategori_materi km ON l.kategori_id = km.id
-          LEFT JOIN kelas k ON l.kelas_id = k.id
-          WHERE u.role = 'siswa'";
+             ls.*,
+             u.nama AS nama_siswa,
+             l.judul AS judul_latihan,
+             l.kelas_id,
+             l.kategori_id,
+             km.nama_kategori,
+             k.nama_kelas,
+             k.jenjang AS jenjang_kelas,
+             COUNT(js.id) AS total_soal,
+             SUM(js.benar) AS jawaban_benar
+           FROM latihan_siswa ls
+           JOIN users u ON ls.siswa_id = u.id
+           JOIN latihan l ON ls.latihan_id = l.id
+           LEFT JOIN jawaban_siswa js ON ls.latihan_id = js.latihan_id AND ls.siswa_id = js.user_id
+           LEFT JOIN kategori_materi km ON l.kategori_id = km.id
+           LEFT JOIN kelas k ON l.kelas_id = k.id
+           WHERE u.role = 'siswa'";
 
 // Tambahkan kondisi filter jika ada
 if (!empty($filter_nama)) {
@@ -64,19 +64,19 @@ if (!$result) {
 
 // Hitung statistik - Query terpisah untuk memastikan data akurat
 $stats_query = "SELECT
-                COUNT(DISTINCT ls.id) as total_latihan,
-                SUM(js.benar) as jawaban_benar,
-                COUNT(js.id) as total_jawaban,
-                CASE
-                    WHEN COUNT(js.id) > 0 THEN ROUND((SUM(js.benar) / COUNT(js.id)) * 100, 2)
-                    ELSE 0
-                END as persentase_benar
-                FROM latihan_siswa ls
-                JOIN users u ON ls.siswa_id = u.id
-                JOIN latihan l ON ls.latihan_id = l.id
-                LEFT JOIN jawaban_siswa js ON ls.latihan_id = js.latihan_id AND ls.siswa_id = js.user_id
-                LEFT JOIN kelas k ON l.kelas_id = k.id
-                WHERE u.role = 'siswa'";
+                 COUNT(DISTINCT ls.id) as total_latihan,
+                 SUM(js.benar) as jawaban_benar,
+                 COUNT(js.id) as total_jawaban,
+                 CASE
+                     WHEN COUNT(js.id) > 0 THEN ROUND((SUM(js.benar) / COUNT(js.id)) * 100, 2)
+                     ELSE 0
+                 END as persentase_benar
+                 FROM latihan_siswa ls
+                 JOIN users u ON ls.siswa_id = u.id
+                 JOIN latihan l ON ls.latihan_id = l.id
+                 LEFT JOIN jawaban_siswa js ON ls.latihan_id = js.latihan_id AND ls.siswa_id = js.user_id
+                 LEFT JOIN kelas k ON l.kelas_id = k.id
+                 WHERE u.role = 'siswa'";
 
 // Tambahkan kondisi filter yang sama untuk statistik
 if (!empty($filter_nama)) {
@@ -126,6 +126,8 @@ $kategori_result = mysqli_query($conn, "SELECT id, nama_kategori FROM kategori_m
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kelola Jawaban Siswa - BimbelAja</title>
     
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+    
     <style>
         .content-wrapper {
             min-height: 100vh;
@@ -154,27 +156,6 @@ $kategori_result = mysqli_query($conn, "SELECT id, nama_kategori FROM kategori_m
         
         .table-responsive {
             overflow-x: auto;
-        }
-        
-        .badge-success {
-            background-color: #1cc88a;
-            color: white;
-            padding: 5px 10px;
-            border-radius: 4px;
-        }
-        
-        .badge-danger {
-            background-color: #e74a3b;
-            color: white;
-            padding: 5px 10px;
-            border-radius: 4px;
-        }
-        
-        .badge-warning {
-            background-color: #f6c23e;
-            color: white;
-            padding: 5px 10px;
-            border-radius: 4px;
         }
         
         .main-content {
@@ -400,7 +381,6 @@ $kategori_result = mysqli_query($conn, "SELECT id, nama_kategori FROM kategori_m
                                                 <th>Total Soal</th>
                                                 <th>Jawaban Benar</th>
                                                 <th>Nilai</th>
-                                                <th>Status</th>
                                                 <th>Waktu Mulai</th>
                                                 <th>Waktu Selesai</th>
                                             </tr>
@@ -413,15 +393,6 @@ $kategori_result = mysqli_query($conn, "SELECT id, nama_kategori FROM kategori_m
                                                     $total_soal = $row['total_soal'] ?? 0;
                                                     $jawaban_benar = $row['jawaban_benar'] ?? 0;
                                                     $nilai = $total_soal > 0 ? round(($jawaban_benar / $total_soal) * 100, 2) : 0;
-                                                    
-                                                    // Tentukan status berdasarkan nilai
-                                                    if ($nilai >= 80) {
-                                                        $status = '<span class="badge badge-success">Sangat Baik</span>';
-                                                    } elseif ($nilai >= 60) {
-                                                        $status = '<span class="badge badge-warning">Cukup</span>';
-                                                    } else {
-                                                        $status = '<span class="badge badge-danger">Perlu Perbaikan</span>';
-                                                    }
                                             ?>
                                                     <tr>
                                                         <td><?php echo $no++; ?></td>
@@ -442,14 +413,13 @@ $kategori_result = mysqli_query($conn, "SELECT id, nama_kategori FROM kategori_m
                                                         <td class="font-weight-bold <?php echo $nilai >= 60 ? 'text-success' : 'text-danger'; ?>">
                                                             <?php echo $nilai; ?>
                                                         </td>
-                                                        <td><?php echo $status; ?></td>
                                                         <td><?php echo date('d M Y H:i', strtotime($row['waktu_mulai'])); ?></td>
                                                         <td><?php echo !empty($row['waktu_selesai']) ? date('d M Y H:i', strtotime($row['waktu_selesai'])) : '-'; ?></td>
                                                     </tr>
                                             <?php
                                                 endwhile;
                                             } else {
-                                                echo '<tr><td colspan="11" class="text-center">Tidak ada data hasil latihan siswa</td></tr>';
+                                                echo '<tr><td colspan="10" class="text-center">Tidak ada data hasil latihan siswa</td></tr>';
                                             }
                                             ?>
                                         </tbody>
@@ -468,6 +438,8 @@ $kategori_result = mysqli_query($conn, "SELECT id, nama_kategori FROM kategori_m
         <i class="fas fa-angle-up"></i>
     </a>
 
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
     <script>
     function exportToExcel() {
         // Simple Excel export using table data
@@ -481,6 +453,16 @@ $kategori_result = mysqli_query($conn, "SELECT id, nama_kategori FROM kategori_m
         downloadLink.click();
         document.body.removeChild(downloadLink);
     }
+    
+    // Initialize DataTables
+    $(document).ready(function() {
+        $('#dataTable').DataTable({
+            "paging": true,
+            "searching": true,
+            "ordering": true,
+            "info": true
+        });
+    });
     </script>
 
 </body>

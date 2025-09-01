@@ -263,6 +263,9 @@ $is_kelola_page = in_array($current_page, array_keys($kelola_pages));
   <a class="<?= ($current_page === 'laporan_transaksi.php') ? 'active' : '' ?>" href="../admin/laporan_transaksi.php">
     <i class="bi bi-cash-stack me-2"></i> Laporan Transaksi
   </a>
+  <a class="<?= ($current_page === 'tambah_materi.php') ? 'active' : '' ?>" href="../admin/tambah_materi.php">
+    <i class="bi bi-book me-2"></i> Tambah Materi
+</a>
   <a class="<?= ($current_page === 'data_siswa.php') ? 'active' : '' ?>" href="../admin/data_siswa.php">
     <i class="bi bi-cash-stack me-2"></i> Data Siswa
   </a>

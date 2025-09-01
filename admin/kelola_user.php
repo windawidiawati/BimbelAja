@@ -1,5 +1,6 @@
 <?php
 ob_start();
+session_start();
 include '../config/database.php';
 include '../includes/admin_header.php';
 
@@ -18,11 +19,27 @@ if ($colCreated && mysqli_num_rows($colCreated) > 0) $has_created_at = true;
 $colUpdated = mysqli_query($conn, "SHOW COLUMNS FROM users LIKE 'updated_at'");
 if ($colUpdated && mysqli_num_rows($colUpdated) > 0) $has_updated_at = true;
 
-// Hapus user
-if (isset($_GET['hapus'])) {
-  $id = intval($_GET['hapus']);
-  mysqli_query($conn, "DELETE FROM users WHERE id = $id");
-  header("Location: kelola_user.php?success=User berhasil dihapus");
+// Hapus user (diubah dari GET ke POST untuk keamanan)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['hapus'])) {
+  $id = intval($_POST['hapus']);
+
+  // Hapus data terkait di tabel lain terlebih dahulu
+  $conn->query("DELETE FROM langganan WHERE user_id = $id");
+  $conn->query("DELETE FROM kelas_online WHERE tutor_id = $id");
+  $conn->query("DELETE FROM materi WHERE tutor_id = $id");
+  $conn->query("DELETE FROM pembayaran WHERE user_id = $id");
+  $conn->query("DELETE FROM progress WHERE siswa_id = $id");
+  $conn->query("DELETE FROM soal WHERE tutor_id = $id");
+
+  // Sekarang, hapus user dari tabel users
+  $stmt = $conn->prepare("DELETE FROM users WHERE id = ?");
+  $stmt->bind_param("i", $id);
+  if ($stmt->execute()) {
+    $_SESSION['success'] = "User berhasil dihapus";
+  } else {
+    $_SESSION['error'] = "Gagal menghapus user";
+  }
+  header("Location: kelola_user.php");
   exit;
 }
 
@@ -60,13 +77,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_user'])) {
     }
 
     if ($stmt && $stmt->execute()) {
-      header("Location: kelola_user.php?success=User berhasil ditambahkan");
+      $_SESSION['success'] = "User berhasil ditambahkan";
     } else {
-      header("Location: kelola_user.php?error=Gagal menambahkan user");
+      $_SESSION['error'] = "Gagal menambahkan user";
     }
+    header("Location: kelola_user.php");
     exit;
   } else {
-    header("Location: kelola_user.php?error=Data tidak lengkap");
+    $_SESSION['error'] = "Data tidak lengkap";
+    header("Location: kelola_user.php");
     exit;
   }
 }
@@ -99,7 +118,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_user'])) {
     } elseif ($role === 'tutor') {
       $sql = "UPDATE users SET nama=?, username=?, role=?, keahlian=?, jenjang=NULL, kelas_id=NULL, email=?, no_hp=? $timestamp_sql WHERE id=?";
       $stmt = $conn->prepare($sql);
-      $stmt->bind_param("sssssssi", $nama, $username, $role, $keahlian, $email, $no_hp, $id);
+      $stmt->bind_param("ssssssi", $nama, $username, $role, $keahlian, $email, $no_hp, $id);
     } else {
       $sql = "UPDATE users SET nama=?, username=?, role=?, jenjang=NULL, kelas_id=NULL, keahlian=NULL, email=?, no_hp=? $timestamp_sql WHERE id=?";
       $stmt = $conn->prepare($sql);
@@ -123,10 +142,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_user'])) {
   }
 
   if ($stmt && $stmt->execute()) {
-    header("Location: kelola_user.php?success=User berhasil diperbarui");
+    $_SESSION['success'] = "User berhasil diperbarui";
   } else {
-    header("Location: kelola_user.php?error=Gagal memperbarui user");
+    $_SESSION['error'] = "Gagal memperbarui user";
   }
+  header("Location: kelola_user.php");
   exit;
 }
 
@@ -147,13 +167,17 @@ $result = mysqli_query($conn, $sql);
 $kelas_result = mysqli_query($conn, "SELECT * FROM kelas");
 ?>
 
-<!-- HTML & JS tetap sama persis (tidak berubah) -->
-
-<?php include '../includes/admin_footer.php'; ?> 
-
-
 <div class="content">
   <h3>Kelola User</h3>
+  
+  <?php if (isset($_SESSION['success'])): ?>
+    <div class="alert alert-success"><?= $_SESSION['success']; unset($_SESSION['success']); ?></div>
+  <?php endif; ?>
+  
+  <?php if (isset($_SESSION['error'])): ?>
+    <div class="alert alert-danger"><?= $_SESSION['error']; unset($_SESSION['error']); ?></div>
+  <?php endif; ?>
+  
   <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#modalUser">+ Tambah User</button>
 
   <div class="table-responsive">
@@ -185,17 +209,24 @@ $kelas_result = mysqli_query($conn, "SELECT * FROM kelas");
               <td><?= $row['role']==='tutor' ? htmlspecialchars($row['keahlian']) : '-' ?></td>
               <td>
                 <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#modalEditUser" onclick='editUser(<?= json_encode($row) ?>)'>Edit</button>
-                <a href="?hapus=<?= intval($row['id']) ?>" class="btn btn-sm btn-danger" onclick="return confirm('Yakin hapus user ini?')">Hapus</a>
+                
+                <form method="POST" style="display:inline-block;">
+                  <input type="hidden" name="hapus" value="<?= intval($row['id']) ?>">
+                  <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Yakin hapus user ini?')">Hapus</button>
+                </form>
               </td>
             </tr>
           <?php endwhile; ?>
+        <?php else: ?>
+          <tr>
+            <td colspan="9" class="text-center">Tidak ada data user</td>
+          </tr>
         <?php endif; ?>
       </tbody>
     </table>
   </div>
 </div>
 
-<!-- Modal Tambah User -->
 <div class="modal fade" id="modalUser" tabindex="-1">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
@@ -250,7 +281,6 @@ $kelas_result = mysqli_query($conn, "SELECT * FROM kelas");
   </div>
 </div>
 
-<!-- Modal Edit User -->
 <div class="modal fade" id="modalEditUser" tabindex="-1">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
@@ -306,7 +336,6 @@ $kelas_result = mysqli_query($conn, "SELECT * FROM kelas");
   </div>
 </div>
 
-<!-- DataTables Scripts -->
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
