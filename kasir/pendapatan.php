@@ -15,7 +15,7 @@ $tgl_akhir = $_GET['tgl_akhir'] ?? date('Y-m-t');
 $tgl_mulai = date('Y-m-d', strtotime($tgl_mulai));
 $tgl_akhir = date('Y-m-d', strtotime($tgl_akhir));
 
-// Query pendapatan per paket (ditaruh di atas)
+// Query pendapatan per paket
 $query_per_paket = mysqli_query($conn, "
     SELECT p.nama AS paket, COUNT(l.id) AS jumlah_langganan, SUM(p.harga) AS total_pendapatan
     FROM langganan l
@@ -48,102 +48,100 @@ $query_rincian = mysqli_query($conn, "
 ");
 ?>
 
-<h4 class="fw-bold mb-4"><i class="bi bi-cash-coin me-2"></i>Pendapatan</h4>
+<div class="container mt-4">
+    <h4 class="fw-bold mb-4"><i class="bi bi-cash-coin me-2"></i>Pendapatan</h4>
 
-<!-- Form Filter Tanggal -->
-<form method="GET" class="row g-3 mb-4">
-    <div class="col-auto">
-        <label for="tgl_mulai" class="col-form-label">Dari</label>
-    </div>
-    <div class="col-auto">
-        <input type="date" class="form-control" id="tgl_mulai" name="tgl_mulai" value="<?= htmlspecialchars($tgl_mulai) ?>">
-    </div>
-    <div class="col-auto">
-        <label for="tgl_akhir" class="col-form-label">Sampai</label>
-    </div>
-    <div class="col-auto">
-        <input type="date" class="form-control" id="tgl_akhir" name="tgl_akhir" value="<?= htmlspecialchars($tgl_akhir) ?>">
-    </div>
-    <div class="col-auto">
-        <button type="submit" class="btn btn-primary">Filter</button>
-    </div>
-</form>
+    <!-- Form Filter Tanggal -->
+    <form method="GET" class="row g-3 mb-4 align-items-end">
+        <div class="col-auto">
+            <label for="tgl_mulai" class="form-label">Dari</label>
+            <input type="date" class="form-control" id="tgl_mulai" name="tgl_mulai" value="<?= htmlspecialchars($tgl_mulai) ?>">
+        </div>
+        <div class="col-auto">
+            <label for="tgl_akhir" class="form-label">Sampai</label>
+            <input type="date" class="form-control" id="tgl_akhir" name="tgl_akhir" value="<?= htmlspecialchars($tgl_akhir) ?>">
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-primary">Filter</button>
+        </div>
+    </form>
 
-<!-- Tabel Pendapatan per Paket (ditaruh paling atas) -->
-<div class="card shadow-sm mb-4">
-    <div class="card-header bg-white">
-        <h5 class="mb-0">Pendapatan per Paket</h5>
+    <!-- Tabel Pendapatan per Paket -->
+    <div class="card shadow-sm mb-4 border-0">
+        <div class="card-header bg-white">
+            <h5 class="mb-0">Pendapatan per Paket</h5>
+        </div>
+        <div class="card-body table-responsive">
+            <table class="table table-bordered table-striped align-middle text-center">
+                <thead class="table-light">
+                    <tr>
+                        <th>No.</th>
+                        <th>Paket</th>
+                        <th>Jumlah Langganan</th>
+                        <th>Total Pendapatan</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (mysqli_num_rows($query_per_paket) > 0): ?>
+                        <?php 
+                        $no = 1;
+                        while ($row = mysqli_fetch_assoc($query_per_paket)) : ?>
+                            <tr>
+                                <td><?= $no++ ?></td>
+                                <td><?= htmlspecialchars($row['paket']) ?></td>
+                                <td><?= $row['jumlah_langganan'] ?></td>
+                                <td>Rp <?= number_format($row['total_pendapatan'], 0, ',', '.') ?></td>
+                            </tr>
+                        <?php endwhile; ?>
+                    <?php else: ?>
+                        <tr><td colspan="4" class="text-center">Tidak ada data paket dalam periode ini.</td></tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
     </div>
-    <div class="card-body table-responsive">
-        <table class="table table-bordered table-striped">
-            <thead class="table-light">
-                <tr>
-                    <th>No.</th>
-                    <th>Paket</th>
-                    <th>Jumlah Langganan</th>
-                    <th>Total Pendapatan</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (mysqli_num_rows($query_per_paket) > 0): ?>
-                    <?php 
-                    $no = 1;
-                    while ($row = mysqli_fetch_assoc($query_per_paket)) : ?>
-                        <tr>
-                            <td><?= $no++ ?></td>
-                            <td><?= htmlspecialchars($row['paket']) ?></td>
-                            <td><?= $row['jumlah_langganan'] ?></td>
-                            <td>Rp <?= number_format($row['total_pendapatan'], 0, ',', '.') ?></td>
-                        </tr>
-                    <?php endwhile; ?>
-                <?php else: ?>
-                    <tr><td colspan="4" class="text-center">Tidak ada data paket dalam periode ini.</td></tr>
-                <?php endif; ?>
-            </tbody>
-        </table>
-    </div>
-</div>
 
-<!-- Ringkasan Total Pendapatan -->
-<div class="card p-3 mb-4 shadow-sm border-start border-success border-4">
-    <h6 class="text-muted">Total Pendapatan</h6>
-    <h3 class="text-success">Rp <?= number_format($data_total['total_pendapatan'] ?? 0, 0, ',', '.') ?></h3>
-</div>
-
-<!-- Tabel Rincian Pendapatan dengan nomor urut, tanpa kolom ID -->
-<div class="card shadow-sm">
-    <div class="card-header bg-white">
-        <h5 class="mb-0">Rincian Langganan Aktif</h5>
+    <!-- Ringkasan Total Pendapatan -->
+    <div class="card p-3 mb-4 shadow-sm border-start border-success border-4">
+        <h6 class="text-muted">Total Pendapatan</h6>
+        <h3 class="text-success">Rp <?= number_format($data_total['total_pendapatan'] ?? 0, 0, ',', '.') ?></h3>
     </div>
-    <div class="card-body table-responsive">
-        <table class="table table-bordered table-striped">
-            <thead class="table-light">
-                <tr>
-                    <th>No.</th>
-                    <th>Nama Siswa</th>
-                    <th>Paket</th>
-                    <th>Harga</th>
-                    <th>Tanggal Mulai</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (mysqli_num_rows($query_rincian) > 0): ?>
-                    <?php 
-                    $no = 1;
-                    while ($row = mysqli_fetch_assoc($query_rincian)) : ?>
-                        <tr>
-                            <td><?= $no++ ?></td>
-                            <td><?= htmlspecialchars($row['nama_siswa']) ?></td>
-                            <td><?= htmlspecialchars($row['paket']) ?></td>
-                            <td>Rp <?= number_format($row['harga'], 0, ',', '.') ?></td>
-                            <td><?= date('d-m-Y', strtotime($row['tanggal_mulai'])) ?></td>
-                        </tr>
-                    <?php endwhile; ?>
-                <?php else: ?>
-                    <tr><td colspan="5" class="text-center">Tidak ada data langganan dalam periode ini.</td></tr>
-                <?php endif; ?>
-            </tbody>
-        </table>
+
+    <!-- Tabel Rincian Langganan Aktif -->
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white">
+            <h5 class="mb-0">Rincian Langganan Aktif</h5>
+        </div>
+        <div class="card-body table-responsive">
+            <table class="table table-bordered table-striped align-middle text-center">
+                <thead class="table-light">
+                    <tr>
+                        <th>No.</th>
+                        <th>Nama Siswa</th>
+                        <th>Paket</th>
+                        <th>Harga</th>
+                        <th>Tanggal Mulai</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (mysqli_num_rows($query_rincian) > 0): ?>
+                        <?php 
+                        $no = 1;
+                        while ($row = mysqli_fetch_assoc($query_rincian)) : ?>
+                            <tr>
+                                <td><?= $no++ ?></td>
+                                <td><?= htmlspecialchars($row['nama_siswa']) ?></td>
+                                <td><?= htmlspecialchars($row['paket']) ?></td>
+                                <td>Rp <?= number_format($row['harga'], 0, ',', '.') ?></td>
+                                <td><?= date('d-m-Y', strtotime($row['tanggal_mulai'])) ?></td>
+                            </tr>
+                        <?php endwhile; ?>
+                    <?php else: ?>
+                        <tr><td colspan="5" class="text-center">Tidak ada data langganan dalam periode ini.</td></tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 

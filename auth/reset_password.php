@@ -7,7 +7,7 @@ if (!$token) {
     die("Token tidak valid.");
 }
 
-// Cek token
+// ✅ Cek token dari tabel (JANGAN bikin token baru di sini)
 $stmt = $conn->prepare("SELECT * FROM password_resets WHERE token = ? AND expires_at > NOW()");
 $stmt->bind_param("s", $token);
 $stmt->execute();
@@ -18,23 +18,36 @@ if ($result->num_rows === 0) {
 }
 
 $row = $result->fetch_assoc();
-$email = $row['email'];
+$email = $row['email']; // ini dipakai untuk update password
 
-// Jika submit password baru
+// ✅ Jika form submit password baru
+// ✅ Jika form submit password baru
+session_start();
+$error = null;
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
+    $password = $_POST['password'];
+    $confirm_password = $_POST['confirm_password'];
 
-    // Update password di tabel users
-    $stmt = $conn->prepare("UPDATE users SET password = ? WHERE email = ?");
-    $stmt->bind_param("ss", $password, $email);
-    $stmt->execute();
+    if ($password !== $confirm_password) {
+        $error = "Password dan Konfirmasi Password tidak sama!";
+    } else {
+        $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
-    // Hapus token setelah dipakai
-    $stmt = $conn->prepare("DELETE FROM password_resets WHERE email = ?");
-    $stmt->bind_param("s", $email);
-    $stmt->execute();
+        $stmt = $conn->prepare("UPDATE users SET password = ? WHERE email = ?");
+        $stmt->bind_param("ss", $hashedPassword, $email);
+        $stmt->execute();
 
-    echo "Password berhasil direset. Silakan login kembali.";
+        $stmt = $conn->prepare("DELETE FROM password_resets WHERE email = ?");
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+
+        // simpan notif ke session
+        $_SESSION['success'] = "Password berhasil diubah, silakan login kembali.";
+
+        header("Location: ../auth/login.php");
+        exit;
+    }
 }
 ?>
 
@@ -46,7 +59,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <style>
         body {
             font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            background: linear-gradient(135deg, 
+              #f0f7ff 0%, 
+              #d0e3ff 25%, 
+              #a8c8ff 50%, 
+              #7aadff 75%, 
+              #0d6efd 100%);
+            background-size: 400% 400%;
             height: 100vh;
             display: flex;
             align-items: center;
@@ -99,15 +118,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .reset-container button:hover {
             background: #00c6ff;
         }
-        .success-msg {
-            background: #d4edda;
-            color: #155724;
-            padding: 12px;
-            margin: 15px auto;
+        .error-msg {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            margin-bottom: 15px;
             border-radius: 8px;
             font-size: 14px;
-            width: 350px;
-            text-align: center;
         }
         @keyframes fadeIn {
             from {opacity: 0; transform: translateY(-20px);}
@@ -118,9 +135,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body>
     <div class="reset-container">
         <h2>Reset Password</h2>
+
+        <?php if ($error): ?>
+            <div class="error-msg"><?= $error ?></div>
+        <?php endif; ?>
+
         <form method="POST">
             <label for="password">Password Baru</label>
             <input type="password" name="password" id="password" required>
+
+            <label for="confirm_password">Konfirmasi Password</label>
+            <input type="password" name="confirm_password" id="confirm_password" required>
+
             <button type="submit">Reset Password</button>
         </form>
     </div>

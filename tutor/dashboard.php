@@ -124,18 +124,6 @@ include '../includes/tutor_header.php';
                 </div>
             </div>
         </div>
-        <div class="col-md-3 col-sm-6">
-            <div class="card shadow-sm border-0">
-                <div class="card-body d-flex align-items-center">
-                    <div class="text-info fs-2 me-3"><i class="bi bi-chat-dots"></i></div>
-                    <div>
-                        <div class="text-muted small">Forum</div>
-                        <div class="fw-bold fs-5"><?= $forum ?></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
 
 <?php include '../includes/tutor_footer.php'; ?>

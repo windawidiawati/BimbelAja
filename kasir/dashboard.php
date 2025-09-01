@@ -21,53 +21,48 @@ $transaksiBaru = mysqli_query($conn, "
 ");
 ?>
 
-<h4 class="fw-bold mb-4"><i class="bi bi-speedometer2 me-2"></i>Dashboard Kasir</h4>
+<div class="container mt-4">
+    <h4 class="fw-bold mb-4"><i class="bi bi-speedometer2 me-2"></i>Dashboard Kasir</h4>
 
-<div class="row g-4">
-    <!-- Total Transaksi -->
-    <div class="col-md-4">
-        <div class="card shadow-sm border-0">
-            <div class="card-body text-center">
-                <i class="bi bi-receipt-cutoff display-5 text-primary mb-3"></i>
-                <h5 class="fw-bold">Total Transaksi</h5>
-                <p class="fs-4 text-dark"><?= $totalTransaksi ?></p>
+    <div class="row g-4 mb-4">
+        <!-- Total Transaksi -->
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body text-center">
+                    <i class="bi bi-receipt-cutoff display-5 text-primary mb-3"></i>
+                    <h5 class="fw-bold">Total Transaksi</h5>
+                    <p class="fs-4 text-dark"><?= $totalTransaksi ?></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transaksi Pending -->
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body text-center">
+                    <i class="bi bi-hourglass-split display-5 text-warning mb-3"></i>
+                    <h5 class="fw-bold">Menunggu Verifikasi</h5>
+                    <p class="fs-4 text-dark"><?= $totalPending ?></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Siswa Terdaftar -->
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body text-center">
+                    <i class="bi bi-people display-5 text-success mb-3"></i>
+                    <h5 class="fw-bold">Siswa Terdaftar</h5>
+                    <p class="fs-4 text-dark"><?= $totalSiswa ?></p>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Transaksi Pending -->
-    <div class="col-md-4">
-        <div class="card shadow-sm border-0">
-            <div class="card-body text-center">
-                <i class="bi bi-hourglass-split display-5 text-warning mb-3"></i>
-                <h5 class="fw-bold">Menunggu Verifikasi</h5>
-                <p class="fs-4 text-dark"><?= $totalPending ?></p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Siswa Terdaftar -->
-    <div class="col-md-4">
-        <div class="card shadow-sm border-0">
-            <div class="card-body text-center">
-                <i class="bi bi-people display-5 text-success mb-3"></i>
-                <h5 class="fw-bold">Siswa Terdaftar</h5>
-                <p class="fs-4 text-dark"><?= $totalSiswa ?></p>
-            </div>
-        </div>
-    </div>
-</div>
-
-<hr class="my-4">
-
-<!-- Tabel Transaksi Terbaru -->
-<div class="card shadow-sm border-0">
-    <div class="card-header bg-primary text-white">
-        <h6 class="mb-0"><i class="bi bi-clock-history me-2"></i>Transaksi Terbaru</h6>
-    </div>
-    <div class="card-body">
-        <table class="table table-striped text-center">
-            <thead>
+    <!-- Tabel Transaksi Terbaru -->
+    <div class="table-responsive">
+        <table class="table table-bordered align-middle">
+            <thead class="table-dark text-center">
                 <tr>
                     <th>#</th>
                     <th>Nama Siswa</th>
@@ -76,23 +71,17 @@ $transaksiBaru = mysqli_query($conn, "
                     <th>Status</th>
                 </tr>
             </thead>
-            <tbody>
-                <?php $no = 1; while ($row = mysqli_fetch_assoc($transaksiBaru)): ?>
+            <tbody class="text-center">
+                <?php $no = 1; while ($row = mysqli_fetch_assoc($transaksiBaru)) : ?>
                     <tr>
-                        <td><?= $no++ ?></td>
-                        <td><?= htmlspecialchars($row['nama']) ?></td>
-                        <td><?= htmlspecialchars($row['paket']) ?></td>
-                        <td>Rp<?= number_format($row['harga'], 0, ',', '.') ?></td>
+                        <td><?= $no++; ?></td>
+                        <td><?= htmlspecialchars($row['nama']); ?></td>
+                        <td><?= htmlspecialchars($row['paket']); ?></td>
+                        <td>Rp<?= number_format($row['harga'], 0, ',', '.'); ?></td>
                         <td>
-                            <?php
-                            $badge = match($row['status']) {
-                                'lunas' => 'success',
-                                'pending' => 'warning text-dark',
-                                'ditolak' => 'danger',
-                                default => 'secondary'
-                            };
-                            ?>
-                            <span class="badge bg-<?= $badge ?>"><?= ucfirst($row['status']) ?></span>
+                            <span class="badge bg-<?= $row['status'] === 'lunas' ? 'success' : ($row['status'] === 'pending' ? 'warning text-dark' : ($row['status'] === 'ditolak' ? 'danger' : 'secondary')) ?>">
+                                <?= ucfirst($row['status']); ?>
+                            </span>
                         </td>
                     </tr>
                 <?php endwhile; ?>

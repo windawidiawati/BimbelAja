@@ -239,7 +239,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       border-left: 4px solid #dc3545;
       background-color: rgba(220, 53, 69, 0.1);
     }
-
+    /* Pastikan alert success berwarna hijau */
+    .alert-success {
+      background-color: #d4edda !important; /* hijau lembut */
+      border-color: #c3e6cb !important;    /* border hijau */
+      color: #155724 !important;           /* teks hijau gelap */
+    }
     .login-footer {
       text-align: center;
       color: var(--gray);
@@ -299,6 +304,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
   <div class="login-container">
+   <?php if (isset($_SESSION['success'])) : ?>
+  <div class="alert alert-success alert-dismissible fade show" role="alert">
+    <?= $_SESSION['success']; ?>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+  <?php unset($_SESSION['success']); ?>
+<?php endif; ?>
+
+
+<?php if (!empty($error)) : ?>
+  <div class="alert alert-danger alert-dismissible fade show" role="alert">
+    <?= htmlspecialchars($error); ?>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+<?php endif; ?>
     <div class="login-card" style="width: 100%; max-width: 420px;">
       <div class="card-header">
         <div class="brand-logo">

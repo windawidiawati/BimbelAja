@@ -1,25 +1,23 @@
 <?php
 require '../vendor/autoload.php';  // sesuaikan path autoload composer
-
 use Dompdf\Dompdf;
 
 include '../config/database.php';
 
 // Ambil user_id dari parameter
 $user_id = isset($_GET['user_id']) ? intval($_GET['user_id']) : 0;
-
 if ($user_id <= 0) {
     die("ID user tidak valid");
 }
 
-// Ambil data user dan pembayaran
+// Ambil data user
 $user_query = mysqli_query($conn, "SELECT * FROM users WHERE id = $user_id");
 $user = mysqli_fetch_assoc($user_query);
 
+// Ambil pembayaran terbaru
 $bayar_query = mysqli_query($conn, "SELECT * FROM pembayaran WHERE user_id = $user_id ORDER BY tanggal DESC LIMIT 1");
 $pembayaran = mysqli_fetch_assoc($bayar_query);
 
-// Cek data
 if (!$user || !$pembayaran) {
     die("Data tidak ditemukan");
 }
@@ -79,6 +77,12 @@ $html = '
             color: #777;
             margin-top: 40px;
         }
+        .kode-unik {
+            font-size: 16px;
+            font-weight: bold;
+            color: #C0392B;
+            margin-bottom: 15px;
+        }
     </style>
 </head>
 <body>
@@ -104,6 +108,10 @@ $html = '
             <tr>
                 <th>No HP</th>
                 <td>' . htmlspecialchars($user['no_hp']) . '</td>
+            </tr>
+            <tr>
+                <th>Kode Transaksi</th>
+                <td>' . htmlspecialchars($pembayaran['kode_unik']) . '</td>
             </tr>
         </table>
     </div>
@@ -142,7 +150,6 @@ $html = '
 </body>
 </html>
 ';
-
 
 // Inisialisasi Dompdf dan buat PDF
 $dompdf = new Dompdf();

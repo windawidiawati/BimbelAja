@@ -1,14 +1,16 @@
-<?php
-include '../includes/kasir_header.php';
+<?php 
 include '../config/database.php';
-
 $pesan = '';
+
+// Generate kode unik transaksi final (digunakan juga di database)
+$kode_unik = 'TRX' . date('Ymd') . rand(100, 999);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Ambil data dari form
     $nama = $_POST['nama'];
     $username = $_POST['username'];
-    $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
+    $password_plain = $_POST['password']; // Simpan password asli
+    $password = password_hash($password_plain, PASSWORD_DEFAULT);
     $email = $_POST['email'];
     $no_hp = $_POST['no_hp'];
     $kelas_id = $_POST['kelas_id'];
@@ -37,9 +39,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $user_id = mysqli_insert_id($conn);
         $tanggal = date('Y-m-d');
 
-        // Insert ke pembayaran
-        $insert_bayar = mysqli_query($conn, "INSERT INTO pembayaran (user_id, paket_id, paket, harga, metode, status, tanggal) 
-            VALUES ($user_id, $paket_id, '$paket', $harga, '$metode', 'Lunas', '$tanggal')");
+        // Insert ke pembayaran dengan kode unik final
+        $insert_bayar = mysqli_query($conn, "INSERT INTO pembayaran (user_id, paket_id, paket, harga, metode, status, tanggal, kode_unik) 
+            VALUES ($user_id, $paket_id, '$paket', $harga, '$metode', 'Lunas', '$tanggal', '$kode_unik')");
+        $pembayaran_id = mysqli_insert_id($conn); // Ambil ID pembayaran langsung setelah insert pembayaran
 
         // Hitung tanggal berakhir langganan
         $tanggal_mulai = $tanggal;
@@ -58,29 +61,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $user_id, $paket_id, '$paket', '$jenjang', $kelas_id, '$tanggal_mulai', '$tanggal_berakhir', 'Aktif', NOW()
         )");
 
-
         if ($insert_bayar && $insert_langganan) {
-            $pesan = '<div class="alert alert-success">Siswa berhasil ditambahkan dan pembayaran tercatat.</div>';
+        // Kirim email ke siswa
+        require 'fungsi_email.php'; // path sesuai
+    $email_result = kirimEmailSiswa($email, $nama, $username, $password_plain);
+        
+        if ($email_result === true) {
+            // Email berhasil
+            header("Location: ../admin/cetak_transaksi.php?id=$pembayaran_id");
+            exit;
         } else {
-            $pesan = '<div class="alert alert-danger">Gagal menyimpan pembayaran atau langganan.</div>';
+            $pesan = '<div class="alert alert-warning">Data berhasil disimpan, tapi ' . $email_result . '</div>';
         }
+    } else {
+        $pesan = '<div class="alert alert-danger">Gagal menyimpan pembayaran atau langganan.</div>';
+    }
+
     } else {
         $pesan = '<div class="alert alert-danger">Gagal menyimpan data siswa.</div>';
     }
-    if ($insert_bayar && $insert_langganan) {
-    // Redirect ke halaman nota cetak PDF
-    header("Location: nota.php?user_id=$user_id");
-    exit;
-} else {
-    $pesan = '<div class="alert alert-danger">Gagal menyimpan pembayaran atau langganan.</div>';
 }
 
-}
+include '../includes/kasir_header.php';
 ?>
 
 <div class="container mt-4">
     <h4 class="mb-3">Form Tambah Siswa & Pembayaran</h4>
     <?= $pesan ?>
+
+    <!-- Tampilkan kode transaksi final -->
+    <div class="mb-3">
+        <label>Kode Transaksi</label>
+        <input type="text" class="form-control" value="<?= $kode_unik ?>" readonly>
+    </div>
+
     <form method="POST">
         <div class="row">
             <div class="col-md-6 mb-3">
@@ -141,6 +155,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </form>
 </div>
-
 
 <?php include '../includes/kasir_footer.php'; ?>
